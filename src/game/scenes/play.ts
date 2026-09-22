@@ -34,6 +34,10 @@ export class PlayScene implements Scene {
   private overlay: HTMLElement | null = null;
   private finishing = false;
   private ui: HTMLElement | null = null;
+  /** Active play time in this scene (paused while the tab is hidden). */
+  private activeMs = 0;
+  private flushedMs = 0;
+  private won = false;
 
   constructor(
     private readonly game: Game,
@@ -51,6 +55,11 @@ export class PlayScene implements Scene {
 
   enter(ui: HTMLElement): void {
     this.ui = ui;
+    this.game.analytics.track('level_start', { level: this.level.id, mode: 'campaign' });
+    this.game.save.update((d) => {
+      d.lastLevelId = this.level.id;
+      d.stats.levelsStarted++;
+    });
     // 62x62 logical keeps buttons >= 44 CSS px even when letterboxed in landscape.
     const y = BAR_Y + 3;
     ui.append(
@@ -93,6 +102,8 @@ export class PlayScene implements Scene {
       }
       case 'undo':
         if (this.finishing || this.history.depth === 0) return;
+        this.game.analytics.track('undo_used', { level: this.level.id, turn: this.state.turn });
+        this.game.save.update((d) => d.stats.undos++);
         this.fx.finishAll();
         this.history = undo(this.history);
         this.recorder.record('u');
@@ -101,6 +112,8 @@ export class PlayScene implements Scene {
         break;
       case 'retry':
         if (this.finishing || this.history.depth === 0) return;
+        this.game.analytics.track('retry_used', { level: this.level.id, turn: this.state.turn });
+        this.game.save.update((d) => d.stats.retries++);
         this.fx.finishAll();
         this.history = retry(this.history);
         this.recorder.record('r');
@@ -129,10 +142,21 @@ export class PlayScene implements Scene {
     animateTurn(this.fx, this.game.audio, result.events, before, result.state);
     if (result.state.status === 'won') {
       this.finishing = true;
-      this.fx.at(0.75, () =>
-        this.game.goResults(this.index, result.state, computeStars(this.level, result.state)),
+      this.won = true;
+      const summary = this.game.recordWin(
+        this.index,
+        result.state,
+        computeStars(this.level, result.state),
+        this.activeMs,
       );
+      this.fx.at(0.75, () => this.game.goResults(this.index, result.state, summary));
     } else if (result.state.status === 'lost') {
+      this.game.analytics.track('level_fail', {
+        level: this.level.id,
+        turn: result.state.turn,
+        time_ms: Math.round(this.activeMs),
+      });
+      this.game.save.update((d) => d.stats.deaths++);
       this.fx.at(0.5, () => this.showOverlay());
     }
   }
@@ -163,6 +187,26 @@ export class PlayScene implements Scene {
 
   update(dt: number): void {
     this.fx.update(dt);
+    if (!this.finishing) this.activeMs += dt * 1000;
+  }
+
+  exit(): void {
+    if (!this.won) {
+      this.game.analytics.track('level_quit', {
+        level: this.level.id,
+        moves: this.state.stats.moves,
+        time_ms: Math.round(this.activeMs),
+      });
+    }
+    this.flushTime();
+  }
+
+  /** Adds unsaved play time to the lifetime stats. */
+  flushTime(): void {
+    const add = Math.round(this.activeMs - this.flushedMs);
+    if (add <= 0) return;
+    this.flushedMs = this.activeMs;
+    this.game.save.update((d) => (d.stats.playTimeMs += add));
   }
 
   render(ctx: CanvasRenderingContext2D): void {

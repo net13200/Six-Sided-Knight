@@ -1,10 +1,14 @@
 /**
- * Owns the shared services (rules, levels, stage, audio, platform) and the
- * scene state machine. Scenes are created through the go* methods.
+ * Owns the shared services (rules, levels, stage, audio, save, analytics,
+ * platform) and the scene state machine. Scenes are created through the
+ * go* methods.
  */
 import { defaultRules } from '../content/register';
 import type { GameState, LevelData, Rules } from '../engine';
 import { loadCampaign } from '../levels/campaign';
+import { LocalAnalytics } from '../meta/analytics';
+import { continueIndex, recordWin } from '../meta/progress';
+import { SaveStore } from '../meta/save';
 import type { Platform } from '../platform/platform';
 import { Audio } from './audio';
 import type { Command } from './input';
@@ -17,10 +21,15 @@ import type { StarResult } from './stars';
 import { C } from './view/palette';
 import type { Stage } from './view/stage';
 
-const SETTINGS_KEY = 'ssk.settings.v1';
+/** A return after this long away starts a new session. */
+export const SESSION_GAP_MS = 30 * 60_000;
+/** The first chapter doubles as the tutorial funnel. */
+export const TUTORIAL_LENGTH = 10;
 
-interface Settings {
-  muted: boolean;
+export interface WinSummary {
+  readonly stars: StarResult;
+  readonly improved: boolean;
+  readonly firstClear: boolean;
 }
 
 export class Game {
@@ -28,20 +37,29 @@ export class Game {
   readonly levels: LevelData[];
   readonly audio = new Audio();
   readonly reducedMotion: boolean;
-  /** Best stars per level id. Kept in memory for now; milestone 3 persists it. */
-  readonly best = new Map<string, number>();
+  readonly save: SaveStore;
+  readonly analytics: LocalAnalytics;
   scene: Scene | null = null;
-  private settings: Settings;
+  private hiddenAt = 0;
 
   constructor(
     readonly stage: Stage,
     readonly platform: Platform,
+    options: { debug?: boolean } = {},
   ) {
     this.rules = defaultRules();
     this.levels = loadCampaign(this.rules);
     this.reducedMotion = platform.prefersReducedMotion();
-    this.settings = this.loadSettings();
-    this.audio.muted = this.settings.muted;
+    this.save = new SaveStore(platform.storage, platform.now());
+    this.audio.muted = this.save.data.settings.muted;
+    this.analytics = new LocalAnalytics(platform.storage, platform.now, randomId);
+    this.analytics.optedOut = this.save.data.settings.analyticsOptOut;
+    this.analytics.verbose = options.debug === true;
+    this.analytics.startSession(SESSION_GAP_MS);
+  }
+
+  get tutorialLevels(): string[] {
+    return this.levels.slice(0, TUTORIAL_LENGTH).map((l) => l.id);
   }
 
   // ---------- scenes ----------
@@ -61,8 +79,8 @@ export class Game {
     this.go(new MenuScene(this));
   }
 
-  goLevels(): void {
-    this.go(new LevelsScene(this));
+  goLevels(chapter?: number): void {
+    this.go(new LevelsScene(this, chapter));
   }
 
   goPlay(index: number): void {
@@ -70,16 +88,39 @@ export class Game {
     this.go(new PlayScene(this, i));
   }
 
-  goResults(index: number, state: GameState, stars: StarResult): void {
-    const prev = this.best.get(this.levels[index]!.id) ?? 0;
-    this.best.set(this.levels[index]!.id, Math.max(prev, stars.count));
-    this.go(new ResultsScene(this, index, state, stars));
+  goResults(index: number, state: GameState, summary: WinSummary): void {
+    this.go(new ResultsScene(this, index, state, summary));
   }
 
-  /** Index of the level "Play" should open: the first one not yet completed. */
   continueIndex(): number {
-    const i = this.levels.findIndex((l) => !this.best.has(l.id));
-    return i < 0 ? this.levels.length - 1 : i;
+    return continueIndex(this.save.data, this.levels);
+  }
+
+  // ---------- progress ----------
+
+  /** Stores a finished level and returns what changed. */
+  recordWin(index: number, state: GameState, stars: StarResult, timeMs: number): WinSummary {
+    const level = this.levels[index]!;
+    const firstClear = (this.save.data.levels[level.id]?.completions ?? 0) === 0;
+    let improved = false;
+    this.save.update((d) => {
+      improved = recordWin(d, level.id, { stars: stars.count, moves: state.stats.moves, timeMs });
+      d.stats.levelsCompleted++;
+      d.stats.moves += state.stats.moves;
+      d.stats.kills += state.stats.kills;
+      d.stats.gold += state.gold;
+    });
+    this.analytics.track('level_complete', {
+      level: level.id,
+      moves: state.stats.moves,
+      hp: state.player.hp,
+      stars: stars.count,
+      time_ms: Math.round(timeMs),
+    });
+    if (firstClear && index < TUTORIAL_LENGTH) {
+      this.analytics.track('tutorial_step_complete', { step: index + 1, level: level.id });
+    }
+    return { stars, improved, firstClear };
   }
 
   // ---------- loop hooks ----------
@@ -103,26 +144,46 @@ export class Game {
     this.scene?.render(ctx);
   }
 
+  /** Called when the page is hidden or shown again. */
+  visibilityChanged(visible: boolean): void {
+    const now = this.platform.now();
+    if (!visible) {
+      this.hiddenAt = now;
+      if (this.scene instanceof PlayScene) this.scene.flushTime();
+      this.analytics.endSession();
+      return;
+    }
+    if (now - this.hiddenAt >= SESSION_GAP_MS) this.analytics.startSession();
+    else this.analytics.resumeSession();
+  }
+
   // ---------- settings ----------
 
   get muted(): boolean {
-    return this.settings.muted;
+    return this.save.data.settings.muted;
   }
 
   toggleMute(): void {
-    this.settings.muted = !this.settings.muted;
-    this.audio.muted = this.settings.muted;
-    this.platform.storage.set(SETTINGS_KEY, JSON.stringify(this.settings));
-    this.stage.root.dispatchEvent(new CustomEvent('ssk:mute'));
+    this.save.update((d) => (d.settings.muted = !d.settings.muted));
+    this.audio.muted = this.save.data.settings.muted;
+    this.stage.root.dispatchEvent(new CustomEvent('ssk:settings'));
   }
 
-  private loadSettings(): Settings {
-    try {
-      const raw = this.platform.storage.get(SETTINGS_KEY);
-      const parsed = raw ? (JSON.parse(raw) as Partial<Settings>) : {};
-      return { muted: parsed.muted === true };
-    } catch {
-      return { muted: false };
-    }
+  get analyticsEnabled(): boolean {
+    return !this.save.data.settings.analyticsOptOut;
   }
+
+  setAnalyticsEnabled(enabled: boolean): void {
+    this.save.update((d) => (d.settings.analyticsOptOut = !enabled));
+    this.analytics.setOptOut(!enabled);
+    if (enabled) this.analytics.startSession();
+    this.stage.root.dispatchEvent(new CustomEvent('ssk:settings'));
+  }
+}
+
+/** Random install id for grouping local events. Not personal, never sent anywhere. */
+function randomId(): string {
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
 }

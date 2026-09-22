@@ -172,3 +172,159 @@ button:focus-visible {
     transform: none;
   }
 }
+.node {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 3px solid #5b547a;
+  background: #2a2640;
+  font-size: 20px;
+}
+.node.done {
+  border-color: #ffd75e;
+  background: #3a3120;
+}
+.node.locked {
+  color: #6f6888;
+  border-color: #3a3550;
+  background: #1d1a28;
+  cursor: default;
+}
+.node svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #1d1a28;
+  border: 1px solid #5b547a;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.sheet h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.sheet .btn {
+  height: 48px;
+  margin-top: auto;
+}
+.toggle {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+.toggle input {
+  width: 22px;
+  height: 22px;
+  margin: 2px 0 0;
+  accent-color: #ffd75e;
+  flex: none;
+}
+.toggle span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.toggle small,
+.sheet .fine {
+  color: #8d86a0;
+  font-size: 12px;
+  line-height: 1.35;
+  margin: 0;
+}
+.debug-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow: auto;
+  padding: 16px;
+  background: #0f0d15;
+  color: #ece6d6;
+  font-size: 13px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.debug-panel h1 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+.debug-panel h2 {
+  margin: 20px 0 8px;
+  font-size: 15px;
+  color: #ffd75e;
+}
+.debug-panel p {
+  margin: 0 0 8px;
+  color: #8d86a0;
+}
+.debug-panel table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.debug-panel th,
+.debug-panel td {
+  text-align: left;
+  padding: 5px 8px;
+  border-bottom: 1px solid #2c2839;
+  vertical-align: top;
+}
+.debug-panel th {
+  color: #8d86a0;
+  font-weight: 600;
+}
+.dbg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+.dbg-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #3a3550;
+  background: #221f2f;
+  font-weight: 600;
+}
+.dbg-btn.danger {
+  border-color: #7a2b36;
+}
+.dbg-raw {
+  width: 100%;
+  height: 160px;
+  background: #1d1a28;
+  color: inherit;
+  border: 1px solid #3a3550;
+}
+.debug-panel .flag {
+  color: #ff5a6a;
+  font-weight: 700;
+}
+.debug-panel .heat {
+  display: block;
+  min-width: 28px;
+  text-align: center;
+  border-radius: 4px;
+}
+.status.pass {
+  color: #6ee07a;
+}
+.status.fail {
+  color: #ff5a6a;
+}
+.status.not-enough-data {
+  color: #8d86a0;
+}
+.debug-panel section {
+  overflow-x: auto;
+}

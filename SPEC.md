@@ -2,7 +2,7 @@
 
 Source of truth for game rules. If code and this file disagree, this file wins (or gets updated in the same commit).
 
-Spec version: 0.2 (milestone 1)
+Spec version: 0.3 (milestone 3)
 
 ## 1. Board
 
@@ -94,6 +94,18 @@ Enemy intent (next move or attack) is deterministic and shown on the board.
 1. Moves ≤ par. Par = the solver's minimum moves to the exit (a level may loosen it).
 2. No damage taken.
 3. All gold: every gem and chest collected (kills are optional).
+
+## 9a. Progression
+
+- Chapters of 10 levels. Level 1 is open; each level unlocks when the previous one is beaten.
+- "Play" from the title screen opens, in one tap, the level the player was last in if it isn't beaten yet, otherwise the first unbeaten level.
+- Per level the save keeps: best stars, fewest moves, completions, and fastest time.
+
+## 9b. Analytics and privacy
+
+- Only local, on-device analytics. No personal data, no network calls.
+- The player can turn it off in Settings; turning it off deletes the stored events.
+- A session ends when the page is hidden or closed. Returning within 30 minutes continues the same session.
 
 ## 10. Daily Roll
 

@@ -1,7 +1,8 @@
 /** Title screen. "Play" continues where the player left off in one tap. */
+import { totalStars } from '../../meta/progress';
 import type { Game } from '../game';
 import type { Command } from '../input';
-import { el, icon, place } from '../ui';
+import { el, icon, iconButton, place } from '../ui';
 import { drawBadge, drawDieBody, drawFace } from '../view/art';
 import { C } from '../view/palette';
 import { muteButton } from './common';
@@ -10,12 +11,17 @@ import type { Scene } from './scene';
 export class MenuScene implements Scene {
   readonly name = 'menu';
   private t = 0;
+  private sheet: HTMLElement | null = null;
+  private ui: HTMLElement | null = null;
 
   constructor(private readonly game: Game) {}
 
   enter(ui: HTMLElement): void {
+    this.ui = ui;
     const next = this.game.continueIndex();
-    const started = this.game.best.size > 0;
+    const started =
+      Object.keys(this.game.save.data.levels).length > 0 ||
+      this.game.save.data.lastLevelId !== null;
     const playBtn = el(
       'button',
       {
@@ -28,15 +34,85 @@ export class MenuScene implements Scene {
     const levelsBtn = el('button', {
       className: 'btn',
       testId: 'levels',
-      text: 'Levels',
+      text: 'Map',
       onClick: () => this.game.goLevels(),
     });
-    ui.append(place(playBtn, 60, 300, 220, 56), place(levelsBtn, 60, 366, 220, 48));
-    ui.append(place(muteButton(this.game), 272, 415, 64, 62));
+    ui.append(
+      place(playBtn, 60, 300, 220, 56),
+      place(levelsBtn, 60, 366, 220, 48),
+      place(
+        iconButton('gear', 'Settings', () => this.openSettings(), 'settings'),
+        4,
+        415,
+        64,
+        62,
+      ),
+      place(muteButton(this.game), 272, 415, 64, 62),
+    );
+  }
+
+  private openSettings(): void {
+    if (this.sheet || !this.ui) return;
+    const toggle = (
+      id: string,
+      label: string,
+      hint: string,
+      checked: boolean,
+      onChange: (on: boolean) => void,
+    ) => {
+      const input = el('input', { testId: id });
+      input.type = 'checkbox';
+      input.id = id;
+      input.checked = checked;
+      input.addEventListener('change', () => onChange(input.checked));
+      const lab = el('label', { className: 'toggle' }, [
+        input,
+        el('span', {}, [el('strong', { text: label }), el('small', { text: hint })]),
+      ]);
+      lab.htmlFor = id;
+      return lab;
+    };
+    const stats = this.game.save.data.stats;
+    this.sheet = place(
+      el('div', { className: 'sheet', testId: 'settings-sheet' }, [
+        el('h2', { text: 'Settings' }),
+        toggle('setting-sound', 'Sound', 'Sound effects', !this.game.muted, () =>
+          this.game.toggleMute(),
+        ),
+        toggle(
+          'setting-analytics',
+          'Play statistics',
+          'Helps tune level difficulty. Stays on this device; nothing is sent anywhere.',
+          this.game.analyticsEnabled,
+          (on) => this.game.setAnalyticsEnabled(on),
+        ),
+        el('p', {
+          className: 'fine',
+          text: `${stats.levelsCompleted} levels cleared · ${totalStars(this.game.save.data)} stars · ${Math.round(stats.playTimeMs / 60000)} min played`,
+        }),
+        el('button', {
+          className: 'btn',
+          testId: 'settings-close',
+          text: 'Done',
+          onClick: () => this.closeSettings(),
+        }),
+      ]),
+      20,
+      90,
+      300,
+      310,
+    );
+    this.ui.append(this.sheet);
+  }
+
+  private closeSettings(): void {
+    this.sheet?.remove();
+    this.sheet = null;
   }
 
   command(cmd: Command): void {
-    if (cmd.type === 'confirm') this.game.goPlay(this.game.continueIndex());
+    if (cmd.type === 'back') this.closeSettings();
+    if (cmd.type === 'confirm' && !this.sheet) this.game.goPlay(this.game.continueIndex());
   }
 
   update(dt: number): void {

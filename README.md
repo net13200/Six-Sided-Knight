@@ -3,7 +3,7 @@
 A mobile-first puzzle-dungeon game where you are a rolling die. The face on the side you roll toward is the one that acts: Sword attacks, Key opens doors, Coin opens chests, and so on.
 
 - **Rules:** [SPEC.md](SPEC.md) is the source of truth.
-- **Status:** milestone 2 of 6. Playable in the browser: 10 tutorial levels, swipe/tap/keyboard, sound, undo/retry, stars.
+- **Status:** milestone 3 of 6. Playable in the browser: 10 tutorial levels, saved progress and stars, a chapter map, settings, and on-device analytics with a hidden KPI panel.
 
 ## Play online
 
@@ -32,6 +32,7 @@ src/content/   faces/, tiles/, enemies/ — one definition module each, register
 src/levels/    campaign levels (data/*.txt) and their loader
 src/solver/    breadth-first solver: proves levels solvable, finds par
 src/game/      browser game: scenes, input, audio, loop; view/ holds rendering and effects
+src/meta/      save data (versioned, with migrations), progression, analytics, KPI maths
 src/platform/  host adapter interface (storage, share, visibility, ...) + browser implementation
 tools/         command-line tools: level validator, solver, replay player
 examples/      sample levels (.json and .txt) and golden replays
@@ -108,6 +109,33 @@ start: top=Shield east=Sword
 | `s`   | slime        |       |             |
 
 `start`, `hint` (one line, at most 40 characters) and `enemies` are optional. `start` fixes faces in named slots (the default is top=Shield, bottom=Heart, north=Bomb, south=Key, east=Sword, west=Coin). `enemies` sets per-enemy data, e.g. `{ "ready": true }` makes a slime act on turn 1.
+
+## Save data
+
+Progress lives in `localStorage` under `ssk.save` as versioned JSON (`src/meta/save.ts`). To change the format:
+
+1. Bump `SAVE_VERSION` and add the new shape.
+2. Add `migrations[oldVersion]`, which turns an old object into the new one.
+3. Add a case to `tests/unit/save.test.ts`.
+
+Safety rules: unreadable data is copied to `ssk.save.corrupt.<time>` before starting fresh, and data from a newer version (after a rollback) is never overwritten. If storage is blocked, the game still runs from memory.
+
+## Analytics and the KPI panel
+
+Events are defined, with versions and typed props, in `EVENTS` in `src/meta/analytics.ts`. They go to a capped ring buffer in `localStorage` (`ssk.analytics`, 3000 events). Nothing is sent anywhere, and there is no personal data: only a random install id, game facts and timestamps. Players can turn recording off in **Settings → Play statistics**, which also deletes what was stored.
+
+Open the hidden panel by adding `#debug` to the URL (or `?debug`, which also logs each event to the console). It shows:
+
+| Section         | How to read it                                                                                                                                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hypotheses      | The KPI targets (tutorial completion > 85%, 3+ levels per session, D1 return, daily participation, every level in the 60–90% win band). Each shows pass, fail, or "not enough data". They are targets to test, not facts. |
+| Sessions        | Count, average length and levels completed per session. A session ends when the page is hidden or closed; coming back within 30 minutes continues it.                                                                     |
+| Return proxies  | D1/D7/D30 from this device's session history. _Exact_ = played on day N after the first session; _rolling_ = played on day N or later. "Not yet" = that day hasn't arrived.                                               |
+| Levels          | Attempts (starts + retries), wins, win rate, undo rate, median winning time. Levels outside 60–90% (after 5+ attempts) are flagged _too hard_ or _too easy_.                                                              |
+| Fail heatmap    | Where players die: level × turn bucket. Darker = more deaths.                                                                                                                                                             |
+| Tutorial funnel | Which of the 10 chapter-1 steps have been completed.                                                                                                                                                                      |
+
+Use **Copy data (JSON)** to export the raw log. The maths lives in `src/meta/kpi.ts`, and each number has a unit test.
 
 ## Adding a face, tile or enemy
 

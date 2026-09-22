@@ -1,4 +1,5 @@
 /** Entry point: wires the platform, stage, input and loop to the game. */
+import { openDebugPanel } from './game/debug-panel';
 import { Game } from './game/game';
 import { bindInput } from './game/input';
 import { Loop } from './game/loop';
@@ -6,9 +7,12 @@ import { Stage } from './game/view/stage';
 import { createBrowserPlatform } from './platform/browser';
 import './style.css';
 
+const params = new URLSearchParams(location.search);
+const debug = params.has('debug') || location.hash === '#debug';
+
 const platform = createBrowserPlatform();
 const stage = new Stage(document.getElementById('app')!);
-const game = new Game(stage, platform);
+const game = new Game(stage, platform, { debug });
 
 bindInput(
   { surface: stage.canvas, toLogical: (x, y) => stage.toLogical(x, y) },
@@ -22,16 +26,25 @@ const loop = new Loop(
 );
 platform.onVisibilityChange((visible) => {
   loop.setPaused(!visible);
+  game.visibilityChanged(visible);
   if (visible) game.audio.resume();
   else game.audio.suspend();
 });
 
+// Closing or reloading the page ends the session (a reload soon after resumes it).
+window.addEventListener('pagehide', () => game.visibilityChanged(false));
+
 // ?level=3 jumps straight into a level (handy for testing and sharing).
-const params = new URLSearchParams(location.search);
 const levelParam = Number(params.get('level'));
 if (levelParam >= 1) game.goPlay(levelParam - 1);
 else game.goMenu();
 loop.start();
+
+// Hidden KPI panel: #debug or ?debug.
+if (debug) openDebugPanel(game);
+window.addEventListener('hashchange', () => {
+  if (location.hash === '#debug') openDebugPanel(game);
+});
 
 // Read-only hook for automated tests and debugging.
 declare global {

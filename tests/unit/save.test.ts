@@ -1,0 +1,97 @@
+import { describe, expect, it } from 'vitest';
+import {
+  LEGACY_SETTINGS_KEY,
+  SAVE_KEY,
+  SAVE_VERSION,
+  SaveStore,
+  freshSave,
+  loadSave,
+  migrate,
+} from '../../src/meta/save';
+import { MemoryStorage } from '../../src/platform/memory';
+
+const NOW = 1_700_000_000_000;
+
+describe('save loading', () => {
+  it('starts fresh with no data', () => {
+    const r = loadSave(new MemoryStorage(), NOW);
+    expect(r.outcome).toBe('fresh');
+    expect(r.save).toEqual(freshSave(NOW));
+    expect(r.writable).toBe(true);
+  });
+
+  it('migrates the milestone-2 settings key into save v1', () => {
+    const storage = new MemoryStorage();
+    storage.set(LEGACY_SETTINGS_KEY, JSON.stringify({ muted: true }));
+    const store = new SaveStore(storage, NOW);
+    expect(store.data.settings.muted).toBe(true);
+    expect(JSON.parse(storage.get(SAVE_KEY)!).version).toBe(SAVE_VERSION);
+  });
+
+  it('round-trips through storage', () => {
+    const storage = new MemoryStorage();
+    const a = new SaveStore(storage, NOW);
+    a.update((d) => {
+      d.levels['c1-01'] = { stars: 2, bestMoves: 7, completions: 1, bestTimeMs: 9000 };
+      d.lastLevelId = 'c1-02';
+    });
+    const b = new SaveStore(storage, NOW + 1000);
+    expect(b.outcome).toBe('loaded');
+    expect(b.data).toEqual(a.data);
+  });
+
+  it('backs up corrupt data before starting over', () => {
+    const storage = new MemoryStorage();
+    storage.set(SAVE_KEY, '{not json');
+    const r = loadSave(storage, NOW);
+    expect(r.outcome).toBe('recovered');
+    expect(storage.get(`${SAVE_KEY}.corrupt.${NOW}`)).toBe('{not json');
+  });
+
+  it('never overwrites data from a newer version', () => {
+    const storage = new MemoryStorage();
+    const future = JSON.stringify({
+      version: SAVE_VERSION + 1,
+      levels: { x: { stars: 3 } },
+      fancy: true,
+    });
+    storage.set(SAVE_KEY, future);
+    const store = new SaveStore(storage, NOW);
+    expect(store.outcome).toBe('newer-version');
+    expect(store.update((d) => (d.settings.muted = true))).toBe(false);
+    expect(storage.get(SAVE_KEY)).toBe(future);
+    expect(store.data.levels.x!.stars).toBe(3); // still readable
+  });
+
+  it('repairs missing and out-of-range fields', () => {
+    const storage = new MemoryStorage();
+    storage.set(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 1,
+        levels: { a: { stars: 9, bestMoves: -4 }, b: null },
+        settings: {},
+      }),
+    );
+    const { save } = loadSave(storage, NOW);
+    expect(save.levels.a).toEqual({ stars: 3, bestMoves: 0, completions: 0, bestTimeMs: 0 });
+    expect(save.levels.b).toBeUndefined();
+    expect(save.settings).toEqual({ muted: false, analyticsOptOut: false });
+    expect(save.stats.levelsCompleted).toBe(0);
+  });
+
+  it('every version from 0 up migrates to the current one', () => {
+    for (let v = 0; v <= SAVE_VERSION; v++) {
+      const out = migrate(v === 0 ? {} : { ...freshSave(NOW), version: v }, NOW);
+      expect(out.version).toBe(SAVE_VERSION);
+    }
+  });
+
+  it('reports failed writes instead of throwing', () => {
+    const storage = new MemoryStorage();
+    const store = new SaveStore(storage, NOW);
+    storage.failWrites = true;
+    expect(store.update((d) => (d.settings.muted = true))).toBe(false);
+    expect(store.data.settings.muted).toBe(true); // kept in memory
+  });
+});

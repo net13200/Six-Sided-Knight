@@ -128,14 +128,79 @@ test.describe('Six Sided Knight', () => {
     await waitForMoves(page, 0);
   });
 
-  test('level select opens a level and shows stars after completion', async ({ page }) => {
+  test('the map opens a level and shows stars after completion', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('levels').click();
+    await expect(page.getByTestId('level-2')).toBeDisabled();
     await page.getByTestId('level-1').click();
     for (const dir of solutionFor(0)) await page.keyboard.press(KEY[dir]);
     await expect.poll(() => scene(page), { timeout: 5000 }).toBe('results');
     await page.getByTestId('results-levels').click();
-    await expect(page.getByTestId('level-1')).toContainText('★');
+    await expect(page.getByTestId('level-1')).toHaveAttribute('aria-label', /3 of 3 stars/);
+    await expect(page.getByTestId('level-2')).toBeEnabled();
+  });
+
+  test('progress survives a reload and Play continues where you left off', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('play').click();
+    for (const dir of solutionFor(0)) await page.keyboard.press(KEY[dir]);
+    await expect.poll(() => scene(page), { timeout: 5000 }).toBe('results');
+    await page.goto('/');
+    await expect(page.getByTestId('play')).toContainText('Continue: level 2');
+    await page.getByTestId('play').click();
+    expect(await levelIndex(page)).toBe(1);
+    // Leaving mid-level and coming back resumes the same level.
+    await page.keyboard.press('ArrowRight');
+    await page.goto('/');
+    await expect(page.getByTestId('play')).toContainText('Continue: level 2');
+  });
+
+  test('a corrupt save does not break the game', async ({ page }) => {
+    await page.addInitScript(() => {
+      if (!sessionStorage.getItem('seeded')) {
+        localStorage.setItem('ssk.save', '{definitely not json');
+        sessionStorage.setItem('seeded', '1');
+      }
+    });
+    await page.goto('/');
+    await expect.poll(() => scene(page)).toBe('menu');
+    await page.getByTestId('play').click();
+    await expect.poll(() => scene(page)).toBe('play');
+    const backup = await page.evaluate(() =>
+      Object.keys(localStorage).some((k) => k.startsWith('ssk.save.corrupt.')),
+    );
+    expect(backup).toBe(true);
+  });
+
+  test('the KPI panel opens with #debug and reflects play', async ({ page }) => {
+    await page.goto('/?level=1');
+    for (const dir of solutionFor(0)) await page.keyboard.press(KEY[dir]);
+    await expect.poll(() => scene(page), { timeout: 5000 }).toBe('results');
+    await page.goto('/#debug');
+    const panel = page.getByTestId('debug-panel');
+    await expect(panel).toBeVisible();
+    await expect(page.getByTestId('debug-hypotheses')).toContainText('Tutorial completion');
+    await expect(page.getByTestId('debug-levels')).toContainText('c1-01');
+    await expect(page.getByTestId('debug-tutorial')).toContainText('✓');
+    await expect(panel).toContainText('level_complete v1');
+    await page.getByTestId('debug-close').click();
+    await expect(panel).toBeHidden();
+  });
+
+  test('turning off play statistics stops recording', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('settings').click();
+    const toggle = page.getByTestId('setting-analytics');
+    await expect(toggle).toBeChecked();
+    await toggle.uncheck();
+    await page.getByTestId('settings-close').click();
+    const stored = await page.evaluate(() => localStorage.getItem('ssk.analytics'));
+    expect(stored).toBeNull();
+    await page.getByTestId('play').click();
+    await page.keyboard.press('ArrowRight');
+    expect(await page.evaluate(() => localStorage.getItem('ssk.analytics'))).toBeNull();
+    await page.goto('/#debug');
+    await expect(page.getByTestId('debug-panel')).toContainText('recording is OFF');
   });
 
   test('mute toggles and persists across reloads', async ({ page }) => {

@@ -9,6 +9,11 @@ export function muteButton(game: Game): HTMLButtonElement {
   b.dataset.testid = 'mute';
   const label = document.createElement('span');
   const sync = () => {
+    if (!b.isConnected && b.dataset.mounted) {
+      game.stage.root.removeEventListener('ssk:settings', sync);
+      return;
+    }
+    b.dataset.mounted = '1';
     b.replaceChildren(icon(game.muted ? 'muted' : 'sound'), label);
     label.textContent = game.muted ? 'Muted' : 'Sound';
     b.setAttribute('aria-label', game.muted ? 'Unmute sound' : 'Mute sound');
@@ -18,7 +23,7 @@ export function muteButton(game: Game): HTMLButtonElement {
     e.stopPropagation();
     game.toggleMute();
   });
-  game.stage.root.addEventListener('ssk:mute', sync);
+  game.stage.root.addEventListener('ssk:settings', sync);
   sync();
   return b;
 }
