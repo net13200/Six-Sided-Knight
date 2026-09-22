@@ -51,7 +51,7 @@ describe('event schema', () => {
       'level_start.mode must be a string',
     ]);
     expect(validateEvent('session_end', { duration_ms: '5' })).toHaveLength(1);
-    expect(validateEvent('session_start', { email: 'x@y.z' })).toHaveLength(1);
+    expect(validateEvent('session_start', { app_version: '1', email: 'x@y.z' })).toHaveLength(1);
   });
 });
 
@@ -61,7 +61,7 @@ describe('local analytics', () => {
     a.startSession();
     a.track('level_start', { level: 'c1-01', mode: 'campaign' });
     expect(a.events.map((e) => [e.n, e.v, e.s])).toEqual([
-      ['session_start', 1, 1],
+      ['session_start', 2, 1],
       ['level_start', 1, 1],
     ]);
   });
@@ -139,5 +139,18 @@ describe('local analytics', () => {
     for (let i = 0; i < 10; i++) a.track('undo_used', { level: 'x', turn: i });
     storage.failWrites = true;
     expect(() => a.track('undo_used', { level: 'x', turn: 99 })).not.toThrow();
+  });
+});
+
+describe('app version', () => {
+  it('session_start records the app version', () => {
+    const a = new LocalAnalytics(
+      new MemoryStorage(),
+      () => 0,
+      () => 'id',
+      '9.9.9',
+    );
+    a.startSession();
+    expect(a.events[0]!.p).toEqual({ app_version: '9.9.9' });
   });
 });

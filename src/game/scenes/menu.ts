@@ -1,5 +1,6 @@
 /** Title screen. "Play" continues where the player left off in one tap. */
 import { totalStars } from '../../meta/progress';
+import { VERSION_LABEL } from '../../version';
 import type { Game } from '../game';
 import type { Command } from '../input';
 import { el, icon, iconButton, place } from '../ui';
@@ -88,7 +89,7 @@ export class MenuScene implements Scene {
         ),
         el('p', {
           className: 'fine',
-          text: `${stats.levelsCompleted} levels cleared · ${totalStars(this.game.save.data)} stars · ${Math.round(stats.playTimeMs / 60000)} min played`,
+          text: `${stats.levelsCompleted} levels cleared · ${totalStars(this.game.save.data)} stars · ${Math.round(stats.playTimeMs / 60000)} min played · ${VERSION_LABEL}`,
         }),
         el('button', {
           className: 'btn',
@@ -144,5 +145,10 @@ export class MenuScene implements Scene {
       ['Coin', -1, 0],
     ];
     for (const [face, dx, dy] of around) drawBadge(ctx, face, cx + dx * 52, cy + dy * 52, 13);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = C.textDim;
+    ctx.font = '11px system-ui, sans-serif';
+    ctx.fillText(VERSION_LABEL, 170, 446);
   }
 }

@@ -16,7 +16,7 @@ function sessionWith(
   body: StoredEvent[] = [],
 ): StoredEvent[] {
   return [
-    ev('session_start', start, s),
+    ev('session_start', start, s, { app_version: '0.3.0' }),
     ...body,
     ev('session_end', start + lengthMs, s, { duration_ms: lengthMs }),
   ];

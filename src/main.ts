@@ -5,6 +5,7 @@ import { bindInput } from './game/input';
 import { Loop } from './game/loop';
 import { Stage } from './game/view/stage';
 import { createBrowserPlatform } from './platform/browser';
+import { VERSION_LABEL } from './version';
 import './style.css';
 
 const params = new URLSearchParams(location.search);
@@ -53,6 +54,7 @@ declare global {
   }
 }
 window.__ssk = {
+  version: VERSION_LABEL,
   scene: () => game.scene?.name,
   state: () =>
     game.scene && 'state' in game.scene ? (game.scene as { state: unknown }).state : null,

@@ -31,6 +31,16 @@ test.describe('Six Sided Knight', () => {
     expect(await levelIndex(page)).toBe(0);
   });
 
+  test('shows the version number on the title screen and in the KPI panel', async ({ page }) => {
+    await page.goto('/');
+    const version = await page.evaluate(() => (window.__ssk as { version: string }).version);
+    expect(version).toMatch(/^v\d+\.\d+\.\d+/);
+    await page.getByTestId('settings').click();
+    await expect(page.getByTestId('settings-sheet')).toContainText(version);
+    await page.goto('/#debug');
+    await expect(page.getByTestId('debug-version')).toContainText(version);
+  });
+
   test('swipe rolls the die', async ({ page }) => {
     await page.goto('/?level=1');
     const before = await gameState(page);

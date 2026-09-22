@@ -110,6 +110,14 @@ start: top=Shield east=Sword
 
 `start`, `hint` (one line, at most 40 characters) and `enemies` are optional. `start` fixes faces in named slots (the default is top=Shield, bottom=Heart, north=Bomb, south=Key, east=Sword, west=Coin). `enemies` sets per-enemy data, e.g. `{ "ready": true }` makes a slime act on turn 1.
 
+## Versions and releases
+
+The version lives in `package.json` and is shown in the game as `v0.3.0 (commit)`: on the title screen, in Settings and in the KPI panel. Each analytics session records it, so stats can be compared between releases. To release:
+
+1. Bump `version` in `package.json` (major.minor.patch).
+2. Add an entry to [CHANGELOG.md](CHANGELOG.md).
+3. Commit to `main` (this deploys automatically), then tag it: `git tag v0.4.0 && git push origin v0.4.0`.
+
 ## Save data
 
 Progress lives in `localStorage` under `ssk.save` as versioned JSON (`src/meta/save.ts`). To change the format:

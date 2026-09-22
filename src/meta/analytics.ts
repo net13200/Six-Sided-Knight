@@ -18,7 +18,8 @@ type PropType = 'number' | 'string' | 'boolean';
  * props means bumping its version so old and new data are never mixed.
  */
 export const EVENTS = {
-  session_start: { v: 1, props: {} },
+  // v2 (0.3.0): adds app_version so KPIs can be split by release.
+  session_start: { v: 2, props: { app_version: 'string' } },
   session_end: { v: 1, props: { duration_ms: 'number' } },
   tutorial_step_complete: { v: 1, props: { step: 'number', level: 'string' } },
   level_start: { v: 1, props: { level: 'string', mode: 'string' } },
@@ -93,6 +94,7 @@ export class LocalAnalytics {
     private readonly storage: KeyValueStorage,
     private readonly now: () => number,
     private readonly randomId: () => string,
+    private readonly appVersion = 'unknown',
   ) {
     this.data = this.read();
   }
@@ -150,7 +152,7 @@ export class LocalAnalytics {
     this.sessionStart = this.now();
     if (this.optedOut) return;
     this.data.sessionCount++;
-    this.track('session_start', {});
+    this.track('session_start', { app_version: this.appVersion });
   }
 
   /**

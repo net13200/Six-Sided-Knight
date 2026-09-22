@@ -10,6 +10,7 @@ import { LocalAnalytics } from '../meta/analytics';
 import { continueIndex, recordWin } from '../meta/progress';
 import { SaveStore } from '../meta/save';
 import type { Platform } from '../platform/platform';
+import { VERSION } from '../version';
 import { Audio } from './audio';
 import type { Command } from './input';
 import { LevelsScene } from './scenes/levels';
@@ -52,7 +53,7 @@ export class Game {
     this.reducedMotion = platform.prefersReducedMotion();
     this.save = new SaveStore(platform.storage, platform.now());
     this.audio.muted = this.save.data.settings.muted;
-    this.analytics = new LocalAnalytics(platform.storage, platform.now, randomId);
+    this.analytics = new LocalAnalytics(platform.storage, platform.now, randomId, VERSION);
     this.analytics.optedOut = this.save.data.settings.analyticsOptOut;
     this.analytics.verbose = options.debug === true;
     this.analytics.startSession(SESSION_GAP_MS);
