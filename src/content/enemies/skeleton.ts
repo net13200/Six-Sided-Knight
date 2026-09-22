@@ -9,5 +9,4 @@ export const Skeleton: EnemyDef = {
   hp: 2,
   bounty: 10,
   onEnemyTurn: (ctx, self) => chase(ctx, self),
-  willAct: () => true,
 };

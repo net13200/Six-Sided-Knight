@@ -74,7 +74,10 @@ export interface EnemyDef {
     overrides: Readonly<Record<string, number | boolean>>,
   ): Record<string, number | boolean>;
   onEnemyTurn(ctx: TurnContext, self: EnemyState): void;
-  /** True if the enemy will act in the next enemy phase (for the UI indicator). */
+  /**
+   * True if the enemy will act in the next enemy phase. Define it only for enemies
+   * that sometimes skip turns; the UI then shows a "ready" / "resting" indicator.
+   */
   willAct?(self: EnemyState): boolean;
   onTurnEnd?(ctx: TurnContext, self: EnemyState): void;
 }

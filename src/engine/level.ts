@@ -45,6 +45,8 @@ export interface LevelData {
   readonly name: string;
   readonly grid: readonly string[];
   readonly par?: number;
+  /** Optional one-line hint shown during play (no text walls). */
+  readonly hint?: string;
   readonly start?: Readonly<Record<string, FaceId>>;
   readonly enemies?: readonly LevelEnemyOverride[];
 }
@@ -76,6 +78,7 @@ export function parseTextLevel(text: string): LevelData {
     name: string;
     grid: string[];
     par?: number;
+    hint?: string;
     start?: Record<string, string>;
   } = {
     schema: LEVEL_SCHEMA_VERSION,
@@ -84,6 +87,7 @@ export function parseTextLevel(text: string): LevelData {
     grid,
   };
   if (meta.par !== undefined) data.par = Number(meta.par);
+  if (meta.hint !== undefined) data.hint = meta.hint;
   if (meta.start !== undefined) {
     // start: top=Shield east=Sword
     data.start = Object.fromEntries(
@@ -116,6 +120,9 @@ export function validateLevel(rules: Rules, raw: unknown): string[] {
   if (typeof lvl.name !== 'string' || lvl.name.length === 0) problems.push('name is required');
   if (lvl.par !== undefined && (!Number.isInteger(lvl.par) || lvl.par < 1)) {
     problems.push('par must be a positive integer');
+  }
+  if (lvl.hint !== undefined && (typeof lvl.hint !== 'string' || lvl.hint.length > 40)) {
+    problems.push('hint must be a string of at most 40 characters');
   }
   if (!Array.isArray(lvl.grid)) return [...problems, 'grid must be an array of strings'];
   if (lvl.grid.length !== GRID_HEIGHT) {

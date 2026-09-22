@@ -1,0 +1,174 @@
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #14121c;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  color: #ece6d6;
+}
+#app {
+  position: fixed;
+  inset: 0;
+}
+.stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 340px;
+  height: 480px;
+  transform-origin: 0 0;
+  background: #14121c;
+}
+.stage-canvas {
+  position: absolute;
+  inset: 0;
+  width: 340px;
+  height: 480px;
+  touch-action: none;
+}
+.stage-ui {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.stage-ui > * {
+  pointer-events: auto;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+button:focus-visible {
+  outline: 2px solid #ffd75e;
+  outline-offset: 2px;
+}
+.icon-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0;
+  border: 1px solid #3a3550;
+  border-radius: 12px;
+  background: #221f2f;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.icon-btn:active {
+  transform: translateY(1px);
+  background: #2c2839;
+}
+.icon-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 14px;
+  border: 1px solid #3a3550;
+  background: #221f2f;
+  font-size: 16px;
+  font-weight: 700;
+}
+.btn.primary {
+  background: #ffd75e;
+  border-color: #b8901f;
+  color: #231a05;
+  font-size: 18px;
+  box-shadow: 0 4px 0 #8a6414;
+}
+.btn.primary:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #8a6414;
+}
+.btn svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.level-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 14px;
+  border: 1px solid #3a3550;
+  background: #221f2f;
+}
+.level-btn strong {
+  font-size: 22px;
+}
+.level-btn .stars {
+  font-size: 12px;
+  color: #ffd75e;
+  min-height: 14px;
+}
+.level-btn.done {
+  background: #2a2640;
+  border-color: #5b547a;
+}
+.overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(20, 18, 28, 0.94);
+  border: 1px solid #5b547a;
+  text-align: center;
+}
+.overlay h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #ff5a6a;
+}
+.overlay p {
+  margin: 0;
+  font-size: 13px;
+  color: #8d86a0;
+}
+.overlay .row {
+  display: flex;
+  gap: 10px;
+}
+.overlay .icon-btn {
+  width: 72px;
+  height: 52px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn.primary:active,
+  .icon-btn:active {
+    transform: none;
+  }
+}
