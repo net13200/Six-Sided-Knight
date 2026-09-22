@@ -1,4 +1,5 @@
 /** Title screen. "Play" continues where the player left off in one tap. */
+import { currentStreak, utcDate } from '../../meta/daily';
 import { totalStars } from '../../meta/progress';
 import { VERSION_LABEL } from '../../version';
 import type { Game } from '../game';
@@ -39,8 +40,22 @@ export class MenuScene implements Scene {
       onClick: () => this.game.goLevels(),
     });
     ui.append(
-      place(playBtn, 60, 300, 220, 56),
-      place(levelsBtn, 60, 366, 220, 48),
+      place(playBtn, 60, 262, 220, 56),
+      place(
+        this.modeButton('daily', 'Daily Roll', this.dailyLabel(), () => this.game.goDaily()),
+        60,
+        328,
+        107,
+        52,
+      ),
+      place(
+        this.modeButton('depths', 'Depths', this.depthsLabel(), () => this.game.goDepths()),
+        173,
+        328,
+        107,
+        52,
+      ),
+      place(levelsBtn, 90, 388, 160, 40),
       place(
         iconButton('gear', 'Settings', () => this.openSettings(), 'settings'),
         4,
@@ -50,6 +65,32 @@ export class MenuScene implements Scene {
       ),
       place(muteButton(this.game), 272, 415, 64, 62),
     );
+  }
+
+  private modeButton(
+    id: string,
+    title: string,
+    sub: string,
+    onClick: () => void,
+  ): HTMLButtonElement {
+    return el('button', { className: 'btn mode', testId: id, onClick }, [
+      el('strong', { text: title }),
+      el('small', { text: sub }),
+    ]);
+  }
+
+  private dailyLabel(): string {
+    const today = utcDate(this.game.platform.now());
+    const streak = currentStreak(this.game.save.data, today);
+    if (this.game.save.data.daily.results[today]) return `done · ${streak}-day streak`;
+    return streak > 0 ? `${streak}-day streak` : 'new every day';
+  }
+
+  private depthsLabel(): string {
+    const best = this.game.save.data.depths.bestFloor;
+    const run = this.game.save.data.depths.inProgress;
+    if (run) return `on floor ${run.floor}`;
+    return best > 0 ? `best floor ${best}` : 'endless';
   }
 
   private openSettings(): void {
@@ -125,17 +166,17 @@ export class MenuScene implements Scene {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = C.text;
     ctx.font = '800 34px system-ui, sans-serif';
-    ctx.fillText('Six Sided', 170, 70);
+    ctx.fillText('Six Sided', 170, 52);
     ctx.fillStyle = C.gold;
-    ctx.fillText('Knight', 170, 108);
+    ctx.fillText('Knight', 170, 88);
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
-    ctx.fillText('You are the die. Every side is a tool.', 170, 140);
+    ctx.fillText('You are the die. Every side is a tool.', 170, 116);
 
     // A gently bobbing hero die with its faces around it.
     const bob = this.game.reducedMotion ? 0 : Math.sin(this.t * 2) * 4;
     const cx = 170;
-    const cy = 215 + bob;
+    const cy = 186 + bob;
     drawDieBody(ctx, cx, cy, 64, 64);
     drawFace(ctx, 'Shield', cx, cy - 2, 40);
     const around: Array<[string, number, number]> = [

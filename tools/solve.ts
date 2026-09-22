@@ -9,6 +9,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { defaultRules } from '../src/content/register';
 import { createState } from '../src/engine';
+import { rate } from '../src/solver/rate';
 import { analyze, type SolveResult } from '../src/solver/solve';
 import { levelFiles, loadLevelFile } from './lib/files';
 
@@ -27,7 +28,9 @@ const fmt = (r: SolveResult) =>
 
 for (const file of files) {
   const lvl = loadLevelFile(file);
-  const a = analyze(rules, createState(rules, lvl));
+  const start = createState(rules, lvl);
+  const a = analyze(rules, start);
+  const difficulty = rate(rules, start).score;
   const problems: string[] = [];
   if (writePar && a.any.status === 'solved' && file.endsWith('.txt') && lvl.par !== a.any.moves) {
     const text = readFileSync(file, 'utf8');
@@ -44,7 +47,7 @@ for (const file of files) {
   if (problems.length) bad++;
   console.log(
     `${problems.length ? 'FAIL' : 'ok  '} ${lvl.id.padEnd(8)} par ${String(lvl.par ?? '-').padStart(2)}  ` +
-      `min ${fmt(a.any)}  no-dmg ${fmt(a.noDamage)}  all-gold ${fmt(a.allGold)}  nodes ${a.any.nodes}` +
+      `min ${fmt(a.any)}  no-dmg ${fmt(a.noDamage)}  all-gold ${fmt(a.allGold)}  difficulty ${difficulty}` +
       (problems.length ? `\n     - ${problems.join('\n     - ')}` : ''),
   );
 }

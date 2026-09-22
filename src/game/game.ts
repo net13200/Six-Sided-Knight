@@ -6,6 +6,7 @@
 import { defaultRules } from '../content/register';
 import type { GameState, LevelData, Rules } from '../engine';
 import { loadCampaign } from '../levels/campaign';
+import { LevelService } from '../gen/service';
 import { LocalAnalytics } from '../meta/analytics';
 import { continueIndex, recordWin } from '../meta/progress';
 import { SaveStore } from '../meta/save';
@@ -13,11 +14,16 @@ import type { Platform } from '../platform/platform';
 import { VERSION } from '../version';
 import { Audio } from './audio';
 import type { Command } from './input';
+import type { FloorSummary, Run } from './runs';
+import { DailyScene } from './scenes/daily';
+import { DepthsScene } from './scenes/depths';
+import { FloorScene } from './scenes/floor';
 import { LevelsScene } from './scenes/levels';
 import { MenuScene } from './scenes/menu';
 import { PlayScene } from './scenes/play';
 import { ResultsScene } from './scenes/results';
 import { canTransition, type Scene } from './scenes/scene';
+import type { PlaySession } from './session';
 import type { StarResult } from './stars';
 import { C } from './view/palette';
 import type { Stage } from './view/stage';
@@ -40,6 +46,7 @@ export class Game {
   readonly reducedMotion: boolean;
   readonly save: SaveStore;
   readonly analytics: LocalAnalytics;
+  readonly levelService: LevelService;
   scene: Scene | null = null;
   private hiddenAt = 0;
 
@@ -50,6 +57,7 @@ export class Game {
   ) {
     this.rules = defaultRules();
     this.levels = loadCampaign(this.rules);
+    this.levelService = new LevelService(this.rules);
     this.reducedMotion = platform.prefersReducedMotion();
     this.save = new SaveStore(platform.storage, platform.now());
     this.audio.muted = this.save.data.settings.muted;
@@ -84,9 +92,39 @@ export class Game {
     this.go(new LevelsScene(this, chapter));
   }
 
+  /** Plays a campaign level. */
   goPlay(index: number): void {
     const i = Math.max(0, Math.min(index, this.levels.length - 1));
-    this.go(new PlayScene(this, i));
+    const level = this.levels[i]!;
+    this.goPlaySession({
+      mode: 'campaign',
+      level,
+      startHp: 5,
+      title: `${i + 1}. ${level.name}`,
+      campaignIndex: i,
+      onStart: () => this.save.update((d) => (d.lastLevelId = level.id)),
+      onWin: (state, stars, ms) => {
+        const summary = this.recordWin(i, state, stars, ms);
+        return () => this.goResults(i, state, summary);
+      },
+      onBack: () => this.goLevels(),
+    });
+  }
+
+  goPlaySession(session: PlaySession): void {
+    this.go(new PlayScene(this, session));
+  }
+
+  goDaily(): void {
+    this.go(new DailyScene(this));
+  }
+
+  goDepths(): void {
+    this.go(new DepthsScene(this));
+  }
+
+  goFloor(summary: FloorSummary, run: Run): void {
+    this.go(new FloorScene(this, summary, run));
   }
 
   goResults(index: number, state: GameState, summary: WinSummary): void {

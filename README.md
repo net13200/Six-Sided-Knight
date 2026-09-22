@@ -3,7 +3,7 @@
 A mobile-first puzzle-dungeon game where you are a rolling die. The face on the side you roll toward is the one that acts: Sword attacks, Key opens doors, Coin opens chests, and so on.
 
 - **Rules:** [SPEC.md](SPEC.md) is the source of truth.
-- **Status:** milestone 3 of 6. Playable in the browser: 10 tutorial levels, saved progress and stars, a chapter map, settings, and on-device analytics with a hidden KPI panel.
+- **Status:** milestone 4 of 6. Campaign (10 tutorial levels), Daily Roll with streaks and sharing, endless Depths, saved progress, and on-device analytics with a hidden KPI panel.
 
 ## Play online
 
@@ -30,7 +30,8 @@ Controls: swipe or tap toward a tile (touch), arrow keys or WASD (keyboard). Z/U
 src/engine/    pure, deterministic simulation (no DOM): dice math, step(), registries, levels, undo, replays
 src/content/   faces/, tiles/, enemies/ — one definition module each, registered in register.ts
 src/levels/    campaign levels (data/*.txt) and their loader
-src/solver/    breadth-first solver: proves levels solvable, finds par
+src/solver/    solvers (BFS, IDA*) and the difficulty rater
+src/gen/       seeded level generator, its Web Worker, and the async level service
 src/game/      browser game: scenes, input, audio, loop; view/ holds rendering and effects
 src/meta/      save data (versioned, with migrations), progression, analytics, KPI maths
 src/platform/  host adapter interface (storage, share, visibility, ...) + browser implementation
@@ -53,7 +54,7 @@ tests/unit/    Vitest tests      tests/e2e/  Playwright tests
 npm run validate-levels
 npm run validate-levels -- examples/levels/demo.json
 
-# Solve levels: minimum moves, and whether each star is achievable
+# Solve levels: minimum moves, whether each star is achievable, difficulty score
 npm run solve                                   # all campaign levels
 npm run solve -- src/levels/data/c1-03.txt      # one level, with solutions
 npm run solve -- --write-par                    # set par = solver minimum in .txt files
@@ -64,6 +65,12 @@ npm run replay -- examples/levels/demo.json examples/replays/demo.replay.json
 npm run replay -- examples/levels/demo.json --inputs SSSEEE
 # Record the current result as the replay's expectations (golden test)
 npm run replay -- examples/levels/demo.json examples/replays/demo.replay.json --write-expect
+```
+
+```sh
+# Preview the generator
+npm run generate -- --seed 42 --band 30,50       # print one level
+npm run generate -- --sweep 20 --band 30,50      # in-band rate and timing over 20 seeds
 ```
 
 Every `*.replay.json` in `examples/replays` is checked by the test suite and must reproduce exactly the same result.
@@ -118,9 +125,15 @@ The version lives in `package.json` and is shown in the game as `v0.3.0 (commit)
 2. Add an entry to [CHANGELOG.md](CHANGELOG.md).
 3. Commit to `main` (this deploys automatically), then tag it: `git tag v0.4.0 && git push origin v0.4.0`.
 
+## Solver, difficulty and generator
+
+- **Solver** (`src/solver/solve.ts`): breadth-first search or IDA* over full game states, with a node budget. States are de-duplicated with compact keys: position, orientation, HP, enemies, and only the tiles that changed. IDA* uses the distance to the nearest exit as its heuristic (never an overestimate, so solutions stay optimal).
+- **Difficulty** (`src/solver/rate.ts`): a 0-100 score from the optimal solution length, how much breadth-first search has to explore, the enemy count, and how often 48 seeded "novice" playouts win. The tutorial rates about 7-60.
+- **Generator** (`src/gen/generate.ts`): builds candidate layouts with more walls, hazards and enemies for higher targets. It keeps only candidates the solver proves winnable at the given starting HP, and retries until the rating lands in the band. Property tests check the guarantee over many seeds.
+
 ## Save data
 
-Progress lives in `localStorage` under `ssk.save` as versioned JSON (`src/meta/save.ts`). To change the format:
+Progress lives in `localStorage` under `ssk.save` as versioned JSON (`src/meta/save.ts`; currently v2, which added Daily Roll and Depths). To change the format:
 
 1. Bump `SAVE_VERSION` and add the new shape.
 2. Add `migrations[oldVersion]`, which turns an old object into the new one.

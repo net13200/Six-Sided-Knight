@@ -1,6 +1,6 @@
 {
   "name": "six-sided-knight",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "A puzzle-dungeon game where you are a rolling die.",
   "type": "module",
@@ -14,6 +14,7 @@
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
     "validate-levels": "tsx tools/validate.ts",
     "solve": "tsx tools/solve.ts",
+    "generate": "tsx tools/generate.ts",
     "test:coverage": "vitest run --coverage",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

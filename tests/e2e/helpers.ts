@@ -97,3 +97,20 @@ export function trackErrors(page: Page): string[] {
   });
   return errors;
 }
+
+/** Solves whatever level is currently on screen (used for generated floors). */
+export async function solveCurrent(page: Page): Promise<Dir[]> {
+  const s = await gameState(page);
+  const r = solve(rules, s, { algorithm: 'idastar', maxNodes: 500_000 });
+  if (r.status !== 'solved') throw new Error('current level not solvable');
+  return [...r.path];
+}
+
+export const KEY = { N: 'ArrowUp', E: 'ArrowRight', S: 'ArrowDown', W: 'ArrowLeft' } as const;
+
+/** Waits until the play screen shows a fresh level, then solves and plays it. */
+export async function playCurrentLevel(page: Page): Promise<void> {
+  await expect.poll(() => scene(page), { timeout: 15_000 }).toBe('play');
+  await expect.poll(async () => (await gameState(page)).stats.moves).toBe(0);
+  for (const dir of await solveCurrent(page)) await page.keyboard.press(KEY[dir]);
+}

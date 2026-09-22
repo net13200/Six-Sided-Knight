@@ -1,15 +1,18 @@
 import type { Command } from '../input';
 
-export type SceneName = 'boot' | 'menu' | 'levels' | 'play' | 'results' | 'daily';
+export type SceneName =
+  'boot' | 'menu' | 'levels' | 'play' | 'results' | 'daily' | 'depths' | 'floor';
 
 /** Allowed transitions of the scene state machine. */
 export const TRANSITIONS: Readonly<Record<SceneName, readonly SceneName[]>> = {
   boot: ['menu', 'play'],
-  menu: ['levels', 'play', 'daily'],
+  menu: ['levels', 'play', 'daily', 'depths'],
   levels: ['menu', 'play'],
-  play: ['results', 'menu', 'levels', 'play'],
+  play: ['results', 'menu', 'levels', 'play', 'floor', 'daily', 'depths'],
   results: ['play', 'levels', 'menu'],
-  daily: ['menu', 'play', 'results'],
+  daily: ['menu', 'play'],
+  depths: ['menu', 'play', 'depths'],
+  floor: ['play', 'daily', 'depths', 'menu'],
 };
 
 export function canTransition(from: SceneName, to: SceneName): boolean {

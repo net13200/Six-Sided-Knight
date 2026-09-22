@@ -2,7 +2,7 @@
 
 Source of truth for game rules. If code and this file disagree, this file wins (or gets updated in the same commit).
 
-Spec version: 0.3 (milestone 3)
+Spec version: 0.4 (milestone 4)
 
 ## 1. Board
 
@@ -109,14 +109,24 @@ Enemy intent (next move or attack) is deterministic and shown on the board.
 
 ## 10. Daily Roll
 
-- Seeded by the UTC date; the same dungeon for everyone. A 3-floor run.
+- Seeded by the UTC date; the same dungeon for everyone. A 3-floor run with rising difficulty (rater bands 15-30, 25-42, 35-55).
+- HP carries between floors, +1 per floor (cap 5). Floors 2 and 3 are generated to be winnable when entered with 2 HP, the lowest possible arrival HP (a floor is left with at least 1 HP, then heals 1).
 - Unlimited undo and retries. The first completion of the day is recorded for the streak and the share text; later plays are practice.
-- Streak = consecutive UTC days with a completed daily. No streak freezes or other pressure mechanics.
-- Share: a text summary (moves, HP, stars) via Web Share or the clipboard.
+- Leaving mid-run saves progress; coming back resumes the same floor.
+- Streak = consecutive UTC days with a completed daily. It shows through the day after the last completion and drops to 0 once a day is missed. No streak freezes or other pressure mechanics.
+- Share: date, stars (out of 9), total moves, HP left, streak (if 2+), link. Via Web Share or the clipboard. No personal data.
 
 ## 11. Depths
 
-- An endless run of generated floors with rising difficulty. Personal best = deepest floor reached.
+- An endless run of generated floors. Difficulty band climbs 4 points per floor from 6-22, plateauing at 70-86.
+- Same HP rules as the Daily Roll; every floor is winnable when entered with 2 HP. Undo works as everywhere else.
+- A run lasts until the player ends it. Record: deepest floor cleared. A run in progress survives leaving the game.
+
+## 11a. Generated levels
+
+- Seeded: the same seed and parameters give the same level on every device.
+- Every generated level is proven solvable by the solver before it is used, and its par is the solver's minimum.
+- The generator retries until the difficulty rating lands in the requested band. If it can't, it uses the closest solvable candidate; it never uses an unsolvable one.
 
 ## 12. Engine invariants
 

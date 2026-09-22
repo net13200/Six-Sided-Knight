@@ -98,11 +98,8 @@ export function computeKpis(
   const levelsPerSession = [...sessionIds].map((s) => completesBySession.get(s) ?? 0);
 
   // ----- levels -----
+  // Campaign levels only: generated floors (daily/depths) are one-offs.
   const levelIds = [...levelOrder];
-  for (const e of events) {
-    const id = e.p.level;
-    if (typeof id === 'string' && !levelIds.includes(id)) levelIds.push(id);
-  }
   const levels: LevelKpi[] = levelIds.map((level) => {
     const of = (n: StoredEvent['n']) => events.filter((e) => e.n === n && e.p.level === level);
     const attempts = of('level_start').length + of('retry_used').length;

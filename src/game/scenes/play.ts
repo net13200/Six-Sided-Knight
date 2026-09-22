@@ -12,6 +12,7 @@ import {
   type LevelData,
 } from '../../engine';
 import type { Game } from '../game';
+import type { PlaySession } from '../session';
 import type { Command } from '../input';
 import { tapDirection } from '../input';
 import { computeStars } from '../stars';
@@ -41,10 +42,10 @@ export class PlayScene implements Scene {
 
   constructor(
     private readonly game: Game,
-    readonly index: number,
+    readonly session: PlaySession,
   ) {
-    this.level = game.levels[index]!;
-    this.history = newHistory(createState(game.rules, this.level));
+    this.level = session.level;
+    this.history = newHistory(createState(game.rules, this.level, { hp: session.startHp }));
     this.recorder = new ReplayRecorder(this.level.id);
     this.fx.reducedMotion = game.reducedMotion;
   }
@@ -53,13 +54,16 @@ export class PlayScene implements Scene {
     return this.history.state;
   }
 
+  /** Campaign position (for tests and debugging), or null for generated floors. */
+  get index(): number | null {
+    return this.session.campaignIndex;
+  }
+
   enter(ui: HTMLElement): void {
     this.ui = ui;
-    this.game.analytics.track('level_start', { level: this.level.id, mode: 'campaign' });
-    this.game.save.update((d) => {
-      d.lastLevelId = this.level.id;
-      d.stats.levelsStarted++;
-    });
+    this.game.analytics.track('level_start', { level: this.level.id, mode: this.session.mode });
+    this.game.save.update((d) => d.stats.levelsStarted++);
+    this.session.onStart?.();
     // 62x62 logical keeps buttons >= 44 CSS px even when letterboxed in landscape.
     const y = BAR_Y + 3;
     ui.append(
@@ -121,7 +125,7 @@ export class PlayScene implements Scene {
         this.hideOverlay();
         break;
       case 'back':
-        this.game.goLevels();
+        this.session.onBack();
         break;
       case 'confirm':
         break;
@@ -143,13 +147,12 @@ export class PlayScene implements Scene {
     if (result.state.status === 'won') {
       this.finishing = true;
       this.won = true;
-      const summary = this.game.recordWin(
-        this.index,
+      const next = this.session.onWin(
         result.state,
         computeStars(this.level, result.state),
         this.activeMs,
       );
-      this.fx.at(0.75, () => this.game.goResults(this.index, result.state, summary));
+      this.fx.at(0.75, next);
     } else if (result.state.status === 'lost') {
       this.game.analytics.track('level_fail', {
         level: this.level.id,
@@ -212,7 +215,7 @@ export class PlayScene implements Scene {
   render(ctx: CanvasRenderingContext2D): void {
     const s = this.state;
     const v = this.fx.compute();
-    drawHud(ctx, this.index, this.level, s);
+    drawHud(ctx, this.session.title, this.level, s);
     drawBoard(ctx, this.game.rules, s, v, this.fx);
     drawCompass(ctx, s.player.die, 170, BAR_Y + 34);
 
@@ -242,7 +245,7 @@ export class PlayScene implements Scene {
 
 function drawHud(
   ctx: CanvasRenderingContext2D,
-  index: number,
+  title: string,
   level: LevelData,
   s: GameState,
 ): void {
@@ -252,7 +255,7 @@ function drawHud(
   ctx.textAlign = 'left';
   ctx.fillStyle = C.text;
   ctx.font = 'bold 15px system-ui, sans-serif';
-  ctx.fillText(`${index + 1}. ${level.name}`, 12, 16);
+  ctx.fillText(title, 12, 16);
   ctx.font = '12px system-ui, sans-serif';
   ctx.fillStyle = C.textDim;
   const par = level.par !== undefined ? ` / par ${level.par}` : '';

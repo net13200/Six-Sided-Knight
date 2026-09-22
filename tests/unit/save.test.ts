@@ -87,6 +87,48 @@ describe('save loading', () => {
     }
   });
 
+  it('migrates a 0.3.0 (v1) save to v2 without losing progress', () => {
+    const storage = new MemoryStorage();
+    const v1 = {
+      version: 1,
+      createdAt: 123,
+      settings: { muted: true, analyticsOptOut: true },
+      levels: { 'c1-01': { stars: 3, bestMoves: 5, completions: 2, bestTimeMs: 4000 } },
+      lastLevelId: 'c1-02',
+      stats: { ...freshSave(0).stats, levelsCompleted: 2 },
+    };
+    storage.set(SAVE_KEY, JSON.stringify(v1));
+    const store = new SaveStore(storage, NOW);
+    expect(store.outcome).toBe('migrated');
+    expect(store.data.version).toBe(2);
+    expect(store.data.levels).toEqual(v1.levels);
+    expect(store.data.settings).toEqual(v1.settings);
+    expect(store.data.lastLevelId).toBe('c1-02');
+    expect(store.data.createdAt).toBe(123);
+    expect(store.data.daily).toEqual({
+      lastDate: null,
+      streak: 0,
+      bestStreak: 0,
+      results: {},
+      inProgress: null,
+    });
+    expect(store.data.depths).toEqual({ bestFloor: 0, runs: 0, inProgress: null });
+    expect(JSON.parse(storage.get(SAVE_KEY)!).version).toBe(2);
+  });
+
+  it('drops malformed runs in progress', () => {
+    const storage = new MemoryStorage();
+    storage.set(
+      SAVE_KEY,
+      JSON.stringify({
+        ...freshSave(0),
+        depths: { bestFloor: 4, runs: 2, inProgress: { floor: 3 } },
+      }),
+    );
+    const { save } = loadSave(storage, NOW);
+    expect(save.depths).toEqual({ bestFloor: 4, runs: 2, inProgress: null });
+  });
+
   it('reports failed writes instead of throwing', () => {
     const storage = new MemoryStorage();
     const store = new SaveStore(storage, NOW);

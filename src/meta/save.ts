@@ -10,7 +10,7 @@
 import type { KeyValueStorage } from '../platform/platform';
 
 export const SAVE_KEY = 'ssk.save';
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 /** Pre-save-system settings (milestone 2). Migrated into save v1. */
 export const LEGACY_SETTINGS_KEY = 'ssk.settings.v1';
 
@@ -52,11 +52,54 @@ export interface SaveV1 {
   stats: LifetimeStats;
 }
 
-export type SaveData = SaveV1;
+/** A Daily Roll or Depths run in progress, so leaving and coming back resumes it. */
+export interface RunProgress {
+  /** Daily: the UTC date. Depths: the run seed. */
+  key: string;
+  floor: number;
+  hp: number;
+  moves: number;
+  stars: number;
+}
+
+export interface DailyState {
+  /** Last UTC date with a counted completion. */
+  lastDate: string | null;
+  streak: number;
+  bestStreak: number;
+  /** First completion per date (bounded history). */
+  results: Record<string, { moves: number; hp: number; stars: number }>;
+  inProgress: RunProgress | null;
+}
+
+export interface DepthsState {
+  /** Deepest floor cleared. */
+  bestFloor: number;
+  runs: number;
+  inProgress: RunProgress | null;
+}
+
+export interface SaveV2 extends Omit<SaveV1, 'version'> {
+  version: 2;
+  daily: DailyState;
+  depths: DepthsState;
+}
+
+export type SaveData = SaveV2;
+
+function freshDaily(): DailyState {
+  return { lastDate: null, streak: 0, bestStreak: 0, results: {}, inProgress: null };
+}
+
+function freshDepths(): DepthsState {
+  return { bestFloor: 0, runs: 0, inProgress: null };
+}
 
 export function freshSave(now: number): SaveData {
   return {
-    version: 1,
+    version: 2,
+    daily: freshDaily(),
+    depths: freshDepths(),
     createdAt: now,
     settings: { muted: false, analyticsOptOut: false },
     levels: {},
@@ -83,10 +126,14 @@ type Json = Record<string, unknown>;
  */
 const migrations: Record<number, (old: Json, ctx: { now: number; legacy: Json | null }) => Json> = {
   0: (_old, { now, legacy }) => {
-    const save = freshSave(now);
-    if (legacy && legacy.muted === true) save.settings.muted = true;
-    return save as unknown as Json;
+    const save = freshSave(now) as unknown as Json;
+    if (legacy && legacy.muted === true) (save.settings as Settings).muted = true;
+    // Produce a v1 object; the 1 -> 2 step adds the rest.
+    const { daily: _d, depths: _p, ...v1 } = save;
+    return { ...v1, version: 1 };
   },
+  // 0.4.0: Daily Roll and Depths.
+  1: (old) => ({ ...old, version: 2, daily: freshDaily(), depths: freshDepths() }),
 };
 
 export interface LoadResult {
@@ -112,7 +159,7 @@ export function migrate(raw: Json, now: number, legacy: Json | null = null): Jso
 /** Fills in any missing fields with defaults and clamps obviously bad values. */
 export function normalize(data: Json, now: number): SaveData {
   const base = freshSave(now);
-  const d = data as Partial<SaveV1>;
+  const d = data as Partial<SaveV2>;
   const levels: Record<string, LevelRecord> = {};
   for (const [id, rec] of Object.entries(d.levels ?? {})) {
     if (!rec || typeof rec !== 'object') continue;
@@ -123,13 +170,41 @@ export function normalize(data: Json, now: number): SaveData {
       bestTimeMs: clampInt(rec.bestTimeMs, 0, 1e12),
     };
   }
+  const daily = { ...base.daily, ...(d.daily ?? {}) };
+  const depths = { ...base.depths, ...(d.depths ?? {}) };
   return {
-    version: 1,
+    version: 2,
+    daily: {
+      ...daily,
+      streak: clampInt(daily.streak, 0, 1e6),
+      bestStreak: clampInt(daily.bestStreak, 0, 1e6),
+      results: typeof daily.results === 'object' && daily.results ? daily.results : {},
+      inProgress: normalizeRun(daily.inProgress),
+    },
+    depths: {
+      ...depths,
+      bestFloor: clampInt(depths.bestFloor, 0, 1e6),
+      runs: clampInt(depths.runs, 0, 1e9),
+      inProgress: normalizeRun(depths.inProgress),
+    },
     createdAt: typeof d.createdAt === 'number' ? d.createdAt : base.createdAt,
     settings: { ...base.settings, ...(d.settings ?? {}) },
     levels,
     lastLevelId: typeof d.lastLevelId === 'string' ? d.lastLevelId : null,
     stats: { ...base.stats, ...(d.stats ?? {}) },
+  };
+}
+
+function normalizeRun(r: unknown): RunProgress | null {
+  if (!r || typeof r !== 'object') return null;
+  const x = r as Partial<RunProgress>;
+  if (typeof x.key !== 'string') return null;
+  return {
+    key: x.key,
+    floor: clampInt(x.floor, 1, 1e6),
+    hp: clampInt(x.hp, 1, 99),
+    moves: clampInt(x.moves, 0, 1e9),
+    stars: clampInt(x.stars, 0, 1e9),
   };
 }
 

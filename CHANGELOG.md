@@ -2,6 +2,15 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.4.0 — Daily Roll and Depths
+
+- **Daily Roll:** a 3-floor dungeon generated from the UTC date, the same for everyone. HP carries over (+1 per floor). Streaks, and a share button that copies a spoiler-free result.
+- **Depths:** endless generated floors that get harder as you go down, with a best-floor record. Runs survive leaving the game.
+- Level generator: seeded, and every level is proven solvable by the solver (even when entered with 2 HP) and rated into a target difficulty band. Runs in a background worker and prefetches the next floor.
+- Solver: IDA* alongside breadth-first search, compact state keys, 10-200x faster on the campaign.
+- Difficulty rater (0-100) from solution length, search breadth, enemies and simulated novice play.
+- Save format v2 (older saves migrate automatically).
+
 ## 0.3.0 — Progress and insights
 
 - Progress is saved: stars, best moves and times per level, lifetime stats. Versioned save format with migrations.
