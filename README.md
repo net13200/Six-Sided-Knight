@@ -5,6 +5,12 @@ A mobile-first puzzle-dungeon game where you are a rolling die. The face on the 
 - **Rules:** [SPEC.md](SPEC.md) is the source of truth.
 - **Status:** milestone 2 of 6. Playable in the browser: 10 tutorial levels, swipe/tap/keyboard, sound, undo/retry, stars.
 
+## Play online
+
+Once deployed: **https://net13200.github.io/Six-Sided-Knight/**
+
+Deployment is automatic on every push to `main` (`.github/workflows/pages.yml`). One-time setup in the repository: **Settings → Pages → Build and deployment → Source: GitHub Actions**. CI (`.github/workflows/ci.yml`) runs all checks and browser tests on every push.
+
 ## Quick start
 
 ```sh
