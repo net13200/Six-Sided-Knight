@@ -1,0 +1,14 @@
+id: c1-09
+name: Slow Slime
+par: 11
+hint: Slimes only move every other turn
+---
+########
+#......#
+#@..s..#
+#......#
+###.####
+#......#
+#.s..s.#
+#.....>#
+########

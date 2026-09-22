@@ -1,0 +1,14 @@
+id: c1-02
+name: Leading Edge
+par: 5
+hint: The side you roll into strikes
+---
+########
+########
+########
+#@k...>#
+########
+########
+########
+########
+########

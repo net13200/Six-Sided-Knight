@@ -1,0 +1,14 @@
+id: c1-10
+name: Crowd Control
+par: 10
+hint: Bombs hit the neighbours too
+---
+########
+###>####
+###.####
+##kkk###
+###.####
+#......#
+#......#
+#..@...#
+########
