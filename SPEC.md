@@ -2,7 +2,7 @@
 
 Source of truth for game rules. If code and this file disagree, this file wins (or gets updated in the same commit).
 
-Spec version: 0.1 (pre-milestone 1)
+Spec version: 0.2 (milestone 1)
 
 ## 1. Board
 
@@ -16,11 +16,11 @@ Spec version: 0.1 (pre-milestone 1)
 - Orientation: `{ top, bottom, north, south, east, west }`.
 - Start orientation: top=Shield, bottom=Heart, north=Bomb, south=Key, east=Sword, west=Coin.
 - Roll transforms (new ← old):
-  - East:  `e=t, b=e, w=b, t=w` (others unchanged)
-  - West:  `w=t, b=w, e=b, t=e`
+  - East: `e=t, b=e, w=b, t=w` (others unchanged)
+  - West: `w=t, b=w, e=b, t=e`
   - North: `n=t, b=n, s=b, t=s`
   - South: `s=t, b=s, n=b, t=n`
-- **Leading face**: the face on the side of the direction of travel, *before* the roll (moving east → current `east` face).
+- **Leading face**: the face on the side of the direction of travel, _before_ the roll (moving east → current `east` face).
 - Invariants (tested): all 24 orientations are reachable; rolling in a direction then the opposite direction restores the original orientation; opposite faces stay opposite.
 
 ## 3. Input and turns
@@ -38,12 +38,12 @@ Spec version: 0.1 (pre-milestone 1)
 
 Moving into an enemy attacks it with the leading face instead of moving.
 
-| Leading face | Damage |
-|---|---|
-| Sword | 3 |
-| Bomb | 2 to target, plus 1 splash to each enemy orthogonally adjacent to the target (never to the player) |
-| Shield | 1 |
-| Key / Coin / Heart | 0 ("clunk") — still a valid action; consumes the turn |
+| Leading face       | Damage                                                                                             |
+| ------------------ | -------------------------------------------------------------------------------------------------- |
+| Sword              | 3                                                                                                  |
+| Bomb               | 2 to target, plus 1 splash to each enemy orthogonally adjacent to the target (never to the player) |
+| Shield             | 1                                                                                                  |
+| Key / Coin / Heart | 0 ("clunk") — still a valid action; consumes the turn                                              |
 
 - If the target dies, the die rolls onto its tile (orientation changes, landing effects apply).
 - If the target survives, the die stays put and its orientation does not change.
@@ -51,16 +51,16 @@ Moving into an enemy attacks it with the leading face instead of moving.
 
 ## 5. Tiles
 
-| Tile | Rule |
-|---|---|
-| Floor | Nothing. |
-| Wall | Impassable. Bump = invalid (no turn). |
-| Spikes | On landing: player takes 1 damage unless the **bottom** face is Shield. Enemies cannot enter. |
-| Healing pool | On landing with **bottom** = Heart and HP below max: heal 2 (cap at max), pool dries → floor. Otherwise nothing, pool stays. |
-| Locked door | Key leading into it: door opens → floor and the die rolls onto it in the same turn. Any other face: invalid bump. Enemies cannot enter. |
-| Chest | Coin leading into it: +30 gold, chest → floor and the die rolls onto it in the same turn. Any other face: invalid bump. Enemies cannot enter. |
-| Gem | On landing: +10 gold, gem → floor. |
-| Exit stairs | On landing: level complete. |
+| Tile         | Rule                                                                                                                                          |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Floor        | Nothing.                                                                                                                                      |
+| Wall         | Impassable. Bump = invalid (no turn).                                                                                                         |
+| Spikes       | On landing: player takes 1 damage unless the **bottom** face is Shield. Enemies cannot enter.                                                 |
+| Healing pool | On landing with **bottom** = Heart and HP below max: heal 2 (cap at max), pool dries → floor. Otherwise nothing, pool stays.                  |
+| Locked door  | Key leading into it: door opens → floor and the die rolls onto it in the same turn. Any other face: invalid bump. Enemies cannot enter.       |
+| Chest        | Coin leading into it: +30 gold, chest → floor and the die rolls onto it in the same turn. Any other face: invalid bump. Enemies cannot enter. |
+| Gem          | On landing: +10 gold, gem → floor.                                                                                                            |
+| Exit stairs  | On landing: level complete.                                                                                                                   |
 
 Enemies may stand on floor, pool, gem, and exit tiles but never trigger or collect them.
 
@@ -70,12 +70,13 @@ Enemies may stand on floor, pool, gem, and exit tiles but never trigger or colle
 
 ## 7. Enemies
 
-| Enemy | HP | Cadence |
-|---|---|---|
-| Skeleton | 2 | Acts every enemy phase. |
-| Slime | 3 | Acts every other enemy phase. Own counter; by default acts on the phases after player turns 2, 4, 6, … A level may mark a slime `ready` (acts on turn 1, 3, 5, …). A visible indicator shows when it will act next. |
+| Enemy    | HP  | Cadence                                                                                                                                                                                                             |
+| -------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Skeleton | 2   | Acts every enemy phase.                                                                                                                                                                                             |
+| Slime    | 3   | Acts every other enemy phase. Own counter; by default acts on the phases after player turns 2, 4, 6, … A level may mark a slime `ready` (acts on turn 1, 3, 5, …). A visible indicator shows when it will act next. |
 
 Enemy action:
+
 1. If orthogonally adjacent to the player: attack for 1 (0 if Shield on top).
 2. Otherwise step to the orthogonal neighbor with the smallest BFS distance to the player. BFS runs over tiles enemies may enter (other enemies are ignored by the BFS so they don't freeze, but an enemy cannot step onto an occupied tile). Ties are broken in the order N, E, S, W. If no neighbor is strictly closer, it stays.
 
@@ -119,6 +120,10 @@ Enemy intent (next move or attack) is deterministic and shown on the board.
 - Analytics: no personal data, with a clear opt-out.
 - All art and audio are procedural and original.
 
-## 14. Proposed fun additions (pending approval)
+## 14. Roadmap (not in scope yet — "start simple, upgrade later")
 
-See the plan discussion. When one is approved it moves into the numbered sections above.
+The engine is built so these can be added without touching the turn logic:
+
+- **More dice: d4, d8, d10.** A die shape is data (`DieShapeDef` in `src/engine/dice.ts`): its slots, which slot is top/bottom, which slot leads in each direction, and a permutation per roll. Each shape is compiled into an orientation table. Only the d6 exists today. How non-cube dice "roll" on a square grid is a design decision still to be made.
+- **Face upgrades and swaps.** The die's faces are a `loadout` (faces by home slot) separate from its orientation, so swapping or upgrading a face means changing the loadout. Upgraded faces are simply new face definitions (e.g. "Sword+", 4 damage).
+- **Deferred fun ideas**, to revisit once the core loop is fun on its own: enemy intent arrows, hold-to-preview a move, hints from the solver, combos, die personality, Wordle-style share, new mechanics per chapter (ice, plates, teleporters), chapter bosses, daily rule twists, watching the par solution, a 3-star celebration.

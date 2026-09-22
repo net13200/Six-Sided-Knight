@@ -1,0 +1,14 @@
+id: demo-text
+name: Text Format Demo
+par: 4
+start: top=Shield east=Sword
+---
+########
+#@k...>#
+#......#
+#......#
+#......#
+#......#
+#......#
+#......#
+########

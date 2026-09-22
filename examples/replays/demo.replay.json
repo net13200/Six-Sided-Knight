@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "level": "demo",
+  "inputs": "SSSEuWEEESSEES",
+  "expect": {
+    "status": "won",
+    "moves": 11,
+    "hp": 3,
+    "gold": 0,
+    "hash": "f1bd0a66"
+  }
+}
