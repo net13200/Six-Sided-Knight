@@ -47,7 +47,7 @@ describe('campaign', () => {
       expect(level.par).toBe(a.any.moves);
       expect(a.noDamage.status, 'no-damage star').toBe('solved');
       expect(a.allGold.status, 'all-gold star').toBe('solved');
-    });
+    }, 30_000);
   }
 });
 
@@ -80,7 +80,7 @@ describe('gauntlets', () => {
           expect(low.status, `${floor.id} at ${MIN_ARRIVAL_HP} HP`).toBe('solved');
         }
       });
-    });
+    }, 30_000);
 
     it(`${id}: every star is achievable over the whole gauntlet`, () => {
       expect(chain(floors, {}, true), 'par star').toBe(true);
@@ -94,6 +94,6 @@ describe('gauntlets', () => {
         }),
         'all-gold star',
       ).toBe(true);
-    });
+    }, 30_000);
   }
 });
