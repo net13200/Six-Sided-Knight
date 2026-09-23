@@ -35,3 +35,20 @@ test.describe('installable app', () => {
     await context.setOffline(false);
   });
 });
+
+test.describe('SugiGames splash', () => {
+  test('plays before the title screen, then gets out of the way', async ({ page }) => {
+    await page.goto('/?splash');
+    await expect(page.getByTestId('splash')).toBeVisible();
+    await expect(page.getByTestId('splash')).toHaveCount(0, { timeout: 8000 });
+    await expect.poll(() => scene(page)).toBe('menu');
+    await page.getByTestId('play').click();
+    await expect.poll(() => scene(page)).toBe('play');
+  });
+
+  test('a tap skips it', async ({ page }) => {
+    await page.goto('/?splash');
+    await page.getByTestId('splash').click();
+    await expect(page.getByTestId('splash')).toHaveCount(0, { timeout: 2500 });
+  });
+});

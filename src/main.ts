@@ -4,10 +4,14 @@ import { Game } from './game/game';
 import { bindInput } from './game/input';
 import { Loop } from './game/loop';
 import { Stage } from './game/view/stage';
+import { runSplash } from './splash';
 import { createBrowserPlatform } from './platform/browser';
 import { registerServiceWorker } from './platform/pwa';
 import { VERSION_LABEL } from './version';
 import './style.css';
+
+// The SugiGames splash plays over the game while it starts up.
+runSplash();
 
 const params = new URLSearchParams(location.search);
 const debug = params.has('debug') || location.hash === '#debug';

@@ -2,6 +2,10 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.5.3 — SugiGames splash
+
+- The SugiGames animation (the 杉 kanji painted stroke by stroke, then the wordmark) plays while the game starts, then fades to the title screen. Tap to skip. Ported from the SugiGames repo; its Baloo 2 font is bundled (only the letters it needs, 1.7 KB, SIL Open Font License), so it works offline and makes no third-party requests.
+
 ## 0.5.2 — A real app on your home screen
 
 - Web app manifest and icons (drawn with the game's own art): "Add to home screen" / "Install app" now opens the game full-screen like an app, with its own icon and splash colour, instead of a browser tab.

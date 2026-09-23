@@ -15,6 +15,10 @@ Deployment is automatic on every push to `main` (`.github/workflows/pages.yml`).
 
 Open the site in Chrome (Android) and choose **Install app** / **Add to home screen**, or in Safari (iOS) **Share → Add to Home Screen**. It opens full-screen with its own icon and works offline (`public/manifest.webmanifest`, `public/sw.js`). The icons in `public/icons/` are rendered from `mockups/icon.html` with the game's art: `npx vite --port 5199 & node tools/make-icons.mjs`.
 
+### Splash
+
+The SugiGames splash (from the [SugiGames](https://github.com/net13200/SugiGames) repo) is inline in `index.html` so it shows before the game loads; `src/splash.ts` animates it. Automated browsers skip it unless the URL has `?splash`. The Baloo 2 font subset in `public/fonts/` is under the SIL Open Font License (`public/fonts/Baloo2-OFL.txt`).
+
 ## Quick start
 
 ```sh

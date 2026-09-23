@@ -19,8 +19,107 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Six Sided Knight" />
     <title>Six Sided Knight</title>
+    <!-- SugiGames splash (from the SugiGames repo). Inline so it shows before the game loads. -->
+    <style>
+      @font-face {
+        font-family: 'Baloo 2';
+        font-weight: 800;
+        font-display: block;
+        src: url('./fonts/baloo2-800-sugigames.woff2') format('woff2');
+      }
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        background: linear-gradient(160deg, #fef6e4 0%, #e7f6f2 100%);
+        cursor: pointer;
+        transition: opacity 0.5s ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #splash.is-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #kanji-svg {
+        filter: drop-shadow(0 6px 14px rgba(90, 60, 130, 0.18));
+      }
+      #kanji-svg .kanji-stroke {
+        stroke-dasharray: 200;
+        stroke-dashoffset: 200;
+      }
+      #brush-tip {
+        filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.95));
+      }
+      #splash-word {
+        font-family: 'Baloo 2', 'Comic Sans MS', system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1.6rem;
+        letter-spacing: 0.02em;
+        opacity: 0;
+        transform: translateY(6px);
+        transition:
+          opacity 0.5s ease,
+          transform 0.5s ease;
+      }
+      #splash-word.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      #splash .word-sugi {
+        color: #8a5a44;
+      }
+      #splash .word-games {
+        color: #2fae64;
+      }
+    </style>
   </head>
   <body>
+    <div id="splash" role="status" aria-label="SugiGames is loading" data-testid="splash">
+      <svg id="kanji-svg" viewBox="0 0 100 100" width="160" height="160" aria-hidden="true">
+        <defs>
+          <linearGradient id="trunkGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#b07a50" />
+            <stop offset="100%" stop-color="#7c4e30" />
+          </linearGradient>
+          <linearGradient id="leafGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#8de89c" />
+            <stop offset="100%" stop-color="#2fae64" />
+          </linearGradient>
+        </defs>
+        <g
+          fill="none"
+          stroke="url(#trunkGradient)"
+          stroke-width="7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path class="kanji-stroke" d="M 14 34 C 24 33, 36 33.5, 46 34.5" />
+          <path class="kanji-stroke" d="M 30 12 C 29.5 32, 30 55, 30 88" />
+          <path class="kanji-stroke" d="M 30 42 C 25 50, 20 58, 16 66" />
+          <path class="kanji-stroke" d="M 30 42 C 35 50, 40 58, 44 66" />
+        </g>
+        <g
+          fill="none"
+          stroke="url(#leafGradient)"
+          stroke-width="5.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path class="kanji-stroke" d="M 76 14 C 68 20, 62 26, 58 32" />
+          <path class="kanji-stroke" d="M 86 40 C 76 47, 68 54, 62 60" />
+          <path class="kanji-stroke" d="M 96 68 C 84 76, 74 82, 66 90" />
+        </g>
+        <circle id="brush-tip" r="4.2" fill="#ffffff" opacity="0" />
+      </svg>
+      <div id="splash-word">
+        <span class="word-sugi">Sugi</span><span class="word-games">Games</span>
+      </div>
+    </div>
     <div id="app"></div>
     <noscript>Six Sided Knight needs JavaScript to run.</noscript>
     <script type="module" src="/src/main.ts"></script>
