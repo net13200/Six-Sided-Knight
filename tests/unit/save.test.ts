@@ -129,6 +129,17 @@ describe('save loading', () => {
     expect(save.depths).toEqual({ bestFloor: 4, runs: 2, inProgress: null });
   });
 
+  it('keeps one-time hint flags and drops junk', () => {
+    const storage = new MemoryStorage();
+    storage.set(
+      SAVE_KEY,
+      JSON.stringify({ ...freshSave(0), hints: { inspect: true, bad: 'yes' } }),
+    );
+    expect(loadSave(storage, NOW).save.hints).toEqual({ inspect: true });
+    storage.set(SAVE_KEY, JSON.stringify({ ...freshSave(0), hints: undefined }));
+    expect(loadSave(storage, NOW).save.hints).toEqual({});
+  });
+
   it('reports failed writes instead of throwing', () => {
     const storage = new MemoryStorage();
     const store = new SaveStore(storage, NOW);

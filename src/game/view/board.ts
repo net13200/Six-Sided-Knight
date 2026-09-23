@@ -1,24 +1,10 @@
 /** Draws the board, entities and effects from a GameState plus event-driven visuals. */
-import { faceInSlot, getShape, type DieState, type GameState, type Rules } from '../../engine';
-import { drawBadge, drawDieBody, drawEnemy, drawFace, drawTile } from './art';
+import type { Dir, GameState, Rules } from '../../engine';
+import { drawEnemy, drawTile } from './art';
+import { drawDieCube } from './cube';
 import type { Fx, Visuals } from './fx';
 import { BOARD_X, BOARD_Y, TILE, tileCenter } from './layout';
-import { C } from './palette';
-
-const SIDE_SLOTS = [
-  ['north', 0, -1],
-  ['east', 1, 0],
-  ['south', 0, 1],
-  ['west', -1, 0],
-] as const;
-
-export function facesOf(die: DieState, orient = die.orient): Record<string, string> {
-  const shape = getShape(die.shape);
-  const d = { ...die, orient };
-  const out: Record<string, string> = {};
-  shape.def.slots.forEach((name, slot) => (out[name] = faceInSlot(d, slot)));
-  return out;
-}
+import { drawOutcomeChips, type Outcome } from './outcome';
 
 /** A wall with no non-wall tile around it (8-neighbourhood) is drawn as empty darkness. */
 function isVoid(state: GameState, x: number, y: number): boolean {
@@ -41,6 +27,7 @@ export function drawBoard(
   state: GameState,
   v: Visuals,
   fx: Fx,
+  outcomes?: ReadonlyArray<readonly [Dir, Outcome]>,
 ): void {
   const t = fx.time;
   ctx.save();
@@ -99,29 +86,19 @@ export function drawBoard(
     ctx.restore();
   }
 
-  // The die
+  // The die, as a cube seen from above, with what each move would do.
   const orient = v.player.orient ?? p.die.orient;
-  const faces = facesOf(p.die, orient);
-  const w = 32 * v.player.sx;
-  const h = 32 * v.player.sy;
-  drawDieBody(ctx, px, py, w, h);
-  drawFace(ctx, faces.top ?? '', px, py - 1, 21 * Math.min(v.player.sx, v.player.sy));
-  if (v.player.flash > 0) {
-    ctx.save();
-    ctx.globalAlpha = v.player.flash * 0.6;
-    ctx.fillStyle = C.hurt;
-    ctx.beginPath();
-    ctx.roundRect(px - w / 2, py - h / 2, w, h, 6);
-    ctx.fill();
-    ctx.restore();
-  }
-  // Leading-face badges: which face hits in each direction.
   const moving = v.player.orient !== null;
-  if (!moving && state.status === 'playing') {
-    for (const [slot, dx, dy] of SIDE_SLOTS) {
-      drawBadge(ctx, faces[slot] ?? '', px + dx * 19, py + dy * 19, 6.5);
-    }
-  }
+  drawDieCube(
+    ctx,
+    p.die,
+    orient,
+    px,
+    py,
+    { sx: v.player.sx, sy: v.player.sy, flash: v.player.flash },
+    !moving,
+  );
+  if (outcomes && !moving && state.status === 'playing') drawOutcomeChips(ctx, outcomes, px, py);
 
   fx.drawParticles(ctx);
   fx.drawFloaters(ctx);
@@ -136,18 +113,4 @@ export function drawBoard(
   }
 }
 
-/** The "compass": top face in the middle, the leading face for each direction around it. */
-export function drawCompass(
-  ctx: CanvasRenderingContext2D,
-  die: DieState,
-  cx: number,
-  cy: number,
-): void {
-  const faces = facesOf(die);
-  const gap = 23;
-  drawDieBody(ctx, cx, cy, 24, 24);
-  drawFace(ctx, faces.top ?? '', cx, cy - 1, 16);
-  for (const [slot, dx, dy] of SIDE_SLOTS) {
-    drawBadge(ctx, faces[slot] ?? '', cx + dx * gap, cy + dy * gap, 10);
-  }
-}
+export { drawCompass, facesOf } from './cube';

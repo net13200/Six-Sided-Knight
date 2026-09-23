@@ -83,6 +83,8 @@ export interface SaveV2 extends Omit<SaveV1, 'version'> {
   version: 2;
   daily: DailyState;
   depths: DepthsState;
+  /** One-time hints already shown (added in 0.4.1; missing = none shown). */
+  hints: Record<string, boolean>;
 }
 
 export type SaveData = SaveV2;
@@ -100,6 +102,7 @@ export function freshSave(now: number): SaveData {
     version: 2,
     daily: freshDaily(),
     depths: freshDepths(),
+    hints: {},
     createdAt: now,
     settings: { muted: false, analyticsOptOut: false },
     levels: {},
@@ -129,7 +132,7 @@ const migrations: Record<number, (old: Json, ctx: { now: number; legacy: Json | 
     const save = freshSave(now) as unknown as Json;
     if (legacy && legacy.muted === true) (save.settings as Settings).muted = true;
     // Produce a v1 object; the 1 -> 2 step adds the rest.
-    const { daily: _d, depths: _p, ...v1 } = save;
+    const { daily: _d, depths: _p, hints: _h, ...v1 } = save;
     return { ...v1, version: 1 };
   },
   // 0.4.0: Daily Roll and Depths.
@@ -172,8 +175,13 @@ export function normalize(data: Json, now: number): SaveData {
   }
   const daily = { ...base.daily, ...(d.daily ?? {}) };
   const depths = { ...base.depths, ...(d.depths ?? {}) };
+  const hints: Record<string, boolean> = {};
+  if (d.hints && typeof d.hints === 'object') {
+    for (const [k, v] of Object.entries(d.hints)) if (v === true) hints[k] = true;
+  }
   return {
     version: 2,
+    hints,
     daily: {
       ...daily,
       streak: clampInt(daily.streak, 0, 1e6),

@@ -41,6 +41,7 @@ describe('event schema', () => {
         'streak_length',
         'share_clicked',
         'mode_selected',
+        'inspect_opened',
       ].sort(),
     );
   });

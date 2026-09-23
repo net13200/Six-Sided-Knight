@@ -22,7 +22,7 @@ npm run check            # typecheck + lint + format check + unit tests
 npm run build            # production build in dist/ (static; works from any path)
 ```
 
-Controls: swipe or tap toward a tile (touch), arrow keys or WASD (keyboard). Z/U/Backspace undo, R retry, M mute, Esc menu.
+Controls: swipe or tap toward a tile (touch), arrow keys or WASD (keyboard). Z/U/Backspace undo, R retry, M mute, Esc menu. Tap the die or the compass (or press I) to inspect the die in 3D and preview rolls.
 
 ## Layout
 

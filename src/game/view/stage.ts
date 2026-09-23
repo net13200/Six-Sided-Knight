@@ -48,6 +48,11 @@ export class Stage {
     this.canvas.height = Math.round(LOGICAL_H * this.scale * this.dpr);
   }
 
+  /** Device pixels per logical pixel (for extra canvases that must stay crisp). */
+  get pixelRatio(): number {
+    return this.scale * this.dpr;
+  }
+
   /** Prepares the context so drawing uses logical coordinates. */
   beginFrame(): CanvasRenderingContext2D {
     const k = this.scale * this.dpr;

@@ -1,5 +1,6 @@
 /** The play screen: HUD, board, compass, and Undo / Retry / Menu / Sound buttons. */
 import {
+  DIRS,
   ReplayRecorder,
   createState,
   newHistory,
@@ -20,10 +21,12 @@ import { el, iconButton, place } from '../ui';
 import { animateBump, animateTurn } from '../view/animate';
 import { drawFace } from '../view/art';
 import { drawBoard, drawCompass } from '../view/board';
+import { predictOutcome, type Outcome } from '../view/outcome';
 import { Fx } from '../view/fx';
 import { BAR_Y, BOARD_X, BOARD_Y, TILE, tileAt } from '../view/layout';
 import { C } from '../view/palette';
 import { muteButton } from './common';
+import { InspectView } from './inspect';
 import type { Scene } from './scene';
 
 export class PlayScene implements Scene {
@@ -39,6 +42,9 @@ export class PlayScene implements Scene {
   private activeMs = 0;
   private flushedMs = 0;
   private won = false;
+  private inspect: InspectView | null = null;
+  /** Move outcomes for the current state (recomputed when the state changes). */
+  private outcomes: { state: GameState; list: Array<readonly [Dir, Outcome]> } | null = null;
 
   constructor(
     private readonly game: Game,
@@ -89,11 +95,41 @@ export class PlayScene implements Scene {
         62,
       ),
       place(muteButton(this.game), 272, y, 64, 62),
+      // The compass is drawn on the canvas; this invisible button makes it tappable.
+      place(
+        el('button', {
+          className: 'compass-btn',
+          testId: 'compass',
+          label: 'Inspect your die',
+          onClick: () => this.openInspect(),
+        }),
+        138,
+        y,
+        64,
+        62,
+      ),
     );
   }
 
+  private openInspect(): void {
+    if (this.inspect || !this.ui || this.finishing) return;
+    this.fx.finishAll();
+    this.inspect = new InspectView(this.game, this.state, () => {
+      this.inspect = null;
+    });
+    this.inspect.open(this.ui);
+    if (!this.game.save.data.hints.inspect) this.game.save.update((d) => (d.hints.inspect = true));
+  }
+
   command(cmd: Command): void {
+    if (this.inspect) {
+      this.inspect.command(cmd);
+      return;
+    }
     switch (cmd.type) {
+      case 'inspect':
+        this.openInspect();
+        break;
       case 'move':
         this.move(cmd.dir);
         break;
@@ -102,6 +138,7 @@ export class PlayScene implements Scene {
         if (!tile) return;
         const dir = tapDirection(this.state.player, tile);
         if (dir) this.move(dir);
+        else this.openInspect(); // tapping the die itself
         break;
       }
       case 'undo':
@@ -216,8 +253,28 @@ export class PlayScene implements Scene {
     const s = this.state;
     const v = this.fx.compute();
     drawHud(ctx, this.session.title, this.level, s);
-    drawBoard(ctx, this.game.rules, s, v, this.fx);
+    drawBoard(ctx, this.game.rules, s, v, this.fx, this.fx.busy ? undefined : this.moveOutcomes(s));
     drawCompass(ctx, s.player.die, 170, BAR_Y + 34);
+
+    // One-time hint for the inspect view, once the level hint has faded.
+    const levelHintShowing = this.level.hint !== undefined && s.stats.moves < 3;
+    if (!levelHintShowing && this.showInspectHint()) {
+      const text = 'Tap the die to inspect it';
+      ctx.save();
+      ctx.font = '600 11px system-ui, sans-serif';
+      const w = ctx.measureText(text).width + 18;
+      const pulse = this.game.reducedMotion ? 1 : 0.75 + 0.25 * Math.sin(this.fx.time * 4);
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = 'rgba(255,215,94,0.95)';
+      ctx.beginPath();
+      ctx.roundRect(170 - w / 2, BAR_Y - 22, w, 18, 9);
+      ctx.fill();
+      ctx.fillStyle = '#231a05';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 170, BAR_Y - 13);
+      ctx.restore();
+    }
 
     // One-line hint that fades once the player gets going.
     if (this.level.hint && s.stats.moves < 3) {
@@ -235,6 +292,23 @@ export class PlayScene implements Scene {
       ctx.fillText(this.level.hint, 170, BOARD_Y + 9 * TILE - 19);
       ctx.restore();
     }
+  }
+
+  private moveOutcomes(s: GameState): Array<readonly [Dir, Outcome]> {
+    if (this.outcomes?.state !== s) {
+      this.outcomes = {
+        state: s,
+        list: DIRS.map((d) => [d, predictOutcome(this.game.rules, s, d)] as const),
+      };
+    }
+    return this.outcomes.list;
+  }
+
+  /** Shown from level 2 on (and in generated runs) until the player has opened the view once. */
+  private showInspectHint(): boolean {
+    if (this.game.save.data.hints.inspect || this.inspect) return false;
+    const idx = this.session.campaignIndex;
+    return idx === null || idx >= 1;
   }
 
   /** Replay of everything the player has input so far (for debugging and future sharing). */

@@ -2,6 +2,15 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.4.1 — A clearer die
+
+- The die is drawn as a cube seen from above: every side face sits on the side it will hit, with bigger icons.
+- Faces are tinted by role (attack warm, defence blue, heal green, tools gold); shapes still tell them apart.
+- Labels next to the die show what each move will do (knockout, damage, chest +30, locked ✕, spikes −1), computed with the real rules.
+- The bottom face is shown under the die and in the compass (it decides spikes and pools).
+- New inspect view: tap the die or the compass (or press I) to spin a 3D die, see all six faces, and preview any roll, including enemy hits that follow. Nothing moves until you swipe.
+- A one-time hint points new players to the inspect view.
+
 ## 0.4.0 — Daily Roll and Depths
 
 - **Daily Roll:** a 3-floor dungeon generated from the UTC date, the same for everyone. HP carries over (+1 per floor). Streaks, and a share button that copies a spoiler-free result.

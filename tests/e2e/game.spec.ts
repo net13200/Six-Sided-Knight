@@ -62,13 +62,36 @@ test.describe('Six Sided Knight', () => {
     expect([after.player.x, after.player.y]).toEqual([s.player.x, s.player.y + 1]);
   });
 
-  test('tapping the die itself does nothing', async ({ page }) => {
+  test('tapping the die opens the inspect view, and previews never move', async ({ page }) => {
     await page.goto('/?level=1');
     const s = await gameState(page);
     const self = await tileClient(page, s.player.x, s.player.y);
     await page.touchscreen.tap(self.x, self.y);
-    await page.waitForTimeout(200);
+    await expect(page.getByTestId('inspect')).toBeVisible();
+    await page.getByTestId('inspect-E').click();
+    await expect(page.getByTestId('inspect')).toHaveAttribute('data-preview', 'E');
+    await page.getByTestId('inspect-close').click();
+    await expect(page.getByTestId('inspect')).toBeHidden();
+    expect(await gameState(page)).toEqual(s);
+  });
+
+  test('the compass and the I key open the inspect view; arrows preview, Escape closes', async ({
+    page,
+  }) => {
+    await page.goto('/?level=2');
+    await page.getByTestId('compass').click();
+    await expect(page.getByTestId('inspect')).toBeVisible();
+    await page.getByTestId('inspect-close').click();
+    await page.keyboard.press('i');
+    await expect(page.getByTestId('inspect')).toBeVisible();
+    await page.keyboard.press('ArrowLeft');
+    await expect(page.getByTestId('inspect')).toHaveAttribute('data-preview', 'W');
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('inspect')).toBeHidden();
     expect((await gameState(page)).stats.moves).toBe(0);
+    // Opening it once retires the one-time hint.
+    const hints = await page.evaluate(() => JSON.parse(localStorage.getItem('ssk.save')!).hints);
+    expect(hints).toEqual({ inspect: true });
   });
 
   test('undo steps back one move', async ({ page }) => {

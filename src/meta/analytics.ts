@@ -36,6 +36,8 @@ export const EVENTS = {
   streak_length: { v: 1, props: { days: 'number' } },
   share_clicked: { v: 1, props: { mode: 'string', result: 'string' } },
   mode_selected: { v: 1, props: { mode: 'string' } },
+  // 0.4.1: the die inspect view.
+  inspect_opened: { v: 1, props: { level: 'string' } },
 } as const satisfies Record<string, { v: number; props: Record<string, PropType> }>;
 
 export type EventName = keyof typeof EVENTS;

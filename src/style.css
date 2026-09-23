@@ -339,3 +339,49 @@ button:focus-visible {
   font-weight: 600;
   color: #8d86a0;
 }
+.inspect {
+  z-index: 5;
+}
+.inspect-canvas {
+  position: absolute;
+  inset: 0;
+  width: 340px;
+  height: 480px;
+  touch-action: none;
+}
+.inspect .icon-btn {
+  position: absolute;
+}
+.inspect-arrow {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid #5b547a;
+  background: #221f2f;
+  padding: 0;
+}
+.inspect-arrow::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-left: 12px solid #ece6d6;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  transform: translate(-40%, -50%) rotate(var(--rot));
+  transform-origin: 40% 50%;
+}
+.inspect-arrow.active {
+  background: #ffd75e;
+  border-color: #8a6414;
+}
+.inspect-arrow.active::after {
+  border-left-color: #231a05;
+}
+.compass-btn {
+  background: transparent;
+  border: 0;
+  border-radius: 14px;
+}
+.compass-btn:focus-visible {
+  outline: 2px solid #ffd75e;
+}

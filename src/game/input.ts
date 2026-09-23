@@ -11,7 +11,8 @@ export type Command =
   | { type: 'retry' }
   | { type: 'mute' }
   | { type: 'back' }
-  | { type: 'confirm' };
+  | { type: 'confirm' }
+  | { type: 'inspect' };
 
 /** Minimum travel (in CSS pixels) for a pointer gesture to count as a swipe. */
 export const SWIPE_THRESHOLD = 24;
@@ -49,6 +50,7 @@ const KEYS: Record<string, Command> = {
   Backspace: { type: 'undo' },
   r: { type: 'retry' },
   m: { type: 'mute' },
+  i: { type: 'inspect' },
   Escape: { type: 'back' },
   Enter: { type: 'confirm' },
 };
