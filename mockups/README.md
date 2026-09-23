@@ -7,3 +7,4 @@ Exploration renders, not part of the game build. Each mockup uses the real game 
 - `die-phone-compare.png`: the whole board at phone size (today vs idea 1 + 2).
 - `die2.ts` / `die2.html`: version 2, combining ideas 1 + 2 + 3 + 5: a larger cube with bigger side icons, smaller outcome labels, the bottom face as a dashed badge at the die's lower-right corner (and in the compass), and faces tinted by role. Open `/mockups/die2.html`.
 - `die2-closeup.png`, `die2-phone.png`: version 2 renders (close-up, and the full play screen at phone size).
+- `compass3d.ts` / `compass3d.html`: 3D compass ideas, drawn with a tiny orthographic cube renderer on the 2D canvas. A: the compass tumbles in 3D with each roll, then settles back into the flat cross. B: a long-press "inspect" view with a large cube you can spin and a preview of each roll (real rules). Images: `compass-A.png`, `compass-B.png`.
