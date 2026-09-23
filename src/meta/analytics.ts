@@ -38,6 +38,10 @@ export const EVENTS = {
   mode_selected: { v: 1, props: { mode: 'string' } },
   // 0.4.1: the die inspect view.
   inspect_opened: { v: 1, props: { level: 'string' } },
+  // 0.5.0: the Forge (store and custom die).
+  face_bought: { v: 1, props: { face: 'string', price: 'number' } },
+  die_changed: { v: 1, props: { faces: 'string' } },
+  crowns_earned: { v: 1, props: { amount: 'number', source: 'string' } },
 } as const satisfies Record<string, { v: number; props: Record<string, PropType> }>;
 
 export type EventName = keyof typeof EVENTS;

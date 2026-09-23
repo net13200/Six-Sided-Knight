@@ -42,6 +42,9 @@ describe('event schema', () => {
         'share_clicked',
         'mode_selected',
         'inspect_opened',
+        'face_bought',
+        'die_changed',
+        'crowns_earned',
       ].sort(),
     );
   });

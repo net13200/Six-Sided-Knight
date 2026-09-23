@@ -124,9 +124,18 @@ Enemy intent (next move or attack) is deterministic and shown on the board.
 - The player can turn it off in Settings; turning it off deletes the stored events.
 - A session ends when the page is hidden or closed. Returning within 30 minutes continues the same session.
 
+## 9c. Crowns, the Forge and custom dice
+
+- **Crowns** are the currency. Every star earned for the first time pays 10 crowns: campaign stars (improving a level from 1 to 3 stars pays for the 2 new ones), the stars of the day's first Daily Roll completion, and the stars of each Depths floor past your record. Replays for stars already earned pay nothing. Saves from before 0.5.0 are paid once for the stars they already hold.
+- **The Forge** sells faces for crowns: Freeze 200, Hook 300 (more later). Nothing is sold for real money.
+- **Custom die**: in the Forge the player chooses which of their owned faces go on their die and where (each home slot: top, bottom, north, south, east, west). Each face at most once; always six faces. The die is used for **Daily Roll and Depths** only; campaign levels always use their own fixed die.
+- A run keeps the die it started with until it ends (changes apply to the next run).
+- Generated floors with a custom die: the floor is generated for the default die first (the same for everyone). If the player's die can win it (at the floor's HP), it's used as is, with par recomputed for that die. If not (e.g. no Key for a door), a variant floor is generated and proven winnable for that die.
+
 ## 10. Daily Roll
 
-- Seeded by the UTC date; the same dungeon for everyone. A 3-floor run with rising difficulty (rater bands 15-30, 25-42, 35-55).
+- Seeded by the UTC date; the same dungeon for everyone (unless their custom die can't win it, see 9c). A 3-floor run with rising difficulty (rater bands 15-30, 25-42, 35-55).
+- From 2026-09-24 the daily may contain ice, archers and golems; earlier dates keep the original feature set so past dailies never change. Depths always may.
 - HP carries between floors, +1 per floor (cap 5). Floors 2 and 3 are generated to be winnable when entered with 2 HP, the lowest possible arrival HP (a floor is left with at least 1 HP, then heals 1).
 - Unlimited undo and retries. The first completion of the day is recorded for the streak and the share text; later plays are practice.
 - Leaving mid-run saves progress; coming back resumes the same floor.

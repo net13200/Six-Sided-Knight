@@ -9,8 +9,14 @@ export function depthsBand(floor: number): [number, number] {
   return [Math.max(0, center - 8), center + 8];
 }
 
-export function depthsFloorParams(runSeed: number, floor: number): GenParams {
+export function depthsFloorParams(
+  runSeed: number,
+  floor: number,
+  loadout?: readonly string[],
+): GenParams {
   return {
+    features: 2,
+    ...(loadout ? { loadout } : {}),
     seed: seedFrom(`ssk-depths:${runSeed}:${floor}`),
     band: depthsBand(floor),
     id: `depths-${floor}`,

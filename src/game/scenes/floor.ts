@@ -4,7 +4,7 @@ import type { Game } from '../game';
 import type { Command } from '../input';
 import type { FloorSummary, Run } from '../runs';
 import { el, icon, iconButton, place } from '../ui';
-import { drawFace } from '../view/art';
+import { drawCrownGain, drawFace } from '../view/art';
 import { C } from '../view/palette';
 import { drawFlame } from './daily';
 import { drawStar } from './common';
@@ -136,6 +136,7 @@ export class FloorScene implements Scene {
         170,
         232,
       );
+      if (s.crowns > 0) drawCrownGain(ctx, s.crowns, 170, 262);
     } else if (s.final) {
       for (let i = 0; i < 9; i++) drawStar(ctx, 114 + i * 14, 236, 6, i < s.stars);
       if (s.counted) {
@@ -145,6 +146,7 @@ export class FloorScene implements Scene {
         ctx.textAlign = 'left';
         ctx.fillText(`${s.streak}-day streak`, 154, 286);
         ctx.textAlign = 'center';
+        if (s.crowns > 0) drawCrownGain(ctx, s.crowns, 170, 316);
       } else {
         ctx.fillStyle = C.textDim;
         ctx.font = '12px system-ui, sans-serif';

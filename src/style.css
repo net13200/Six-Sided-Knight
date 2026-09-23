@@ -385,3 +385,49 @@ button:focus-visible {
 .compass-btn:focus-visible {
   outline: 2px solid #ffd75e;
 }
+.slot-btn {
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  padding: 0;
+}
+.slot-btn:focus-visible {
+  outline: 2px solid #ffd75e;
+}
+.sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sheet-art {
+  width: 64px;
+  height: 64px;
+  flex: none;
+}
+.sheet p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.35;
+}
+.sheet .row {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+.sheet .row .btn {
+  flex: 1;
+  margin-top: 0;
+  font-size: 15px;
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.btn.small {
+  font-size: 14px;
+  border-radius: 12px;
+}
+.btn.primary.long {
+  font-size: 16px;
+  white-space: nowrap;
+}

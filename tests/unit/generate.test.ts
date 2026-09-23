@@ -91,3 +91,64 @@ describe('level generator', () => {
     expect(hits / n).toBeGreaterThanOrEqual(0.85);
   }, 120_000);
 });
+
+describe('generated floors and custom dice', () => {
+  const noKey = ['Shield', 'Heart', 'Bomb', 'Freeze', 'Sword', 'Hook'];
+
+  it('a custom die always gets a floor it can win, with par for that die', () => {
+    fc.assert(
+      fc.property(seeds, (seed) => {
+        const g = generateLevel(rules, {
+          seed,
+          band: [25, 45],
+          id: 'gen',
+          name: 'Gen',
+          hp: 2,
+          maxAttempts: 6,
+          loadout: noKey,
+          features: 2,
+        });
+        expect(g.level.loadout).toEqual(noKey);
+        const s = createState(rules, g.level, { hp: 2 });
+        expect(s.player.die.loadout).toEqual(noKey);
+        const r = solve(rules, s, { algorithm: 'idastar', maxNodes: 300_000 });
+        expect(r.status).toBe('solved');
+        expect(g.level.par).toBe(r.moves);
+      }),
+      { numRuns: 12 },
+    );
+  }, 120_000);
+
+  it('uses the shared floor when the custom die can win it', () => {
+    const base = generateLevel(rules, { seed: 7, band: [15, 30], id: 'g', name: 'G' });
+    // Same faces, different order: every face still available.
+    const shuffled = ['Sword', 'Heart', 'Bomb', 'Key', 'Shield', 'Coin'];
+    const g = generateLevel(rules, {
+      seed: 7,
+      band: [15, 30],
+      id: 'g',
+      name: 'G',
+      loadout: shuffled,
+    });
+    expect(g.variant).toBeUndefined();
+    expect(g.level.grid).toEqual(base.level.grid);
+  });
+
+  it('feature set 2 brings in ice, archers and golems', () => {
+    const glyphs = new Set<string>();
+    for (let seed = 1; seed <= 40; seed++) {
+      const g = generateLevel(rules, {
+        seed,
+        band: [40, 60],
+        id: 'g',
+        name: 'G',
+        maxAttempts: 4,
+        features: 2,
+      });
+      for (const row of g.level.grid) for (const ch of row) glyphs.add(ch);
+    }
+    expect(glyphs.has('=')).toBe(true);
+    expect(glyphs.has('a')).toBe(true);
+    expect(glyphs.has('g')).toBe(true);
+  }, 120_000);
+});

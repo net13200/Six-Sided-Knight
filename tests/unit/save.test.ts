@@ -87,7 +87,7 @@ describe('save loading', () => {
     }
   });
 
-  it('migrates a 0.3.0 (v1) save to v2 without losing progress', () => {
+  it('migrates a 0.3.0 (v1) save to the current version without losing progress', () => {
     const storage = new MemoryStorage();
     const v1 = {
       version: 1,
@@ -100,7 +100,7 @@ describe('save loading', () => {
     storage.set(SAVE_KEY, JSON.stringify(v1));
     const store = new SaveStore(storage, NOW);
     expect(store.outcome).toBe('migrated');
-    expect(store.data.version).toBe(2);
+    expect(store.data.version).toBe(SAVE_VERSION);
     expect(store.data.levels).toEqual(v1.levels);
     expect(store.data.settings).toEqual(v1.settings);
     expect(store.data.lastLevelId).toBe('c1-02');
@@ -113,7 +113,36 @@ describe('save loading', () => {
       inProgress: null,
     });
     expect(store.data.depths).toEqual({ bestFloor: 0, runs: 0, inProgress: null });
-    expect(JSON.parse(storage.get(SAVE_KEY)!).version).toBe(2);
+    expect(JSON.parse(storage.get(SAVE_KEY)!).version).toBe(SAVE_VERSION);
+    // The 3 stars already earned pay out once.
+    expect(store.data.wallet).toEqual({ crowns: 30, earned: 30, spent: 0 });
+  });
+
+  it('migrates a 0.4.x (v2) save to v3: crowns for stars already earned, default die', () => {
+    const storage = new MemoryStorage();
+    const base = freshSave(0);
+    const v2 = {
+      ...base,
+      version: 2,
+      levels: {
+        'c1-01': { stars: 3, bestMoves: 5, completions: 1, bestTimeMs: 1 },
+        'c1-02': { stars: 2, bestMoves: 5, completions: 1, bestTimeMs: 1 },
+      },
+      daily: {
+        ...base.daily,
+        results: { '2026-09-20': { moves: 30, hp: 3, stars: 7 } },
+      },
+      stats: { ...base.stats, faceMoves: undefined },
+    } as Record<string, unknown>;
+    for (const k of ['wallet', 'owned', 'die', 'skin']) delete v2[k];
+    storage.set(SAVE_KEY, JSON.stringify(v2));
+    const store = new SaveStore(storage, NOW);
+    expect(store.outcome).toBe('migrated');
+    expect(store.data.wallet).toEqual({ crowns: 120, earned: 120, spent: 0 });
+    expect(store.data.owned).toEqual([]);
+    expect(store.data.die).toBeNull();
+    expect(store.data.skin).toBe('classic');
+    expect(store.data.stats.faceMoves).toEqual({});
   });
 
   it('drops malformed runs in progress', () => {

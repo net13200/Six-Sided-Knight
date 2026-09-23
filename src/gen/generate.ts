@@ -6,6 +6,14 @@
  * never returns an unsolvable level.
  *
  * Same seed + same params = same level, on every device.
+ *
+ * Custom dice (Daily Roll, Depths): the dungeon is generated with the default
+ * die first, so everyone gets the same one. If the player's own die can't
+ * win it, a variant is generated for that die instead. Par is always the
+ * minimum for the die that plays it.
+ *
+ * Feature sets: 1 = the original tiles and enemies (kept stable so past
+ * dailies never change), 2 = adds ice, archers and golems.
  */
 import { Rng, createState, validateLevel, type LevelData, type Rules } from '../engine';
 import { rate, type Rating } from '../solver/rate';
@@ -19,6 +27,10 @@ export interface GenParams {
   /** Starting HP the level must be solvable with. */
   readonly hp?: number;
   readonly maxAttempts?: number;
+  /** The player's die (faces by home slot). Default: the rules' default loadout. */
+  readonly loadout?: readonly string[];
+  /** Which tiles and enemies may appear (default 1). */
+  readonly features?: 1 | 2;
 }
 
 export interface Generated {
@@ -26,6 +38,8 @@ export interface Generated {
   readonly rating: Rating;
   readonly attempts: number;
   readonly inBand: boolean;
+  /** True when the default dungeon couldn't be won with the player's die, so this one was made for it. */
+  readonly variant?: boolean;
 }
 
 const W = 8;
@@ -44,11 +58,34 @@ const G = {
   player: '@',
   skeleton: 'k',
   slime: 's',
+  ice: '=',
+  archer: 'a',
+  golem: 'g',
 } as const;
 
 type Cell = string;
 
+const sameFaces = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && a.every((f, i) => f === b[i]);
+
 export function generateLevel(rules: Rules, params: GenParams): Generated {
+  const custom =
+    params.loadout && !sameFaces(params.loadout, rules.config.defaultLoadout)
+      ? params.loadout
+      : null;
+  const base = generateFor(rules, { ...params, loadout: undefined });
+  if (!custom) return base;
+
+  // The shared dungeon, if the player's die can win it.
+  const level: LevelData = { ...base.level, loadout: [...custom] };
+  const rating = rate(rules, createState(rules, level, { hp: params.hp ?? 5 }));
+  if (rating.solvable) return { ...base, level: { ...level, par: rating.minMoves }, rating };
+  // Otherwise a variant made for this die.
+  const v = generateFor(rules, { ...params, seed: (params.seed ^ 0x5bd1e995) >>> 0 });
+  return { ...v, variant: true };
+}
+
+function generateFor(rules: Rules, params: GenParams): Generated {
   const [lo, hi] = params.band;
   const target = (lo + hi) / 2;
   const maxAttempts = params.maxAttempts ?? 24;
@@ -58,8 +95,14 @@ export function generateLevel(rules: Rules, params: GenParams): Generated {
     const rng = new Rng((params.seed ^ Math.imul(attempt + 1, 0x9e3779b1)) >>> 0);
     // After the first miss, nudge the next attempt toward the band.
     const d = clamp01(target / 100 + (best ? Math.sign(target - best.rating.score) * 0.08 : 0));
-    const grid = buildGrid(rng, d);
-    const level: LevelData = { schema: 1, id: params.id, name: params.name, grid };
+    const grid = buildGrid(rng, d, params.features ?? 1);
+    const level: LevelData = {
+      schema: 1,
+      id: params.id,
+      name: params.name,
+      grid,
+      ...(params.loadout ? { loadout: [...params.loadout] } : {}),
+    };
     if (validateLevel(rules, level).length) continue;
     const start = createState(rules, level, { hp: params.hp ?? 5 });
     const rating = rate(rules, start);
@@ -72,7 +115,10 @@ export function generateLevel(rules: Rules, params: GenParams): Generated {
 
   if (best) return { level: best.level, rating: best.rating, attempts: maxAttempts, inBand: false };
   // Extremely unlikely: fall back to a guaranteed-solvable corridor.
-  const level = fallbackLevel(params);
+  const level = {
+    ...fallbackLevel(params),
+    ...(params.loadout ? { loadout: [...params.loadout] } : {}),
+  };
   return {
     level,
     rating: rate(rules, createState(rules, level, { hp: params.hp ?? 5 })),
@@ -84,7 +130,7 @@ export function generateLevel(rules: Rules, params: GenParams): Generated {
 /**
  * Builds a candidate grid. `d` (0-1) scales wall density, hazards and enemies.
  */
-function buildGrid(rng: Rng, d: number): string[] {
+function buildGrid(rng: Rng, d: number, features: 1 | 2): string[] {
   const g: Cell[][] = Array.from({ length: H }, (_, y) =>
     Array.from({ length: W }, (_, x) =>
       x === 0 || y === 0 || x === W - 1 || y === H - 1 ? G.wall : G.floor,
@@ -136,16 +182,40 @@ function buildGrid(rng: Rng, d: number): string[] {
   if (rng.next() < 0.4) put(G.pool, 1);
   // A door on a cell that sits between start and exit makes a key puzzle.
   if (rng.next() < 0.2 + d * 0.4) placeDoor(g, rng, start, exit, reserved);
+  if (features >= 2 && rng.next() < 0.25 + d * 0.35) placeIce(g, rng, reserved);
   const enemies = Math.min(3, Math.round(d * 3.2 + rng.next() * 0.8 - 0.3));
   for (let i = 0; i < enemies; i++) {
     const c = free();
     // Keep enemies off the start's neighbourhood so turn 1 isn't a forced hit.
-    if (c && manhattan(c, start) > 2) g[c[1]]![c[0]] = rng.next() < 0.6 ? G.skeleton : G.slime;
+    if (!c || manhattan(c, start) <= 2) continue;
+    let glyph: string = rng.next() < 0.6 ? G.skeleton : G.slime;
+    if (features >= 2) {
+      const r = rng.next();
+      // Archers never start in line with the die, so turn 1 is never a forced hit either.
+      const inLine = c[0] === start[0] || c[1] === start[1];
+      if (r < 0.1 + d * 0.15 && !inLine) glyph = G.archer;
+      else if (r > 0.92 - d * 0.1) glyph = G.golem;
+    }
+    g[c[1]]![c[0]] = glyph;
   }
 
   g[start[1]]![start[0]] = G.player;
   g[exit[1]]![exit[0]] = G.exit;
   return g.map((row) => row.join(''));
+}
+
+/** A short straight strip of ice (2-4 tiles) over floor. */
+function placeIce(g: Cell[][], rng: Rng, reserved: Set<string>): void {
+  const x0 = 1 + rng.int(W - 2);
+  const y0 = 1 + rng.int(H - 2);
+  const horizontal = rng.next() < 0.5;
+  const len = 2 + rng.int(3);
+  for (let k = 0; k < len; k++) {
+    const x = x0 + (horizontal ? k : 0);
+    const y = y0 + (horizontal ? 0 : k);
+    if (x > W - 2 || y > H - 2) break;
+    if (g[y]![x] === G.floor && !reserved.has(key([x, y]))) g[y]![x] = G.ice;
+  }
 }
 
 /** Puts a door on a floor cell whose removal disconnects start from exit, if one exists. */

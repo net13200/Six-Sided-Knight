@@ -42,7 +42,7 @@ export class LevelService {
 
   /** Cache key includes the params that change the result. */
   private key(p: GenParams): string {
-    return `${p.id}|${p.seed}|${p.band.join('-')}|${p.hp ?? 5}`;
+    return `${p.id}|${p.seed}|${p.band.join('-')}|${p.hp ?? 5}|${p.features ?? 1}|${p.loadout?.join(',') ?? ''}`;
   }
 
   generate(params: GenParams): Promise<Generated> {

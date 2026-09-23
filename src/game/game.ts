@@ -10,6 +10,7 @@ import { LevelService } from '../gen/service';
 import { LocalAnalytics } from '../meta/analytics';
 import { continueIndex, recordWin } from '../meta/progress';
 import { SaveStore } from '../meta/save';
+import { crownsForStars, earnCrowns } from '../meta/store';
 import type { Platform } from '../platform/platform';
 import { VERSION } from '../version';
 import { Audio } from './audio';
@@ -18,10 +19,12 @@ import type { FloorSummary, Run } from './runs';
 import { DailyScene } from './scenes/daily';
 import { DepthsScene } from './scenes/depths';
 import { FloorScene } from './scenes/floor';
+import { ForgeScene } from './scenes/forge';
 import { LevelsScene } from './scenes/levels';
 import { MenuScene } from './scenes/menu';
 import { PlayScene } from './scenes/play';
 import { ResultsScene } from './scenes/results';
+import { StatsScene } from './scenes/stats';
 import { canTransition, type Scene } from './scenes/scene';
 import type { PlaySession } from './session';
 import type { StarResult } from './stars';
@@ -37,6 +40,8 @@ export interface WinSummary {
   readonly stars: StarResult;
   readonly improved: boolean;
   readonly firstClear: boolean;
+  /** Crowns earned for stars won for the first time. */
+  readonly crowns: number;
 }
 
 export class Game {
@@ -123,6 +128,15 @@ export class Game {
     this.go(new DepthsScene(this));
   }
 
+  /** The Forge (store + die builder). `back` returns to where it was opened from. */
+  goForge(back?: () => void): void {
+    this.go(new ForgeScene(this, back));
+  }
+
+  goStats(): void {
+    this.go(new StatsScene(this));
+  }
+
   goFloor(summary: FloorSummary, run: Run): void {
     this.go(new FloorScene(this, summary, run));
   }
@@ -141,9 +155,12 @@ export class Game {
   recordWin(index: number, state: GameState, stars: StarResult, timeMs: number): WinSummary {
     const level = this.levels[index]!;
     const firstClear = (this.save.data.levels[level.id]?.completions ?? 0) === 0;
+    const before = this.save.data.levels[level.id]?.stars ?? 0;
     let improved = false;
+    let crowns = 0;
     this.save.update((d) => {
       improved = recordWin(d, level.id, { stars: stars.count, moves: state.stats.moves, timeMs });
+      crowns = earnCrowns(d, crownsForStars(stars.count - before));
       d.stats.levelsCompleted++;
       d.stats.moves += state.stats.moves;
       d.stats.kills += state.stats.kills;
@@ -156,10 +173,11 @@ export class Game {
       stars: stars.count,
       time_ms: Math.round(timeMs),
     });
+    if (crowns > 0) this.analytics.track('crowns_earned', { amount: crowns, source: 'campaign' });
     if (firstClear && index < TUTORIAL_LENGTH) {
       this.analytics.track('tutorial_step_complete', { step: index + 1, level: level.id });
     }
-    return { stars, improved, firstClear };
+    return { stars, improved, firstClear, crowns };
   }
 
   // ---------- loop hooks ----------

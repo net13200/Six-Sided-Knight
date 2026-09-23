@@ -3,6 +3,7 @@ import type { GameState } from '../../engine';
 import type { Game, WinSummary } from '../game';
 import type { Command } from '../input';
 import { el, icon, iconButton, place } from '../ui';
+import { drawCrownGain } from '../view/art';
 import { C } from '../view/palette';
 import { drawStar } from './common';
 import type { Scene } from './scene';
@@ -111,7 +112,12 @@ export class ResultsScene implements Scene {
     ctx.textAlign = 'center';
     ctx.fillStyle = C.gold;
     ctx.font = 'bold 14px system-ui, sans-serif';
-    ctx.fillText(`Gold ${this.state.gold}`, 170, 286);
+    if (this.summary.crowns > 0) {
+      ctx.fillText(`Gold ${this.state.gold}`, 120, 286);
+      drawCrownGain(ctx, this.summary.crowns, 225, 286);
+    } else {
+      ctx.fillText(`Gold ${this.state.gold}`, 170, 286);
+    }
     if (this.summary.firstClear && this.hasNext) {
       ctx.fillStyle = C.textDim;
       ctx.font = '12px system-ui, sans-serif';

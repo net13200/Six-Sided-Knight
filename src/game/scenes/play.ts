@@ -2,6 +2,7 @@
 import {
   DIRS,
   ReplayRecorder,
+  leadingFace,
   createState,
   newHistory,
   play,
@@ -42,6 +43,8 @@ export class PlayScene implements Scene {
   private activeMs = 0;
   private flushedMs = 0;
   private won = false;
+  /** Moves per leading face not yet written to the lifetime stats. */
+  private faceMoves = new Map<string, number>();
   private inspect: InspectView | null = null;
   /** Move outcomes for the current state (recomputed when the state changes). */
   private outcomes: { state: GameState; list: Array<readonly [Dir, Outcome]> } | null = null;
@@ -180,6 +183,8 @@ export class PlayScene implements Scene {
       return;
     }
     this.history = history;
+    const face = leadingFace(before.player.die, dir);
+    this.faceMoves.set(face, (this.faceMoves.get(face) ?? 0) + 1);
     animateTurn(this.fx, this.game.audio, result.events, before, result.state);
     if (result.state.status === 'won') {
       this.finishing = true;
@@ -244,9 +249,14 @@ export class PlayScene implements Scene {
   /** Adds unsaved play time to the lifetime stats. */
   flushTime(): void {
     const add = Math.round(this.activeMs - this.flushedMs);
-    if (add <= 0) return;
+    if (add <= 0 && this.faceMoves.size === 0) return;
     this.flushedMs = this.activeMs;
-    this.game.save.update((d) => (d.stats.playTimeMs += add));
+    const faces = [...this.faceMoves];
+    this.faceMoves.clear();
+    this.game.save.update((d) => {
+      d.stats.playTimeMs += Math.max(0, add);
+      for (const [face, n] of faces) d.stats.faceMoves[face] = (d.stats.faceMoves[face] ?? 0) + n;
+    });
   }
 
   render(ctx: CanvasRenderingContext2D): void {

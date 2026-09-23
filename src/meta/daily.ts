@@ -29,8 +29,20 @@ export function addDays(date: string, days: number): string {
   return utcDate(t);
 }
 
-export function dailyFloorParams(date: string, floor: number): GenParams {
+/**
+ * First date whose dungeon may use ice, archers and golems. Earlier dates keep
+ * the original feature set so past dailies never change.
+ */
+export const DAILY_FEATURES_2_FROM = '2026-09-24';
+
+export function dailyFloorParams(
+  date: string,
+  floor: number,
+  loadout?: readonly string[],
+): GenParams {
   return {
+    features: date >= DAILY_FEATURES_2_FROM ? 2 : 1,
+    ...(loadout ? { loadout } : {}),
     seed: seedFrom(`ssk-daily:${date}:${floor}`),
     band: DAILY_BANDS[floor - 1] ?? DAILY_BANDS[DAILY_BANDS.length - 1]!,
     id: `daily-${date}-${floor}`,

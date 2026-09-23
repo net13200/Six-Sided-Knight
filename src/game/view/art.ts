@@ -688,6 +688,62 @@ export function drawEnemy(
   }
 }
 
+// ---------- crowns (the currency) ----------
+
+/** A small gold crown, the currency icon. `size` is the full width. */
+export function drawCrown(ctx: Ctx, cx: number, cy: number, size: number): void {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(size / 2, size / 2);
+  ctx.beginPath();
+  ctx.moveTo(-0.9, 0.55);
+  ctx.lineTo(-0.95, -0.45);
+  ctx.lineTo(-0.45, 0.02);
+  ctx.lineTo(0, -0.7);
+  ctx.lineTo(0.45, 0.02);
+  ctx.lineTo(0.95, -0.45);
+  ctx.lineTo(0.9, 0.55);
+  ctx.closePath();
+  paint(ctx, C.gold, 0.14);
+  ctx.beginPath();
+  ctx.rect(-0.9, 0.38, 1.8, 0.2);
+  ctx.fillStyle = '#c9a22e';
+  ctx.fill();
+  for (const x of [-0.95, 0, 0.95]) {
+    ctx.beginPath();
+    ctx.arc(x, x === 0 ? -0.72 : -0.47, 0.13, 0, Math.PI * 2);
+    paint(ctx, C.heart, 0.06);
+  }
+  ctx.restore();
+}
+
+/** Crown icon plus amount, right-aligned at (right, cy). */
+export function drawCrowns(ctx: Ctx, amount: number, right: number, cy: number): void {
+  ctx.save();
+  ctx.font = 'bold 13px system-ui, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = C.gold;
+  ctx.fillText(String(amount), right, cy + 1);
+  const w = ctx.measureText(String(amount)).width;
+  ctx.restore();
+  drawCrown(ctx, right - w - 12, cy, 16);
+}
+
+/** "+N" with a crown, centered at (cx, cy): crowns just earned. */
+export function drawCrownGain(ctx: Ctx, amount: number, cx: number, cy: number): void {
+  const text = `+${amount}`;
+  ctx.save();
+  ctx.font = 'bold 14px system-ui, sans-serif';
+  const w = ctx.measureText(text).width + 22;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = C.gold;
+  ctx.fillText(text, cx - w / 2 + 22, cy + 1);
+  ctx.restore();
+  drawCrown(ctx, cx - w / 2 + 8, cy, 16);
+}
+
 // ---------- the die ----------
 
 export function drawDieBody(ctx: Ctx, cx: number, cy: number, w: number, h: number): void {

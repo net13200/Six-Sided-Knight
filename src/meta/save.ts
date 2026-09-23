@@ -10,7 +10,7 @@
 import type { KeyValueStorage } from '../platform/platform';
 
 export const SAVE_KEY = 'ssk.save';
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 /** Pre-save-system settings (milestone 2). Migrated into save v1. */
 export const LEGACY_SETTINGS_KEY = 'ssk.settings.v1';
 
@@ -40,6 +40,8 @@ export interface LifetimeStats {
   retries: number;
   deaths: number;
   playTimeMs: number;
+  /** Turn-using moves per leading face (added in save v3). */
+  faceMoves: Record<string, number>;
 }
 
 export interface SaveV1 {
@@ -60,6 +62,8 @@ export interface RunProgress {
   hp: number;
   moves: number;
   stars: number;
+  /** The die this run is played with (fixed for the whole run). Missing = default. */
+  die?: string[];
 }
 
 export interface DailyState {
@@ -87,7 +91,28 @@ export interface SaveV2 extends Omit<SaveV1, 'version'> {
   hints: Record<string, boolean>;
 }
 
-export type SaveData = SaveV2;
+/** Crowns: the currency earned from stars and spent in the store. */
+export interface Wallet {
+  crowns: number;
+  /** Lifetime totals, for the stats screen. */
+  earned: number;
+  spent: number;
+}
+
+export interface SaveV3 extends Omit<SaveV2, 'version'> {
+  version: 3;
+  wallet: Wallet;
+  /** Faces bought in the store (the six starting faces are always owned). */
+  owned: string[];
+  /** The player's custom die for Daily Roll and Depths: faces by home slot. Null = default. */
+  die: string[] | null;
+  /** Equipped cosmetic die skin. */
+  skin: string;
+}
+
+export type SaveData = SaveV3;
+
+export const CROWNS_PER_STAR = 10;
 
 function freshDaily(): DailyState {
   return { lastDate: null, streak: 0, bestStreak: 0, results: {}, inProgress: null };
@@ -99,7 +124,11 @@ function freshDepths(): DepthsState {
 
 export function freshSave(now: number): SaveData {
   return {
-    version: 2,
+    version: 3,
+    wallet: { crowns: 0, earned: 0, spent: 0 },
+    owned: [],
+    die: null,
+    skin: 'classic',
     daily: freshDaily(),
     depths: freshDepths(),
     hints: {},
@@ -117,6 +146,7 @@ export function freshSave(now: number): SaveData {
       retries: 0,
       deaths: 0,
       playTimeMs: 0,
+      faceMoves: {},
     },
   };
 }
@@ -131,12 +161,38 @@ const migrations: Record<number, (old: Json, ctx: { now: number; legacy: Json | 
   0: (_old, { now, legacy }) => {
     const save = freshSave(now) as unknown as Json;
     if (legacy && legacy.muted === true) (save.settings as Settings).muted = true;
-    // Produce a v1 object; the 1 -> 2 step adds the rest.
-    const { daily: _d, depths: _p, hints: _h, ...v1 } = save;
+    // Produce a v1 object; later steps add the rest.
+    const {
+      daily: _d,
+      depths: _p,
+      hints: _h,
+      wallet: _w,
+      owned: _o,
+      die: _die,
+      skin: _s,
+      ...v1
+    } = save;
     return { ...v1, version: 1 };
   },
   // 0.4.0: Daily Roll and Depths.
   1: (old) => ({ ...old, version: 2, daily: freshDaily(), depths: freshDepths() }),
+  // 0.5.0: crowns, the store and custom dice. Stars already earned pay out once.
+  2: (old) => {
+    const levels = (old.levels ?? {}) as Record<string, { stars?: unknown }>;
+    const daily = (old.daily ?? {}) as { results?: Record<string, { stars?: unknown }> };
+    let stars = 0;
+    for (const r of Object.values(levels)) stars += clampInt(r?.stars, 0, 3);
+    for (const r of Object.values(daily.results ?? {})) stars += clampInt(r?.stars, 0, 9);
+    const crowns = stars * CROWNS_PER_STAR;
+    return {
+      ...old,
+      version: 3,
+      wallet: { crowns, earned: crowns, spent: 0 },
+      owned: [],
+      die: null,
+      skin: 'classic',
+    };
+  },
 };
 
 export interface LoadResult {
@@ -162,7 +218,7 @@ export function migrate(raw: Json, now: number, legacy: Json | null = null): Jso
 /** Fills in any missing fields with defaults and clamps obviously bad values. */
 export function normalize(data: Json, now: number): SaveData {
   const base = freshSave(now);
-  const d = data as Partial<SaveV2>;
+  const d = data as Partial<SaveV3>;
   const levels: Record<string, LevelRecord> = {};
   for (const [id, rec] of Object.entries(d.levels ?? {})) {
     if (!rec || typeof rec !== 'object') continue;
@@ -179,8 +235,24 @@ export function normalize(data: Json, now: number): SaveData {
   if (d.hints && typeof d.hints === 'object') {
     for (const [k, v] of Object.entries(d.hints)) if (v === true) hints[k] = true;
   }
+  const wallet = { ...base.wallet, ...(d.wallet ?? {}) };
+  const owned = Array.isArray(d.owned)
+    ? [...new Set(d.owned.filter((f): f is string => typeof f === 'string'))]
+    : [];
+  const die = Array.isArray(d.die) && d.die.every((f) => typeof f === 'string') ? [...d.die] : null;
+  const stats = { ...base.stats, ...(d.stats ?? {}) };
+  const faceMoves: Record<string, number> = {};
+  for (const [k, v] of Object.entries(stats.faceMoves ?? {})) faceMoves[k] = clampInt(v, 0, 1e9);
   return {
-    version: 2,
+    version: 3,
+    wallet: {
+      crowns: clampInt(wallet.crowns, 0, 1e9),
+      earned: clampInt(wallet.earned, 0, 1e9),
+      spent: clampInt(wallet.spent, 0, 1e9),
+    },
+    owned,
+    die,
+    skin: typeof d.skin === 'string' ? d.skin : 'classic',
     hints,
     daily: {
       ...daily,
@@ -199,7 +271,7 @@ export function normalize(data: Json, now: number): SaveData {
     settings: { ...base.settings, ...(d.settings ?? {}) },
     levels,
     lastLevelId: typeof d.lastLevelId === 'string' ? d.lastLevelId : null,
-    stats: { ...base.stats, ...(d.stats ?? {}) },
+    stats: { ...stats, faceMoves },
   };
 }
 
@@ -213,6 +285,9 @@ function normalizeRun(r: unknown): RunProgress | null {
     hp: clampInt(x.hp, 1, 99),
     moves: clampInt(x.moves, 0, 1e9),
     stars: clampInt(x.stars, 0, 1e9),
+    ...(Array.isArray(x.die) && x.die.every((f) => typeof f === 'string')
+      ? { die: [...x.die] }
+      : {}),
   };
 }
 

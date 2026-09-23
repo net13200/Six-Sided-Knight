@@ -15,6 +15,7 @@ import {
 } from '../meta/daily';
 import { depthsFloorParams } from '../meta/depths';
 import type { RunProgress } from '../meta/save';
+import { STARTING_FACES, crownsForStars, earnCrowns, playerLoadout } from '../meta/store';
 import type { Game } from './game';
 import type { PlaySession } from './session';
 
@@ -33,6 +34,8 @@ export interface FloorSummary {
   readonly streak: number;
   readonly bestFloor: number;
   readonly newBest: boolean;
+  /** Crowns earned on this floor (first daily completion, or a new Depths record). */
+  readonly crowns: number;
 }
 
 export class Run {
@@ -57,18 +60,38 @@ export class Run {
     return this.progress.key;
   }
 
+  /** Runs are played with the player's custom die, fixed when the run starts. */
   static newDaily(game: Game, date: string, practice = false): Run {
-    return new Run(game, 'daily', { key: date, floor: 1, hp: 5, moves: 0, stars: 0 }, practice);
+    const die = playerLoadout(game.save.data);
+    return new Run(
+      game,
+      'daily',
+      { key: date, floor: 1, hp: 5, moves: 0, stars: 0, die },
+      practice,
+    );
   }
 
   static newDepths(game: Game, seed: number): Run {
-    return new Run(game, 'depths', { key: String(seed), floor: 1, hp: 5, moves: 0, stars: 0 });
+    const die = playerLoadout(game.save.data);
+    return new Run(game, 'depths', {
+      key: String(seed),
+      floor: 1,
+      hp: 5,
+      moves: 0,
+      stars: 0,
+      die,
+    });
+  }
+
+  /** The die for this run. */
+  get die(): readonly string[] {
+    return this.progress.die ?? STARTING_FACES;
   }
 
   params(floor = this.progress.floor): GenParams {
     return this.mode === 'daily'
-      ? dailyFloorParams(this.progress.key, floor)
-      : depthsFloorParams(Number(this.progress.key), floor);
+      ? dailyFloorParams(this.progress.key, floor, this.die)
+      : depthsFloorParams(Number(this.progress.key), floor, this.die);
   }
 
   /** Generates (or fetches the prefetched) current floor, then starts playing it. */
@@ -112,12 +135,14 @@ export class Run {
     const game = this.game;
     let counted = false;
     let newBest = false;
+    let crowns = 0;
 
     if (this.mode === 'daily' && final) {
       const date = p.key;
       if (!this.practice) {
         game.save.update((d) => {
           counted = recordDaily(d, date, { moves: p.moves, hp: p.hp, stars: p.stars });
+          if (counted) crowns = earnCrowns(d, crownsForStars(p.stars));
           d.daily.inProgress = null;
         });
       }
@@ -132,12 +157,15 @@ export class Run {
       if (this.mode === 'depths') {
         game.save.update((d) => {
           newBest = cleared > d.depths.bestFloor;
+          // Only floors past your record pay out, so an endless run can't be farmed.
+          if (newBest) crowns = earnCrowns(d, crownsForStars(stars));
           d.depths.bestFloor = Math.max(d.depths.bestFloor, cleared);
         });
       }
       this.persist();
     }
 
+    if (crowns > 0) game.analytics.track('crowns_earned', { amount: crowns, source: this.mode });
     const today = p.key;
     return {
       mode: this.mode,
@@ -151,6 +179,7 @@ export class Run {
       streak: this.mode === 'daily' ? currentStreak(game.save.data, today) : 0,
       bestFloor: game.save.data.depths.bestFloor,
       newBest,
+      crowns,
     };
   }
 

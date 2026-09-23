@@ -64,6 +64,18 @@ export class DailyScene implements Scene {
         64,
         62,
       ),
+      place(
+        iconButton(
+          'die',
+          'Your die',
+          () => this.game.goForge(() => this.game.goDaily()),
+          'your-die',
+        ),
+        272,
+        415,
+        64,
+        62,
+      ),
     );
   }
 

@@ -53,12 +53,24 @@ export class DepthsScene implements Scene {
         new Run(this.game, 'depths', progress).abandon();
         this.game.goDepths();
       });
-      ui.append(place(surface, 60, 386, 220, 46));
+      ui.append(place(surface, 72, 386, 196, 46));
     }
     ui.append(
       place(
         iconButton('back', 'Menu', () => this.game.goMenu(), 'back'),
         4,
+        415,
+        64,
+        62,
+      ),
+      place(
+        iconButton(
+          'die',
+          'Your die',
+          () => this.game.goForge(() => this.game.goDepths()),
+          'your-die',
+        ),
+        272,
         415,
         64,
         62,

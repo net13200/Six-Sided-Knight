@@ -5,7 +5,7 @@ import { VERSION_LABEL } from '../../version';
 import type { Game } from '../game';
 import type { Command } from '../input';
 import { el, icon, iconButton, place } from '../ui';
-import { drawBadge, drawDieBody, drawFace } from '../view/art';
+import { drawBadge, drawCrowns, drawDieBody, drawFace } from '../view/art';
 import { C } from '../view/palette';
 import { muteButton } from './common';
 import type { Scene } from './scene';
@@ -33,12 +33,9 @@ export class MenuScene implements Scene {
       },
       [icon('play'), el('span', { text: started ? `Continue: level ${next + 1}` : 'Play' })],
     );
-    const levelsBtn = el('button', {
-      className: 'btn',
-      testId: 'levels',
-      text: 'Map',
-      onClick: () => this.game.goLevels(),
-    });
+    if (started) playBtn.classList.add('long');
+    const small = (id: string, text: string, onClick: () => void) =>
+      el('button', { className: 'btn small', testId: id, text, onClick });
     ui.append(
       place(playBtn, 60, 262, 220, 56),
       place(
@@ -55,7 +52,27 @@ export class MenuScene implements Scene {
         107,
         52,
       ),
-      place(levelsBtn, 90, 388, 160, 40),
+      place(
+        small('levels', 'Map', () => this.game.goLevels()),
+        74,
+        388,
+        62,
+        48,
+      ),
+      place(
+        small('forge', 'Forge', () => this.game.goForge()),
+        139,
+        388,
+        62,
+        48,
+      ),
+      place(
+        small('stats', 'Stats', () => this.game.goStats()),
+        204,
+        388,
+        62,
+        48,
+      ),
       place(
         iconButton('gear', 'Settings', () => this.openSettings(), 'settings'),
         4,
@@ -187,9 +204,11 @@ export class MenuScene implements Scene {
     ];
     for (const [face, dx, dy] of around) drawBadge(ctx, face, cx + dx * 52, cy + dy * 52, 13);
 
+    drawCrowns(ctx, this.game.save.data.wallet.crowns, 330, 18);
+
     ctx.textAlign = 'center';
     ctx.fillStyle = C.textDim;
     ctx.font = '11px system-ui, sans-serif';
-    ctx.fillText(VERSION_LABEL, 170, 446);
+    ctx.fillText(VERSION_LABEL, 170, 452);
   }
 }
