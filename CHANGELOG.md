@@ -2,6 +2,11 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.5.2 — A real app on your home screen
+
+- Web app manifest and icons (drawn with the game's own art): "Add to home screen" / "Install app" now opens the game full-screen like an app, with its own icon and splash colour, instead of a browser tab.
+- Service worker: once installed (or visited once), the game opens and plays offline. Updates arrive the next time you're online.
+
 ## 0.5.1 — One daily for everyone
 
 - The Daily Roll is now always the same floors and par for everyone, whatever their die. If your die can't win a floor, you're warned at its start: change your die (between floors, or leave and come back) — that's part of the challenge. Depths still makes a variant floor when your die can't win one.

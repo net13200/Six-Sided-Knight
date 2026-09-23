@@ -5,6 +5,7 @@ import { bindInput } from './game/input';
 import { Loop } from './game/loop';
 import { Stage } from './game/view/stage';
 import { createBrowserPlatform } from './platform/browser';
+import { registerServiceWorker } from './platform/pwa';
 import { VERSION_LABEL } from './version';
 import './style.css';
 
@@ -40,6 +41,9 @@ const levelParam = Number(params.get('level'));
 if (levelParam >= 1) game.goPlay(levelParam - 1);
 else game.goMenu();
 loop.start();
+
+// Installed app: offline support.
+registerServiceWorker();
 
 // Hidden KPI panel: #debug or ?debug.
 if (debug) openDebugPanel(game);

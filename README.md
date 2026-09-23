@@ -11,6 +11,10 @@ Once deployed: **https://net13200.github.io/Six-Sided-Knight/**
 
 Deployment is automatic on every push to `main` (`.github/workflows/pages.yml`). One-time setup in the repository: **Settings → Pages → Build and deployment → Source: GitHub Actions**. CI (`.github/workflows/ci.yml`) runs all checks and browser tests on every push.
 
+### Installing on a phone
+
+Open the site in Chrome (Android) and choose **Install app** / **Add to home screen**, or in Safari (iOS) **Share → Add to Home Screen**. It opens full-screen with its own icon and works offline (`public/manifest.webmanifest`, `public/sw.js`). The icons in `public/icons/` are rendered from `mockups/icon.html` with the game's art: `npx vite --port 5199 & node tools/make-icons.mjs`.
+
 ## Quick start
 
 ```sh

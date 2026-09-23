@@ -15,6 +15,19 @@ export default tseslint.config(
     },
   },
   {
+    // Plain JS that runs outside the bundle: the service worker and a Node tool.
+    files: ['public/sw.js'],
+    languageOptions: {
+      globals: { self: 'readonly', caches: 'readonly', fetch: 'readonly', URL: 'readonly' },
+    },
+  },
+  {
+    files: ['tools/**/*.mjs'],
+    languageOptions: {
+      globals: { console: 'readonly', process: 'readonly', document: 'readonly' },
+    },
+  },
+  {
     // The simulation core must stay pure: no DOM, no timers, no Math.random.
     files: ['src/engine/**/*.ts'],
     rules: {
