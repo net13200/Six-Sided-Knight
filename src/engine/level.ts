@@ -11,7 +11,8 @@
  *   "grid": ["########", "#@...>.#", ...],   // 9 rows of 8 chars
  *   "par": 6,                                   // optional
  *   "start": { "top": "<face>", "east": "<face>" }, // optional orientation constraints
- *   "enemies": [{ "x": 3, "y": 2, "data": { "wait": 0 } }] // optional per-enemy overrides
+ *   "enemies": [{ "x": 3, "y": 2, "data": { "wait": 0 } }], // optional per-enemy overrides
+ *   "loadout": [<face id>, ...]   // optional: die faces by home slot (to swap faces)
  * }
  *
  * Plain-text form (.txt), converted by parseTextLevel():
@@ -22,7 +23,7 @@
  *   ########
  *   #@...>.#
  */
-import { findOrientation } from './dice';
+import { findOrientation, getShape } from './dice';
 import type { Rules } from './registry';
 import type { EnemyState, FaceId, GameState, TileId } from './types';
 
@@ -49,6 +50,8 @@ export interface LevelData {
   readonly hint?: string;
   readonly start?: Readonly<Record<string, FaceId>>;
   readonly enemies?: readonly LevelEnemyOverride[];
+  /** Die faces by home slot, for levels that swap faces. Default: rules.config.defaultLoadout. */
+  readonly loadout?: readonly FaceId[];
 }
 
 export class LevelError extends Error {
@@ -80,6 +83,7 @@ export function parseTextLevel(text: string): LevelData {
     par?: number;
     hint?: string;
     start?: Record<string, string>;
+    loadout?: string[];
   } = {
     schema: LEVEL_SCHEMA_VERSION,
     id: meta.id ?? '',
@@ -97,6 +101,7 @@ export function parseTextLevel(text: string): LevelData {
         .map((kv) => kv.split('=') as [string, string]),
     );
   }
+  if (meta.loadout !== undefined) data.loadout = meta.loadout.split(/\s+/).filter(Boolean);
   return data;
 }
 
@@ -153,10 +158,20 @@ export function validateLevel(rules: Rules, raw: unknown): string[] {
     if (!enemyCells.has(`${o.x},${o.y}`))
       problems.push(`enemy override at (${o.x},${o.y}) has no enemy`);
   }
-  if (lvl.start !== undefined) {
+  const loadout = lvl.loadout ?? rules.config.defaultLoadout;
+  const before = problems.length;
+  if (lvl.loadout !== undefined) {
+    const slots = getShape(rules.config.dieShape).def.slots.length;
+    if (!Array.isArray(lvl.loadout) || lvl.loadout.length !== slots) {
+      problems.push(`loadout must list ${slots} faces`);
+    } else {
+      for (const f of lvl.loadout)
+        if (!rules.faces.has(f)) problems.push(`loadout has unknown face '${f}'`);
+    }
+  }
+  if (lvl.start !== undefined && problems.length === before) {
     try {
-      const { dieShape, defaultLoadout } = rules.config;
-      if (findOrientation(dieShape, defaultLoadout, lvl.start) < 0) {
+      if (findOrientation(rules.config.dieShape, loadout, lvl.start) < 0) {
         problems.push('start orientation is impossible');
       }
     } catch (e) {
@@ -227,7 +242,7 @@ export function createState(rules: Rules, level: LevelData, opts: CreateOptions 
   );
 
   const shape = rules.config.dieShape;
-  const loadout = opts.loadout ?? rules.config.defaultLoadout;
+  const loadout = opts.loadout ?? level.loadout ?? rules.config.defaultLoadout;
   const orient = level.start ? findOrientation(shape, loadout, level.start) : 0;
   if (orient < 0)
     throw new LevelError(level.id, ['start orientation is impossible for this loadout']);

@@ -6,7 +6,7 @@ export const Bomb: FaceDef = {
   id: 'Bomb',
   name: 'Bomb',
   glyph: 'B',
-  tags: [],
+  tags: ['blast'],
   attack: 2,
   onAttack(ctx, target) {
     const neighbours = DIRS.map((d) =>

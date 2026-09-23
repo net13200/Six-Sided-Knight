@@ -58,7 +58,8 @@ export interface TileDef {
   /** Tile reached by the goal check (exit stairs). Used by the solver/validator. */
   readonly goal?: boolean;
   onLeadInto?(ctx: TurnContext, info: LeadInfo): LeadResult | undefined;
-  onLand?(ctx: TurnContext, at: Pos): void;
+  /** The die arrived on this tile, travelling in `dir`. */
+  onLand?(ctx: TurnContext, at: Pos, dir: Dir): void;
   onTurnEnd?(ctx: TurnContext, at: Pos): void;
 }
 
@@ -74,6 +75,13 @@ export interface EnemyDef {
     overrides: Readonly<Record<string, number | boolean>>,
   ): Record<string, number | boolean>;
   onEnemyTurn(ctx: TurnContext, self: EnemyState): void;
+  /** Adjusts damage this enemy takes from `face` (e.g. armour that only one face breaks). */
+  modifyDamage?(ctx: TurnContext, self: EnemyState, amount: number, face: FaceId): number;
+  /**
+   * Tiles this enemy would hit from range next enemy phase (UI only: drawn as
+   * danger lanes). Melee enemies leave it undefined.
+   */
+  dangerTiles?(ctx: TurnContext, self: EnemyState): Pos[];
   /**
    * True if the enemy will act in the next enemy phase. Define it only for enemies
    * that sometimes skip turns; the UI then shows a "ready" / "resting" indicator.

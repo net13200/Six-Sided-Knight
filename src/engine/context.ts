@@ -201,7 +201,26 @@ export class TurnContext {
     this.distCache = null;
     this.emit({ type: 'moved', from, to, dir, orient: die.orient });
 
-    this.tileDefAt(to.x, to.y)?.onLand?.(this, to);
+    this.land(to, dir);
+  }
+
+  /**
+   * Moves the die one step in `dir` without rolling (orientation unchanged),
+   * then runs landing hooks. The caller checks the destination is free.
+   */
+  slidePlayer(dir: Dir): void {
+    if (this.over) return;
+    const p = this.playerState;
+    const from = { x: p.x, y: p.y };
+    const to = { x: p.x + DIR_DELTA[dir].dx, y: p.y + DIR_DELTA[dir].dy };
+    this.playerState = { ...p, x: to.x, y: to.y };
+    this.distCache = null;
+    this.emit({ type: 'slid', from, to, dir });
+    this.land(to, dir);
+  }
+
+  private land(at: Pos, dir: Dir): void {
+    this.tileDefAt(at.x, at.y)?.onLand?.(this, at, dir);
     for (const [slot, face] of this.dieSlots()) {
       if (this.over) return;
       this.face(face).onLand?.(this, slot);
@@ -252,6 +271,8 @@ export class TurnContext {
     const e = this.enemyById(enemyId);
     if (!e) return false;
     const at = { x: e.x, y: e.y };
+    const mod = this.rules.enemies.get(e.kind).modifyDamage;
+    if (mod) amount = Math.max(0, mod(this, e, amount, face));
     this.emit({ type: 'attacked', target: enemyId, at, face, damage: amount, splash });
     if (amount <= 0) return false;
     const hp = e.hp - amount;
@@ -274,6 +295,18 @@ export class TurnContext {
     }
     this.replaceEnemy({ ...e, x: to.x, y: to.y });
     this.emit({ type: 'enemyMoved', enemyId, from: { x: e.x, y: e.y }, to });
+  }
+
+  /** Moves an enemy as a result of the player's action (not its own move). */
+  pullEnemy(enemyId: number, to: Pos): void {
+    const e = this.enemyById(enemyId);
+    if (!e) return;
+    if (this.enemyAt(to.x, to.y) || (this.playerState.x === to.x && this.playerState.y === to.y)) {
+      throw new Error(`Enemy ${enemyId} cannot be pulled onto an occupied tile`);
+    }
+    this.replaceEnemy({ ...e, x: to.x, y: to.y });
+    this.distCache = null;
+    this.emit({ type: 'pulled', from: { x: e.x, y: e.y }, to, enemyId });
   }
 
   updateEnemyData(enemyId: number, patch: Readonly<Record<string, number | boolean>>): void {

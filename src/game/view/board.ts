@@ -1,10 +1,11 @@
 /** Draws the board, entities and effects from a GameState plus event-driven visuals. */
-import type { Dir, GameState, Rules } from '../../engine';
+import { TurnContext, type Dir, type GameState, type Pos, type Rules } from '../../engine';
 import { drawEnemy, drawTile } from './art';
 import { drawDieCube } from './cube';
 import type { Fx, Visuals } from './fx';
 import { BOARD_X, BOARD_Y, TILE, tileCenter } from './layout';
 import { drawOutcomeChips, type Outcome } from './outcome';
+import { C } from './palette';
 
 /** A wall with no non-wall tile around it (8-neighbourhood) is drawn as empty darkness. */
 function isVoid(state: GameState, x: number, y: number): boolean {
@@ -42,6 +43,8 @@ export function drawBoard(
       drawTile(ctx, rules.tiles.get(id), BOARD_X + x * TILE, BOARD_Y + y * TILE, TILE, x, y, t);
     }
   }
+
+  if (state.status === 'playing') drawDangerLanes(ctx, rules, state, t);
 
   const p = state.player;
   const pc = tileCenter(p.x, p.y);
@@ -111,6 +114,42 @@ export function drawBoard(
     ctx.fillRect(BOARD_X, BOARD_Y, 8 * TILE, 9 * TILE);
     ctx.restore();
   }
+}
+
+/** Tiles ranged enemies (archers) will shoot next turn: a red wash with arrow ticks. */
+export function dangerTiles(rules: Rules, state: GameState): Pos[] {
+  const out: Pos[] = [];
+  let ctx: TurnContext | null = null;
+  for (const e of state.enemies) {
+    const def = rules.enemies.get(e.kind);
+    if (!def.dangerTiles) continue;
+    // An enemy under a turn-skipping effect (frozen) won't shoot.
+    if (e.effects.some((f) => rules.effects.get(f.id).onEnemyTurn)) continue;
+    ctx ??= new TurnContext(rules, state);
+    out.push(...def.dangerTiles(ctx, e));
+  }
+  return out;
+}
+
+function drawDangerLanes(ctx: CanvasRenderingContext2D, rules: Rules, s: GameState, t: number) {
+  const tiles = dangerTiles(rules, s);
+  if (tiles.length === 0) return;
+  ctx.save();
+  ctx.fillStyle = C.danger;
+  ctx.strokeStyle = `rgba(255,90,106,${0.35 + 0.15 * Math.sin(t * 4)})`;
+  ctx.lineWidth = 1.2;
+  for (const p of tiles) {
+    const x = BOARD_X + p.x * TILE;
+    const y = BOARD_Y + p.y * TILE;
+    ctx.fillRect(x, y, TILE, TILE);
+    ctx.beginPath();
+    ctx.moveTo(x + TILE / 2 - 4, y + TILE / 2);
+    ctx.lineTo(x + TILE / 2 + 4, y + TILE / 2);
+    ctx.moveTo(x + TILE / 2, y + TILE / 2 - 4);
+    ctx.lineTo(x + TILE / 2, y + TILE / 2 + 4);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 export { drawCompass, facesOf } from './cube';

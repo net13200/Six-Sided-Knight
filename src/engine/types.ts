@@ -97,6 +97,10 @@ export type DamageSource =
 
 export type GameEvent =
   | { type: 'moved'; from: Pos; to: Pos; dir: Dir; orient: number }
+  /** The die moved without rolling (e.g. sliding on ice); orientation unchanged. */
+  | { type: 'slid'; from: Pos; to: Pos; dir: Dir }
+  /** Something was pulled toward the die (an enemy, or a treasure being collected). */
+  | { type: 'pulled'; from: Pos; to: Pos; enemyId?: number }
   | { type: 'bumped'; at: Pos; dir: Dir; reason: string }
   | { type: 'attacked'; target: number; at: Pos; face: FaceId; damage: number; splash?: boolean }
   | { type: 'enemyAttacked'; enemyId: number; from: Pos; damage: number; blocked: boolean }

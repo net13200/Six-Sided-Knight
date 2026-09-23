@@ -1,7 +1,7 @@
 /**
  * Face role colours (a tint behind each face). Shapes stay the primary cue;
  * colour just makes scanning faster: attack warm, defence blue, heal green,
- * tools gold. Unknown (new) faces get a neutral lilac.
+ * tools gold, control cyan. Unknown (new) faces get a neutral lilac.
  */
 const ROLE: Readonly<Record<string, string>> = {
   Sword: '#f4b39c',
@@ -10,6 +10,8 @@ const ROLE: Readonly<Record<string, string>> = {
   Heart: '#b8e6b9',
   Key: '#f1d78e',
   Coin: '#f1d78e',
+  Freeze: '#aee9e6',
+  Hook: '#f1d78e',
 };
 
 export function roleColor(face: string): string {

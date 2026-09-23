@@ -13,6 +13,15 @@ const ROLL = 0.13;
 const LUNGE = 0.11;
 const ENEMY_MOVE = 0.12;
 const DEATH = 0.25;
+const SLIDE = 0.08;
+const PULL = 0.16;
+const ARROW = 0.14;
+
+const DEATH_COLOR: Record<string, string> = {
+  slime: C.slime,
+  archer: C.archer,
+  golem: C.golem,
+};
 
 const ENEMY_EVENTS = new Set<GameEvent['type']>(['enemyMoved', 'enemyAttacked', 'enemyWaited']);
 
@@ -61,6 +70,61 @@ export function animateTurn(
         orient = e.orient;
         break;
       }
+      case 'slid': {
+        const from = e.from;
+        const to = e.to;
+        fx.tween(
+          t,
+          SLIDE,
+          (p, v) => {
+            v.player.dx = (from.x + (to.x - from.x) * p - final.x) * TILE;
+            v.player.dy = (from.y + (to.y - from.y) * p - final.y) * TILE;
+            v.player.orient = null;
+          },
+          true,
+        );
+        const c = tileCenter(from.x, from.y);
+        at(t, () => fx.burst(c.x, c.y + 10, C.frost, 3, 25));
+        sfx('slide', t);
+        t += SLIDE;
+        cur = to;
+        break;
+      }
+      case 'pulled': {
+        const a = tileCenter(e.from.x, e.from.y);
+        const b = tileCenter(e.to.x, e.to.y);
+        const me = tileCenter(cur.x, cur.y);
+        fx.streak(me.x, me.y, a.x, a.y, t, PULL / 2, '#d7dee8');
+        if (e.enemyId !== undefined) {
+          const id = e.enemyId;
+          fx.tween(
+            t + PULL / 2,
+            PULL,
+            (p, v) => {
+              const ev = fx.enemyVisual(v, id);
+              const k = ease.inOut(p);
+              ev.dx = (e.from.x + (e.to.x - e.from.x) * k - e.to.x) * TILE;
+              ev.dy = (e.from.y + (e.to.y - e.from.y) * k - e.to.y) * TILE;
+            },
+            true,
+          );
+        } else {
+          at(t + PULL / 2, () => fx.burst(a.x, a.y, C.gem, 8, 40));
+          fx.streak(a.x, a.y, b.x, b.y, t + PULL / 2, PULL, C.gem);
+        }
+        sfx('pull', t);
+        t += PULL * 1.5;
+        break;
+      }
+      case 'effectApplied': {
+        const target = before.enemies.find((x) => x.id === e.enemyId);
+        if (target) {
+          const c = tileCenter(target.x, target.y);
+          at(t, () => fx.burst(c.x, c.y, C.frost, 12, 45));
+        }
+        sfx('freeze', t);
+        break;
+      }
       case 'bumped':
         // Handled by animateBump (bumps never reach a consumed turn).
         break;
@@ -89,7 +153,8 @@ export function animateTurn(
         const enemy = before.enemies.find((x) => x.id === e.enemyId);
         const c = tileCenter(e.at.x, e.at.y);
         if (enemy) fx.ghost(enemy, c.x, c.y, t, DEATH);
-        at(t, () => fx.burst(c.x, c.y, enemy?.kind === 'slime' ? C.slime : C.skeleton, 14, 80));
+        const color = DEATH_COLOR[enemy?.kind ?? ''] ?? C.skeleton;
+        at(t, () => fx.burst(c.x, c.y, color, 14, 80));
         sfx('kill', t);
         break;
       }
@@ -147,6 +212,13 @@ export function animateTurn(
         break;
       }
       case 'enemyAttacked': {
+        const ranged = Math.abs(e.from.x - cur.x) + Math.abs(e.from.y - cur.y) > 1;
+        if (ranged) {
+          const a = tileCenter(e.from.x, e.from.y);
+          const b = tileCenter(cur.x, cur.y);
+          fx.streak(a.x, a.y, b.x, b.y, enemyStart, ARROW, '#e8e3d3');
+          sfx('shoot', enemyStart);
+        }
         lunge(fx, e.from, e.from, cur, enemyStart, e.enemyId);
         if (e.blocked) {
           const c = tileCenter(cur.x, cur.y);

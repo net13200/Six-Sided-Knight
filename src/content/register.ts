@@ -9,6 +9,8 @@ import { Heart } from './faces/heart';
 import { Key } from './faces/key';
 import { Shield } from './faces/shield';
 import { Sword } from './faces/sword';
+import { Freeze } from './faces/freeze';
+import { Hook } from './faces/hook';
 import { Floor, Wall } from './tiles/basic';
 import { Chest } from './tiles/chest';
 import { Door } from './tiles/door';
@@ -16,8 +18,12 @@ import { Exit } from './tiles/exit';
 import { Gem } from './tiles/gem';
 import { Pool } from './tiles/pool';
 import { Spikes } from './tiles/spikes';
+import { Ice } from './tiles/ice';
 import { Skeleton } from './enemies/skeleton';
 import { Slime } from './enemies/slime';
+import { Archer } from './enemies/archer';
+import { Golem } from './enemies/golem';
+import { Frozen } from './effects/frozen';
 
 export const CORE_CONFIG: RulesConfig = {
   floorTile: Floor.id,
@@ -26,10 +32,10 @@ export const CORE_CONFIG: RulesConfig = {
   defaultLoadout: ['Shield', 'Heart', 'Bomb', 'Key', 'Sword', 'Coin'],
 };
 
-export const FACES = [Sword, Shield, Bomb, Heart, Key, Coin];
-export const TILES = [Floor, Wall, Spikes, Pool, Door, Chest, Gem, Exit];
-export const ENEMIES = [Skeleton, Slime];
-export const EFFECTS: EffectDef[] = [];
+export const FACES = [Sword, Shield, Bomb, Heart, Key, Coin, Freeze, Hook];
+export const TILES = [Floor, Wall, Spikes, Pool, Door, Chest, Gem, Exit, Ice];
+export const ENEMIES = [Skeleton, Slime, Archer, Golem];
+export const EFFECTS: EffectDef[] = [Frozen];
 
 export function registerCoreContent(rules: Rules): Rules {
   FACES.forEach((f) => rules.faces.register(f));

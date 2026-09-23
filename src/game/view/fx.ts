@@ -93,6 +93,28 @@ export class Fx {
   private flashColor = '#fff';
   private seed = 1;
   private timers: Array<{ time: number; fn: () => void }> = [];
+  private streaks: Array<{
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+    start: number;
+    dur: number;
+    color: string;
+  }> = [];
+
+  /** A short projectile (arrow, hook line) flying from (x0,y0) to (x1,y1). */
+  streak(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    delay: number,
+    dur: number,
+    color: string,
+  ) {
+    this.streaks.push({ x0, y0, x1, y1, start: this.time + delay, dur, color });
+  }
 
   /** Adds a tween starting `delay` seconds from now. */
   tween(delay: number, dur: number, apply: (p: number, v: Visuals) => void, hold = false): void {
@@ -149,6 +171,7 @@ export class Fx {
   get busy(): boolean {
     return (
       this.timers.length > 0 ||
+      this.streaks.some((k) => this.time < k.start + k.dur) ||
       this.anims.some((a) => this.time < a.start + a.dur) ||
       this.ghosts.some((g) => this.time < g.end)
     );
@@ -162,6 +185,7 @@ export class Fx {
     this.timers = [];
     this.ghosts = [];
     this.tileGhosts = [];
+    this.streaks = [];
   }
 
   update(dt: number): void {
@@ -174,6 +198,7 @@ export class Fx {
     this.anims = this.anims.filter((a) => this.time < a.start + a.dur + 0.05);
     this.ghosts = this.ghosts.filter((g) => this.time < g.end);
     this.tileGhosts = this.tileGhosts.filter((g) => this.time < g.until);
+    this.streaks = this.streaks.filter((k) => this.time < k.start + k.dur);
     for (const p of this.particles) {
       p.life -= dt;
       p.x += p.vx * dt;
@@ -220,6 +245,19 @@ export class Fx {
   }
 
   drawParticles(ctx: CanvasRenderingContext2D): void {
+    for (const k of this.streaks) {
+      if (this.time < k.start) continue;
+      const p = clamp01((this.time - k.start) / k.dur);
+      const head = p;
+      const tail = Math.max(0, p - 0.35);
+      ctx.strokeStyle = k.color;
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(k.x0 + (k.x1 - k.x0) * tail, k.y0 + (k.y1 - k.y0) * tail);
+      ctx.lineTo(k.x0 + (k.x1 - k.x0) * head, k.y0 + (k.y1 - k.y0) * head);
+      ctx.stroke();
+    }
     for (const p of this.particles) {
       ctx.globalAlpha = clamp01(p.life / p.max);
       ctx.fillStyle = p.color;

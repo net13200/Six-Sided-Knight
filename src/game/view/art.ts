@@ -148,6 +148,63 @@ const FACE_ICONS: Record<string, IconFn> = {
     ctx.fillStyle = '#c9a22e';
     ctx.fill();
   },
+  Freeze(ctx) {
+    // six-armed snowflake
+    ctx.lineCap = 'round';
+    for (const pass of [0, 1]) {
+      ctx.lineWidth = pass === 0 ? 0.3 : 0.14;
+      ctx.strokeStyle = pass === 0 ? C.outline : C.frost;
+      for (let i = 0; i < 3; i++) {
+        ctx.save();
+        ctx.rotate((i * Math.PI) / 3);
+        ctx.beginPath();
+        ctx.moveTo(0, -0.86);
+        ctx.lineTo(0, 0.86);
+        for (const sy of [-1, 1]) {
+          ctx.moveTo(0, sy * 0.5);
+          ctx.lineTo(-0.24, sy * 0.72);
+          ctx.moveTo(0, sy * 0.5);
+          ctx.lineTo(0.24, sy * 0.72);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+    ctx.beginPath();
+    ctx.arc(0, 0, 0.2, 0, Math.PI * 2);
+    paint(ctx, '#ffffff', 0.08);
+  },
+  Hook(ctx) {
+    // grappling hook: ring, shaft, curved barb
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(0, -0.72, 0.18, 0, Math.PI * 2);
+    ctx.lineWidth = 0.24;
+    ctx.strokeStyle = C.outline;
+    ctx.stroke();
+    ctx.lineWidth = 0.12;
+    ctx.strokeStyle = '#d7dee8';
+    ctx.stroke();
+    for (const pass of [0, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(0, -0.54);
+      ctx.lineTo(0, 0.3);
+      ctx.arc(-0.34, 0.3, 0.34, 0, Math.PI * 0.95);
+      ctx.moveTo(0, 0.3);
+      ctx.arc(0.34, 0.3, 0.34, Math.PI, Math.PI * 0.05, true);
+      ctx.lineWidth = pass === 0 ? 0.36 : 0.18;
+      ctx.strokeStyle = pass === 0 ? C.outline : '#d7dee8';
+      ctx.stroke();
+    }
+    for (const sx of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(sx * 0.68, 0.3);
+      ctx.lineTo(sx * 0.78, 0.02);
+      ctx.lineTo(sx * 0.56, 0.2);
+      ctx.closePath();
+      paint(ctx, '#d7dee8', 0.08);
+    }
+  },
 };
 
 export function drawFace(ctx: Ctx, face: string, cx: number, cy: number, size: number): void {
@@ -332,6 +389,34 @@ const TILE_ART: Record<string, TileArt> = {
     ctx.lineWidth = 2;
     ctx.strokeRect(px + 3, py + 3, s - 6, s - 6);
   },
+  ice(ctx, px, py, s, tx, ty, t) {
+    ctx.fillStyle = C.ice;
+    ctx.fillRect(px, py, s, s);
+    ctx.fillStyle = C.iceDeep;
+    ctx.fillRect(px, py + s - 4, s, 4);
+    ctx.strokeStyle = 'rgba(40,90,120,0.35)';
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(px + 0.5, py + 0.5, s - 1, s - 1);
+    // glints, drifting slowly
+    const g = (Math.sin(t * 1.3 + tx * 0.9 + ty * 1.7) + 1) / 2;
+    ctx.strokeStyle = `rgba(255,255,255,${0.45 + 0.35 * g})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(px + 6, py + s * 0.55);
+    ctx.lineTo(px + s * 0.45, py + 7);
+    ctx.moveTo(px + s * 0.5, py + s - 8);
+    ctx.lineTo(px + s - 7, py + s * 0.45);
+    ctx.stroke();
+    // a hairline crack
+    const r = hash2(tx, ty);
+    ctx.strokeStyle = 'rgba(40,90,120,0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px + 8 + r * 10, py + s - 6);
+    ctx.lineTo(px + 14 + r * 8, py + s * 0.6);
+    ctx.lineTo(px + 10 + r * 12, py + s * 0.45);
+    ctx.stroke();
+  },
 };
 
 export function drawTile(
@@ -433,6 +518,81 @@ const ENEMY_ART: Record<string, EnemyArt> = {
       ctx.fill();
     }
   },
+  archer(ctx, cx, cy, look) {
+    const sway = Math.sin(look.t * 2 + cx) * 0.6;
+    // bow behind, on the side it faces
+    const side = look.lookX >= 0 ? 1 : -1;
+    ctx.beginPath();
+    ctx.arc(cx + side * 6, cy + 1, 12, -Math.PI / 2.4, Math.PI / 2.4, side < 0);
+    ctx.strokeStyle = '#8a5a33';
+    ctx.lineWidth = 2.4;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(
+      cx + side * 6 + side * 12 * Math.cos(Math.PI / 2.4),
+      cy + 1 - 12 * Math.sin(Math.PI / 2.4),
+    );
+    ctx.lineTo(
+      cx + side * 6 + side * 12 * Math.cos(Math.PI / 2.4),
+      cy + 1 + 12 * Math.sin(Math.PI / 2.4),
+    );
+    ctx.strokeStyle = 'rgba(236,230,214,0.7)';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+    // hooded cloak
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 14 + sway);
+    ctx.quadraticCurveTo(cx + 12, cy - 6, cx + 11, cy + 12);
+    ctx.lineTo(cx - 11, cy + 12);
+    ctx.quadraticCurveTo(cx - 12, cy - 6, cx, cy - 14 + sway);
+    ctx.closePath();
+    ctx.fillStyle = C.archer;
+    ctx.fill();
+    ctx.strokeStyle = C.outline;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // face in shadow with bright eyes
+    ctx.beginPath();
+    ctx.ellipse(cx, cy - 3 + sway / 2, 6.5, 5.5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = C.archerDark;
+    ctx.fill();
+    ctx.fillStyle = '#f7f09a';
+    const ex = look.lookX * 1.4;
+    const ey = look.lookY * 1.2;
+    ctx.fillRect(cx - 3.5 + ex, cy - 4 + ey, 2.2, 2);
+    ctx.fillRect(cx + 1.3 + ex, cy - 4 + ey, 2.2, 2);
+  },
+  golem(ctx, cx, cy, look) {
+    const breathe = Math.sin(look.t * 1.5 + cx) * 0.5;
+    ctx.beginPath();
+    ctx.roundRect(cx - 14, cy - 12 + breathe, 28, 25 - breathe, 5);
+    ctx.fillStyle = C.golem;
+    ctx.fill();
+    ctx.strokeStyle = C.outline;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // plates and cracks
+    ctx.strokeStyle = C.golemDark;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(cx - 14, cy + 2);
+    ctx.lineTo(cx + 14, cy + 2);
+    ctx.moveTo(cx - 4, cy + 2);
+    ctx.lineTo(cx - 6, cy + 12);
+    ctx.moveTo(cx + 7, cy - 12 + breathe);
+    ctx.lineTo(cx + 5, cy - 6);
+    ctx.lineTo(cx + 8, cy - 3);
+    ctx.stroke();
+    // moss
+    ctx.fillStyle = '#6a9a4a';
+    ctx.fillRect(cx - 13, cy - 12 + breathe, 7, 2.5);
+    ctx.fillRect(cx + 4, cy + 10, 6, 2);
+    // glowing eyes
+    const ex = look.lookX * 1.4;
+    ctx.fillStyle = '#ffb238';
+    ctx.fillRect(cx - 7 + ex, cy - 6 + breathe, 4, 2.5);
+    ctx.fillRect(cx + 3 + ex, cy - 6 + breathe, 4, 2.5);
+  },
 };
 
 export function drawEnemy(
@@ -468,6 +628,18 @@ export function drawEnemy(
     ctx.fill();
     ctx.restore();
   }
+  const frozen = enemy.effects.find((e) => e.id === 'frozen');
+  if (frozen) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(cx - 16, cy - 16, 32, 31, 6);
+    ctx.fillStyle = 'rgba(191,243,255,0.35)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(191,243,255,0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+  }
   if (!showStatus) return;
   // HP pips
   const n = def.hp;
@@ -477,6 +649,24 @@ export function drawEnemy(
     ctx.arc(x, cy + 16, 2.2, 0, Math.PI * 2);
     ctx.fillStyle = i < enemy.hp ? C.hurt : 'rgba(255,255,255,0.18)';
     ctx.fill();
+  }
+  if (frozen) {
+    // Frozen: a snowflake badge with the turns left, instead of the cadence badge.
+    const bx = cx + 12;
+    const by = cy - 13;
+    ctx.beginPath();
+    ctx.arc(bx, by, 6.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#16303c';
+    ctx.fill();
+    ctx.strokeStyle = C.frost;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = C.frost;
+    ctx.font = 'bold 9px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(frozen.turns), bx, by + 0.5);
+    return;
   }
   // Cadence indicator for enemies that skip turns.
   if (def.willAct) {

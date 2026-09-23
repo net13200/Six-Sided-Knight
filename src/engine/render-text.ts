@@ -33,6 +33,10 @@ export function describeEvent(e: GameEvent): string {
   switch (e.type) {
     case 'moved':
       return `rolled ${e.dir} to ${e.to.x},${e.to.y}`;
+    case 'slid':
+      return `slid ${e.dir} to ${e.to.x},${e.to.y}`;
+    case 'pulled':
+      return `pulled ${e.enemyId !== undefined ? `enemy #${e.enemyId}` : 'item'} from ${e.from.x},${e.from.y} to ${e.to.x},${e.to.y}`;
     case 'bumped':
       return `bumped ${e.reason} (no turn)`;
     case 'attacked':

@@ -15,30 +15,30 @@ import {
 } from '../../src/engine';
 import { run, start } from './helpers';
 
-const Frozen: EffectDef = {
-  id: 'frozen',
-  name: 'Frozen',
+const Stunned: EffectDef = {
+  id: 'stunned',
+  name: 'Stunned',
   onEnemyTurn: () => true, // skip the enemy's turn
 };
 
-const Freeze: FaceDef = {
-  id: 'Freeze',
-  name: 'Freeze',
-  glyph: 'F',
+const Stun: FaceDef = {
+  id: 'Stun',
+  name: 'Stun',
+  glyph: 'X',
   tags: [],
   attack: 0,
   onAttack(ctx, target) {
-    ctx.damageEnemy(target.id, 0, 'Freeze');
-    ctx.applyEffect(target.id, 'frozen', 2);
+    ctx.damageEnemy(target.id, 0, 'Stun');
+    ctx.applyEffect(target.id, 'stunned', 2);
     return false;
   },
 };
 
 /** Pushes the die one extra tile on landing (a conveyor), via a face-agnostic tile hook. */
-const Ice: TileDef = {
-  id: 'ice',
-  name: 'Ice',
-  glyph: '=',
+const Conveyor: TileDef = {
+  id: 'conveyor',
+  name: 'Conveyor',
+  glyph: '%',
   passable: true,
   enemyPassable: true,
   onLand(ctx, at) {
@@ -64,12 +64,12 @@ function extendedRules() {
   const rules = registerCoreContent(
     createRules({
       ...CORE_CONFIG,
-      defaultLoadout: ['Shield', 'Heart', 'Bomb', 'Key', 'Sword', 'Freeze'],
+      defaultLoadout: ['Shield', 'Heart', 'Bomb', 'Key', 'Sword', 'Stun'],
     }),
   );
-  rules.faces.register(Freeze);
-  rules.effects.register(Frozen);
-  rules.tiles.register(Ice);
+  rules.faces.register(Stun);
+  rules.effects.register(Stunned);
+  rules.tiles.register(Conveyor);
   rules.enemies.register(Turret);
   return rules;
 }
@@ -77,11 +77,11 @@ function extendedRules() {
 describe('adding content through registries only', () => {
   const rules = extendedRules();
 
-  it('a new face and effect: Freeze stops an enemy for 2 turns', () => {
-    // Freeze replaces Coin in the west slot. The skeleton is adjacent to the west.
+  it('a new face and effect: Stun stops an enemy for 2 turns', () => {
+    // Stun replaces Coin in the west slot. The skeleton is adjacent to the west.
     const s = start(['.......>', 'k@......'], {}, {}, rules);
     const [frozen] = run(s, 'W', rules);
-    expect(frozen!.state.enemies[0]!.effects).toEqual([{ id: 'frozen', turns: 1 }]);
+    expect(frozen!.state.enemies[0]!.effects).toEqual([{ id: 'stunned', turns: 1 }]);
     // Adjacent but frozen: no attack this turn or next, then it thaws and attacks.
     let state = frozen!.state;
     const attacked = [frozen!.events.some((e) => e.type === 'enemyAttacked')];
@@ -94,8 +94,8 @@ describe('adding content through registries only', () => {
     expect(state.enemies[0]).toMatchObject({ x: 0, y: 1, effects: [] });
   });
 
-  it('a new tile: ice slides the die one extra tile', () => {
-    const s = start(['#@=...>#'], {}, {}, rules);
+  it('a new tile: a conveyor pushes the die one extra tile', () => {
+    const s = start(['#@%...>#'], {}, {}, rules);
     expect(run(s, 'E', rules)[0]!.state.player.x).toBe(3);
   });
 
@@ -111,7 +111,8 @@ describe('adding content through registries only', () => {
 describe('core engine names no content', () => {
   const ids = [
     ...['Sword', 'Shield', 'Bomb', 'Heart', 'Key', 'Coin'],
-    ...['floor', 'wall', 'spikes', 'pool', 'door', 'chest', 'gem', 'exit', 'skeleton', 'slime'],
+    ...['floor', 'wall', 'spikes', 'pool', 'door', 'chest', 'gem', 'exit', 'ice'],
+    ...['skeleton', 'slime', 'archer', 'golem', 'Freeze', 'Hook', 'frozen'],
   ];
   const dir = join(__dirname, '../../src/engine');
   for (const file of readdirSync(dir)) {

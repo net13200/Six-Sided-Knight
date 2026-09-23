@@ -2,7 +2,7 @@
 
 Source of truth for game rules. If code and this file disagree, this file wins (or gets updated in the same commit).
 
-Spec version: 0.4 (milestone 4)
+Spec version: 0.5 (milestone 5)
 
 ## 1. Board
 
@@ -12,7 +12,8 @@ Spec version: 0.4 (milestone 4)
 
 ## 2. The die
 
-- Faces: `Sword`, `Shield`, `Bomb`, `Heart`, `Key`, `Coin`.
+- Faces: `Sword`, `Shield`, `Bomb`, `Heart`, `Key`, `Coin` (the starting die), plus `Freeze` and `Hook` (bought in the store, see 9c; campaign levels may also swap one in).
+- A die's faces are its **loadout** (faces by home slot). A level may set its own loadout (`loadout:` in the level file), e.g. Freeze instead of Coin.
 - Orientation: `{ top, bottom, north, south, east, west }`.
 - Start orientation: top=Shield, bottom=Heart, north=Bomb, south=Key, east=Sword, west=Coin.
 - Roll transforms (new ← old):
@@ -44,6 +45,16 @@ Moving into an enemy attacks it with the leading face instead of moving.
 | Bomb               | 2 to target, plus 1 splash to each enemy orthogonally adjacent to the target (never to the player) |
 | Shield             | 1                                                                                                  |
 | Key / Coin / Heart | 0 ("clunk") — still a valid action; consumes the turn                                              |
+| Hook               | 0 ("clunk") when the enemy is adjacent (see 4a for pulling from range)                             |
+| Freeze             | 0 damage; the enemy is **frozen** and skips its next 2 enemy phases                                |
+
+- Enemy armour: some enemies ignore damage from certain faces (Golem: only Bomb hurts it, splash included).
+
+## 4a. Hook
+
+- When Hook leads into a tile with no enemy, it looks along that line up to 3 tiles from the die. The tile next to the die must be passable and not the exit; the line stops at the first impassable tile (wall, door, chest).
+- The first enemy found 2–3 tiles away is pulled onto the tile next to the die (only if enemies may stand there; not onto spikes). The first treasure found (a gem) is collected from range.
+- Either way the die stays put, its faces unchanged, and the turn is used. With nothing in reach the die simply rolls.
 
 - If the target dies, the die rolls onto its tile (orientation changes, landing effects apply).
 - If the target survives, the die stays put and its orientation does not change.
@@ -51,18 +62,19 @@ Moving into an enemy attacks it with the leading face instead of moving.
 
 ## 5. Tiles
 
-| Tile         | Rule                                                                                                                                          |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Floor        | Nothing.                                                                                                                                      |
-| Wall         | Impassable. Bump = invalid (no turn).                                                                                                         |
-| Spikes       | On landing: player takes 1 damage unless the **bottom** face is Shield. Enemies cannot enter.                                                 |
-| Healing pool | On landing with **bottom** = Heart and HP below max: heal 2 (cap at max), pool dries → floor. Otherwise nothing, pool stays.                  |
-| Locked door  | Key leading into it: door opens → floor and the die rolls onto it in the same turn. Any other face: invalid bump. Enemies cannot enter.       |
-| Chest        | Coin leading into it: +30 gold, chest → floor and the die rolls onto it in the same turn. Any other face: invalid bump. Enemies cannot enter. |
-| Gem          | On landing: +10 gold, gem → floor.                                                                                                            |
-| Exit stairs  | On landing: level complete.                                                                                                                   |
+| Tile         | Rule                                                                                                                                                                                                                                                                                     |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Floor        | Nothing.                                                                                                                                                                                                                                                                                 |
+| Wall         | Impassable. Bump = invalid (no turn).                                                                                                                                                                                                                                                    |
+| Spikes       | On landing: player takes 1 damage unless the **bottom** face is Shield. Enemies cannot enter.                                                                                                                                                                                            |
+| Healing pool | On landing with **bottom** = Heart and HP below max: heal 2 (cap at max), pool dries → floor. Otherwise nothing, pool stays.                                                                                                                                                             |
+| Locked door  | Key leading into it: door opens → floor and the die rolls onto it in the same turn. Any other face: invalid bump. Enemies cannot enter.                                                                                                                                                  |
+| Chest        | Coin leading into it: +30 gold, chest → floor and the die rolls onto it in the same turn. Any other face: invalid bump. Enemies cannot enter.                                                                                                                                            |
+| Gem          | On landing: +10 gold, gem → floor.                                                                                                                                                                                                                                                       |
+| Exit stairs  | On landing: level complete.                                                                                                                                                                                                                                                              |
+| Ice          | On landing: the die **slides** on in the same direction without rolling (same faces) until it lands on a non-ice tile, or stops on the last ice tile before a wall, door, chest, enemy or the board edge. Each tile slid onto triggers its landing effect. Enemies walk on ice normally. |
 
-Enemies may stand on floor, pool, gem, and exit tiles but never trigger or collect them.
+Enemies may stand on floor, pool, gem, ice and exit tiles but never trigger or collect them.
 
 ## 6. Defense
 
@@ -75,7 +87,12 @@ Enemies may stand on floor, pool, gem, and exit tiles but never trigger or colle
 | Skeleton | 2   | Acts every enemy phase.                                                                                                                                                                                             |
 | Slime    | 3   | Acts every other enemy phase. Own counter; by default acts on the phases after player turns 2, 4, 6, … A level may mark a slime `ready` (acts on turn 1, 3, 5, …). A visible indicator shows when it will act next. |
 
-Enemy action:
+| Archer | 1 | Never moves. Every enemy phase it shoots along its row and column: if the die is in a clear straight line it hits for 1 (Shield on top blocks). Walls, doors, chests and other enemies block arrows. Its lanes are shown on the board. |
+| Golem | 4 | Stone armour: only Bomb damages it. Acts every other enemy phase like a slime (same `ready` rule). Chases and hits for 1. Bounty 20. |
+
+Frozen enemies skip their turn (no move, no attack, no shot); the counter is shown on the enemy.
+
+Enemy action (skeleton, slime, golem):
 
 1. If orthogonally adjacent to the player: attack for 1 (0 if Shield on top).
 2. Otherwise step to the orthogonal neighbor with the smallest BFS distance to the player. BFS runs over tiles enemies may enter (other enemies are ignored by the BFS so they don't freeze, but an enemy cannot step onto an occupied tile). Ties are broken in the order N, E, S, W. If no neighbor is strictly closer, it stays.
@@ -133,7 +150,7 @@ Enemy intent (next move or attack) is deterministic and shown on the board.
 - The simulation is pure and deterministic: `step(state, action) → { state, events }`. No DOM access. Seeded RNG only.
 - State is immutable / copy-on-write; undo is a stack of states.
 - Replay = `{ levelId | seed, inputs[] }`; replaying reproduces exactly the same final state and events.
-- Faces, tiles, enemies, and effects are registry definitions with hooks (`onLeadInto`, `onLand`, `onEnemyTurn`, `onTurnEnd`). Core turn logic never names a specific face, tile, or enemy.
+- Faces, tiles, enemies, and effects are registry definitions with hooks (`onLeadInto`, `onLand`, `onEnemyTurn`, `onTurnEnd`, `modifyDamage`, `dangerTiles`). Core turn logic never names a specific face, tile, or enemy. Milestone 5's ice, Freeze, Hook, Archer and Golem are content modules only; the engine gained three generic capabilities for them (slide the die without rolling, pull an enemy, an enemy damage modifier), none of which names content.
 - Any single-face leading requirement is satisfiable at any tile, so puzzle levels must be proven solvable by the solver, never assumed.
 
 ## 12a. Reading the die (UI)

@@ -16,7 +16,12 @@ export type SfxName =
   | 'win'
   | 'lose'
   | 'undo'
-  | 'click';
+  | 'click'
+  | 'slide'
+  | 'freeze'
+  | 'pull'
+  | 'shoot'
+  | 'buy';
 
 export class Audio {
   private ctx: AudioContext | null = null;
@@ -123,6 +128,25 @@ export class Audio {
         break;
       case 'click':
         this.tone(t, 'sine', 700, 700, 0.04, 0.1);
+        break;
+      case 'slide':
+        this.noiseHit(t, 0.18, 4200, 0.12);
+        this.tone(t, 'sine', 1400, 900, 0.16, 0.05);
+        break;
+      case 'freeze':
+        [1568, 2093, 2637].forEach((f, i) => this.tone(t + i * 0.04, 'sine', f, f, 0.16, 0.08));
+        this.noiseHit(t, 0.1, 5000, 0.12);
+        break;
+      case 'pull':
+        this.tone(t, 'triangle', 300, 700, 0.14, 0.15);
+        this.noiseHit(t + 0.1, 0.04, 1500, 0.2);
+        break;
+      case 'shoot':
+        this.noiseHit(t, 0.07, 3500, 0.2);
+        this.tone(t, 'sine', 900, 400, 0.08, 0.08);
+        break;
+      case 'buy':
+        [659, 988, 1319].forEach((f, i) => this.tone(t + i * 0.06, 'square', f, f, 0.1, 0.07));
         break;
     }
   }
