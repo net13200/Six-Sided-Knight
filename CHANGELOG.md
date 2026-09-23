@@ -2,6 +2,14 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.6.0 — Polish and release-ready (milestone 6)
+
+- **Accessibility:** screen-reader support (every move is announced; H reads the board: your faces, what each direction does, the exit and nearby enemies). New settings: High contrast, Larger labels, Reduce motion. Archer lanes are hatched so they read without colour. Every button is a comfortable tap target, even in landscape.
+- **Performance:** smoother on slower phones (cached board drawing, 2x canvas cap, half-rate drawing when idle), deep Depths floors generate about 4x faster, smaller app icons. Measured and documented in PERFORMANCE.md; the 300 KB download budget is enforced in CI.
+- **App:** a "New version ready" bar when an update is out, and Daily Roll/Depths confirmed to work offline.
+- **Docs:** how-to-play guide, privacy notes, architecture overview, release checklist.
+- The Forge was re-laid out with bigger tiles; Back and Skins are now at the top.
+
 ## 0.5.3 — SugiGames splash
 
 - The SugiGames animation (the 杉 kanji painted stroke by stroke, then the wordmark) plays while the game starts, then fades to the title screen. Tap to skip. Ported from the SugiGames repo; its Baloo 2 font is bundled (only the letters it needs, 1.7 KB, SIL Open Font License), so it works offline and makes no third-party requests.

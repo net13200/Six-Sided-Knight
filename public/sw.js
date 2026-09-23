@@ -5,7 +5,7 @@
  *   never-changing names), stored as it's fetched.
  * - The page reports the files it's using; older cached builds are pruned.
  */
-const CACHE = 'ssk-v2';
+const CACHE = 'ssk-v3';
 const CORE = ['./', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -29,6 +29,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  // "Is there a newer build?" checks must reach the network, not this cache.
+  if (req.cache === 'no-store') return;
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req)

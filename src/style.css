@@ -480,3 +480,26 @@ button:focus-visible {
   min-height: 50px;
   align-items: center;
 }
+#update-toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: #ffd75e;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+#update-toast button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #231a05;
+  font-weight: 700;
+  font-size: 15px;
+}

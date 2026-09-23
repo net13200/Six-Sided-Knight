@@ -3,7 +3,8 @@
 A mobile-first puzzle-dungeon game where you are a rolling die. The face on the side you roll toward is the one that acts: Sword attacks, Key opens doors, Coin opens chests, and so on.
 
 - **Rules:** [SPEC.md](SPEC.md) is the source of truth.
-- **Status:** milestone 5 of 6. A 60-level campaign in six chapters (each from chapter 2 on ends in a 3-floor Gauntlet), Daily Roll with streaks and sharing, endless Depths, crowns and the Forge (buy faces, build your own die for Daily Roll and Depths), cosmetic die skins, a stats screen, saved progress, and on-device analytics with a hidden KPI panel.
+- **Docs:** how to play ([docs/GUIDE.md](docs/GUIDE.md)), [PRIVACY.md](PRIVACY.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [PERFORMANCE.md](PERFORMANCE.md), [RELEASE.md](RELEASE.md).
+- **Status:** all 6 milestones done. A 60-level campaign in six chapters (each from chapter 2 on ends in a 3-floor Gauntlet), Daily Roll with streaks and sharing, endless Depths, crowns and the Forge (buy faces, build your own die for Daily Roll and Depths), cosmetic die skins, a stats screen, saved progress, and on-device analytics with a hidden KPI panel.
 
 ## Play online
 
@@ -30,7 +31,7 @@ npm run check            # typecheck + lint + format check + unit tests
 npm run build            # production build in dist/ (static; works from any path)
 ```
 
-Controls: swipe or tap toward a tile (touch), arrow keys or WASD (keyboard). Z/U/Backspace undo, R retry, M mute, Esc menu. Tap the die or the compass (or press I) to inspect the die in 3D and preview rolls.
+Controls: swipe or tap toward a tile (touch), arrow keys or WASD (keyboard). Z/U/Backspace undo, R retry, M mute, Esc menu. Tap the die or the compass (or press I) to inspect the die in 3D and preview rolls. H reads the board aloud for screen readers. Settings has High contrast, Larger labels and Reduce motion.
 
 ## Layout
 

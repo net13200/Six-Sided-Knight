@@ -32,6 +32,12 @@ test.describe('installable app', () => {
     await expect.poll(() => scene(page)).toBe('menu');
     await page.getByTestId('play').click();
     await expect.poll(() => scene(page)).toBe('play');
+    // Generated floors work offline too (the generator runs in a cached worker).
+    await page.keyboard.press('Escape');
+    await page.goto('/');
+    await page.getByTestId('daily').click();
+    await page.getByTestId('daily-start').click();
+    await expect.poll(() => scene(page), { timeout: 15_000 }).toBe('play');
     await context.setOffline(false);
   });
 });
@@ -50,5 +56,25 @@ test.describe('SugiGames splash', () => {
     await page.goto('/?splash');
     await page.getByTestId('splash').click();
     await expect(page.getByTestId('splash')).toHaveCount(0, { timeout: 2500 });
+  });
+});
+
+test.describe('update notice', () => {
+  // The service worker would fetch on the page's behalf, bypassing page.route.
+  test.use({ serviceWorkers: 'block' });
+
+  test('offers a reload when a newer build is out', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await expect.poll(() => scene(page)).toBe('menu');
+    // The server now has a different build.
+    await page.route(/\/$/, async (route) => {
+      const res = await route.fetch();
+      const html = (await res.text()).replace(/assets\/index-[\w-]+\.js/, 'assets/index-NEWER.js');
+      await route.fulfill({ response: res, body: html });
+    });
+    await page.clock.fastForward('11:00');
+    await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    await expect(page.getByTestId('update-reload')).toBeVisible();
   });
 });
