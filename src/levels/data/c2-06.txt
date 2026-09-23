@@ -1,0 +1,14 @@
+id: c2-06
+name: Treasure Rink
+par: 10
+hint: Floor tiles stop a slide too
+---
+########
+#@=.===#
+#==#===#
+#*##.>=#
+##=====#
+#.===###
+#==#=#.#
+########
+########

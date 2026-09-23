@@ -5,7 +5,7 @@
  */
 import { defaultRules } from '../content/register';
 import type { GameState, LevelData, Rules } from '../engine';
-import { loadCampaign } from '../levels/campaign';
+import { loadCampaign, loadGauntletFloors } from '../levels/campaign';
 import { LevelService } from '../gen/service';
 import { LocalAnalytics } from '../meta/analytics';
 import { continueIndex, recordWin } from '../meta/progress';
@@ -15,7 +15,8 @@ import type { Platform } from '../platform/platform';
 import { VERSION } from '../version';
 import { Audio } from './audio';
 import type { Command } from './input';
-import type { FloorSummary, Run } from './runs';
+import { Gauntlet } from './gauntlet';
+import type { FloorRun, FloorSummary } from './runs';
 import { DailyScene } from './scenes/daily';
 import { DepthsScene } from './scenes/depths';
 import { FloorScene } from './scenes/floor';
@@ -24,7 +25,10 @@ import { LevelsScene } from './scenes/levels';
 import { MenuScene } from './scenes/menu';
 import { PlayScene } from './scenes/play';
 import { ResultsScene } from './scenes/results';
+import { SkinsScene } from './scenes/skins';
 import { StatsScene } from './scenes/stats';
+import { setDieSkin } from './view/cube';
+import { activeSkin, newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/skins';
 import { canTransition, type Scene } from './scenes/scene';
 import type { PlaySession } from './session';
 import type { StarResult } from './stars';
@@ -42,11 +46,17 @@ export interface WinSummary {
   readonly firstClear: boolean;
   /** Crowns earned for stars won for the first time. */
   readonly crowns: number;
+  /** Par to show when it isn't the level's own (a gauntlet's summed par). */
+  readonly par?: number;
+  /** Skins unlocked by this win. */
+  readonly newSkins: readonly SkinDef[];
 }
 
 export class Game {
   readonly rules: Rules;
   readonly levels: LevelData[];
+  /** Extra floors of gauntlet levels, by level id. */
+  readonly gauntlets: Map<string, LevelData[]>;
   readonly audio = new Audio();
   readonly reducedMotion: boolean;
   readonly save: SaveStore;
@@ -62,6 +72,7 @@ export class Game {
   ) {
     this.rules = defaultRules();
     this.levels = loadCampaign(this.rules);
+    this.gauntlets = loadGauntletFloors(this.rules);
     this.levelService = new LevelService(this.rules);
     this.reducedMotion = platform.prefersReducedMotion();
     this.save = new SaveStore(platform.storage, platform.now());
@@ -70,6 +81,12 @@ export class Game {
     this.analytics.optedOut = this.save.data.settings.analyticsOptOut;
     this.analytics.verbose = options.debug === true;
     this.analytics.startSession(SESSION_GAP_MS);
+    this.applySkin();
+  }
+
+  /** Draws the die with the equipped skin from now on. */
+  applySkin(): void {
+    setDieSkin(activeSkin(this.save.data));
   }
 
   get tutorialLevels(): string[] {
@@ -101,6 +118,11 @@ export class Game {
   goPlay(index: number): void {
     const i = Math.max(0, Math.min(index, this.levels.length - 1));
     const level = this.levels[i]!;
+    const extra = this.gauntlets.get(level.id);
+    if (extra) {
+      void new Gauntlet(this, i, [level, ...extra]).play();
+      return;
+    }
     this.goPlaySession({
       mode: 'campaign',
       level,
@@ -133,11 +155,15 @@ export class Game {
     this.go(new ForgeScene(this, back));
   }
 
+  goSkins(): void {
+    this.go(new SkinsScene(this));
+  }
+
   goStats(): void {
     this.go(new StatsScene(this));
   }
 
-  goFloor(summary: FloorSummary, run: Run): void {
+  goFloor(summary: FloorSummary, run: FloorRun): void {
     this.go(new FloorScene(this, summary, run));
   }
 
@@ -156,6 +182,7 @@ export class Game {
     const level = this.levels[index]!;
     const firstClear = (this.save.data.levels[level.id]?.completions ?? 0) === 0;
     const before = this.save.data.levels[level.id]?.stars ?? 0;
+    const skinsBefore = unlockedSkins(this.save.data);
     let improved = false;
     let crowns = 0;
     this.save.update((d) => {
@@ -177,7 +204,8 @@ export class Game {
     if (firstClear && index < TUTORIAL_LENGTH) {
       this.analytics.track('tutorial_step_complete', { step: index + 1, level: level.id });
     }
-    return { stars, improved, firstClear, crowns };
+    const newSkins = newlyUnlocked(skinsBefore, unlockedSkins(this.save.data));
+    return { stars, improved, firstClear, crowns, newSkins };
   }
 
   // ---------- loop hooks ----------

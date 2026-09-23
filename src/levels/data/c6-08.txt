@@ -1,0 +1,15 @@
+id: c6-08
+name: Last Stand
+par: 12
+hint: Freeze and Hook, together
+loadout: Shield Hook Bomb Key Sword Freeze
+---
+########
+#====#=#
+#=*==>k#
+#======#
+#.#==#g#
+#@=#==##
+#==#==.#
+########
+########

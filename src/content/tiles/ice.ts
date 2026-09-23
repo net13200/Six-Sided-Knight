@@ -12,6 +12,7 @@ export const Ice: TileDef = {
   glyph: '=',
   passable: true,
   enemyPassable: true,
+  carries: true,
   onLand(ctx, at, dir) {
     const nx = at.x + DIR_DELTA[dir].dx;
     const ny = at.y + DIR_DELTA[dir].dy;

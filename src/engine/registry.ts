@@ -57,6 +57,11 @@ export interface TileDef {
   readonly treasure?: boolean;
   /** Tile reached by the goal check (exit stairs). Used by the solver/validator. */
   readonly goal?: boolean;
+  /**
+   * Landing here can carry the die further in the same straight line (ice).
+   * Tells the solver one action may cover several tiles.
+   */
+  readonly carries?: boolean;
   onLeadInto?(ctx: TurnContext, info: LeadInfo): LeadResult | undefined;
   /** The die arrived on this tile, travelling in `dir`. */
   onLand?(ctx: TurnContext, at: Pos, dir: Dir): void;

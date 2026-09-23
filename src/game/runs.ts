@@ -15,12 +15,21 @@ import {
 } from '../meta/daily';
 import { depthsFloorParams } from '../meta/depths';
 import type { RunProgress } from '../meta/save';
+import { newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/skins';
 import { STARTING_FACES, crownsForStars, earnCrowns, playerLoadout } from '../meta/store';
 import type { Game } from './game';
 import type { PlaySession } from './session';
 
+/** Something played floor by floor (Daily Roll, Depths, a campaign Gauntlet). */
+export interface FloorRun {
+  /** Daily: the UTC date. Depths: the run seed. Gauntlet: the level id. */
+  readonly key: string;
+  /** Plays the current floor. */
+  play(): Promise<void>;
+}
+
 export interface FloorSummary {
-  readonly mode: 'daily' | 'depths';
+  readonly mode: 'daily' | 'depths' | 'gauntlet';
   /** Floor just cleared. */
   readonly floor: number;
   /** Total floors (daily), or null (endless). */
@@ -36,9 +45,11 @@ export interface FloorSummary {
   readonly newBest: boolean;
   /** Crowns earned on this floor (first daily completion, or a new Depths record). */
   readonly crowns: number;
+  /** Skins unlocked (a daily streak milestone). */
+  readonly newSkins?: readonly SkinDef[];
 }
 
-export class Run {
+export class Run implements FloorRun {
   private progress: RunProgress;
 
   constructor(
@@ -136,6 +147,7 @@ export class Run {
     let counted = false;
     let newBest = false;
     let crowns = 0;
+    const skinsBefore = unlockedSkins(game.save.data);
 
     if (this.mode === 'daily' && final) {
       const date = p.key;
@@ -180,6 +192,7 @@ export class Run {
       bestFloor: game.save.data.depths.bestFloor,
       newBest,
       crowns,
+      newSkins: newlyUnlocked(skinsBefore, unlockedSkins(game.save.data)),
     };
   }
 

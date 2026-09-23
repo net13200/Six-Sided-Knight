@@ -1,0 +1,14 @@
+id: c2-07
+name: Hot Spring
+par: 9
+hint: Pools heal Heart-down, even after ice
+---
+########
+#@.....#
+#.^^^^.#
+#.^..^.#
+#==~===#
+#.^..^.#
+#.^^^^.#
+#.....>#
+########

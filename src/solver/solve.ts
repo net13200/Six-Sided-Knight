@@ -91,6 +91,49 @@ export function goalDistance(rules: Rules, s: GameState): number {
   return best === Infinity ? 0 : best;
 }
 
+/**
+ * Admissible heuristic for levels where one action can carry the die several
+ * tiles in a straight line (ice): the fewest straight-line segments from each
+ * tile to a goal, over tiles the die could ever cross (doors and chests count
+ * as open). Returns null when no tile carries, so plain Manhattan is used.
+ */
+export function segmentDistances(rules: Rules, s: GameState): Int16Array | null {
+  const defs = s.tiles.map((t) => rules.tiles.get(t));
+  if (!defs.some((d) => d.carries)) return null;
+  const w = s.width;
+  const h = s.height;
+  const open = defs.map((d) => d.passable || d.onLeadInto !== undefined);
+  const dist = new Int16Array(w * h).fill(-1);
+  const queue: number[] = [];
+  defs.forEach((d, i) => {
+    if (d.goal) {
+      dist[i] = 0;
+      queue.push(i);
+    }
+  });
+  for (let q = 0; q < queue.length; q++) {
+    const cur = queue[q]!;
+    const cx = cur % w;
+    const cy = (cur - cx) / w;
+    for (const [dx, dy] of [
+      [0, -1],
+      [1, 0],
+      [0, 1],
+      [-1, 0],
+    ] as const) {
+      for (let x = cx + dx, y = cy + dy; x >= 0 && y >= 0 && x < w && y < h; x += dx, y += dy) {
+        const i = y * w + x;
+        if (!open[i]) break;
+        if (dist[i] === -1) {
+          dist[i] = dist[cur]! + 1;
+          queue.push(i);
+        }
+      }
+    }
+  }
+  return dist;
+}
+
 export function solve(rules: Rules, start: GameState, opts: SolveOptions = {}): SolveResult {
   return opts.algorithm === 'idastar'
     ? solveIdaStar(rules, start, opts)
@@ -159,9 +202,16 @@ function solveIdaStar(rules: Rules, start: GameState, opts: SolveOptions): Solve
   // Best depth at which each state was reached in the current iteration.
   let table = new Map<string, number>();
   let seenTotal = 0;
+  // Ice can move the die several tiles per action: then count straight segments instead.
+  const segments = segmentDistances(rules, start);
+  const h = (s: GameState): number => {
+    if (!segments) return goalDistance(rules, s);
+    const d = segments[s.player.y * s.width + s.player.x]!;
+    return d < 0 ? 0 : d;
+  };
 
   const search = (s: GameState, g: number, bound: number): number | 'found' => {
-    const f = g + goalDistance(rules, s);
+    const f = g + h(s);
     if (f > bound) return f;
     if (++nodes > maxNodes) {
       budgetHit = true;
@@ -194,7 +244,7 @@ function solveIdaStar(rules: Rules, start: GameState, opts: SolveOptions): Solve
     return min;
   };
 
-  let bound = goalDistance(rules, start);
+  let bound = h(start);
   for (;;) {
     table = new Map([[enc.key(start, extra(start)), 0]]);
     const t = search(start, 0, bound);

@@ -9,6 +9,7 @@
  * - drawCompass: the flat cross under the board, with the bottom face.
  */
 import { faceInSlot, getShape, type DieState } from '../../engine';
+import { SKINS, type SkinDef } from '../../meta/skins';
 import { drawFace } from './art';
 import { C } from './palette';
 import { roleColor } from './roles';
@@ -44,6 +45,12 @@ export interface CubeLook {
   readonly flash: number;
 }
 
+/** The equipped cosmetic skin (frame, glow, pattern). Never changes face colours. */
+let currentSkin: SkinDef = SKINS[0]!;
+export function setDieSkin(skin: SkinDef): void {
+  currentSkin = skin;
+}
+
 /** The die on the board, seen from above. `R` is the outer half-size. */
 export function drawDieCube(
   ctx: CanvasRenderingContext2D,
@@ -53,6 +60,7 @@ export function drawDieCube(
   cy: number,
   look: CubeLook,
   showBottom: boolean,
+  skin: SkinDef = currentSkin,
 ): void {
   const faces = facesOf(die, orient);
   const R = 22; // a touch larger than half a tile: nothing else is drawn at the die's edges
@@ -60,6 +68,14 @@ export function drawDieCube(
   ctx.save();
   ctx.translate(cx, cy);
   ctx.scale(look.sx, look.sy);
+
+  if (skin.glow) {
+    const g = ctx.createRadialGradient(0, 0, R * 0.6, 0, 0, R * 1.5);
+    g.addColorStop(0, skin.glow);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(-R * 1.6, -R * 1.6, R * 3.2, R * 3.2);
+  }
 
   // Shadow, with the bottom face peeking out of it.
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
@@ -90,6 +106,13 @@ export function drawDieCube(
     ctx.fill();
     ctx.fillStyle = SIDE_LIGHT[slot]!;
     ctx.fill();
+    if (skin.pattern !== 'none') {
+      ctx.save();
+      ctx.clip();
+      drawPattern(ctx, skin, R);
+      ctx.restore();
+      path();
+    }
     ctx.strokeStyle = C.outline;
     ctx.lineWidth = 1.5;
     ctx.stroke();
@@ -119,6 +142,13 @@ export function drawDieCube(
   ctx.strokeStyle = C.outline;
   ctx.lineWidth = 2;
   ctx.stroke();
+  if (skin.id !== 'classic') {
+    ctx.beginPath();
+    ctx.roundRect(-R + 1.5, -R + 1.5, R * 2 - 3, R * 2 - 3, 5);
+    ctx.strokeStyle = skin.rim;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
 
   if (look.flash > 0) {
     ctx.globalAlpha = look.flash * 0.55;
@@ -128,6 +158,86 @@ export function drawDieCube(
     ctx.fill();
   }
   ctx.restore();
+}
+
+/** A faint cosmetic pattern over the side panels (already clipped). */
+function drawPattern(ctx: CanvasRenderingContext2D, skin: SkinDef, R: number): void {
+  ctx.fillStyle = skin.patternColor;
+  ctx.strokeStyle = skin.patternColor;
+  ctx.lineWidth = 1;
+  switch (skin.pattern) {
+    case 'dots':
+      for (let y = -R; y <= R; y += 5)
+        for (let x = -R + ((y / 5) % 2 ? 2.5 : 0); x <= R; x += 5) ctx.fillRect(x, y, 1.4, 1.4);
+      break;
+    case 'stripes':
+      ctx.beginPath();
+      for (let k = -2 * R; k <= 2 * R; k += 5) {
+        ctx.moveTo(k, -R);
+        ctx.lineTo(k + 2 * R, R);
+      }
+      ctx.stroke();
+      break;
+    case 'stars':
+      for (const [x, y] of [
+        [-17, -15],
+        [12, -18],
+        [18, 6],
+        [-14, 16],
+        [5, 18],
+        [-19, 2],
+        [16, -4],
+        [-4, -19],
+      ] as const) {
+        ctx.fillRect(x - 0.7, y - 0.7, 1.4, 1.4);
+      }
+      break;
+    case 'frost':
+      ctx.beginPath();
+      for (const [x, y, a] of [
+        [-16, -16, 0.6],
+        [16, -16, 2.4],
+        [16, 16, 3.9],
+        [-16, 16, 5.5],
+      ] as const) {
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + Math.cos(a) * 7, y + Math.sin(a) * 7);
+        ctx.moveTo(x + Math.cos(a) * 3, y + Math.sin(a) * 3);
+        ctx.lineTo(x + Math.cos(a + 0.8) * 5, y + Math.sin(a + 0.8) * 5);
+      }
+      ctx.stroke();
+      break;
+    case 'cracks':
+      ctx.beginPath();
+      ctx.moveTo(-R, -8);
+      ctx.lineTo(-14, -5);
+      ctx.lineTo(-16, 2);
+      ctx.moveTo(R, 10);
+      ctx.lineTo(14, 8);
+      ctx.lineTo(15, 14);
+      ctx.moveTo(4, -R);
+      ctx.lineTo(6, -14);
+      ctx.stroke();
+      break;
+    case 'shine':
+      ctx.beginPath();
+      ctx.moveTo(-R, -R + 6);
+      ctx.lineTo(-R + 6, -R);
+      ctx.lineTo(-R + 12, -R);
+      ctx.lineTo(-R, -R + 12);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(R, R - 6);
+      ctx.lineTo(R - 6, R);
+      ctx.lineTo(R - 9, R);
+      ctx.lineTo(R, R - 9);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    case 'none':
+      break;
+  }
 }
 
 /** The face underneath: a small badge with a dashed ring ("under the die"). */

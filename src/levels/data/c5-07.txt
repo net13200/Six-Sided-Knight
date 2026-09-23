@@ -1,0 +1,14 @@
+id: c5-07
+name: Rime
+par: 11
+loadout: Shield Heart Bomb Key Sword Freeze
+---
+########
+#==##=.#
+##=@####
+#===..k#
+#>==.==#
+##===#*#
+#===#==#
+########
+########

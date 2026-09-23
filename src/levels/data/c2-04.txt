@@ -1,0 +1,14 @@
+id: c2-04
+name: Frozen Key
+par: 11
+hint: Faces don't turn while you slide
+---
+########
+#......#
+#.@....#
+#.######
+#=====|#
+######.#
+######>#
+########
+########

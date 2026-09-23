@@ -1,0 +1,14 @@
+id: c6-10-2
+name: The Throne II
+par: 14
+loadout: Shield Hook Bomb Key Sword Freeze
+---
+########
+#==#===#
+#=k@=#=#
+#=>g#=##
+##*##==#
+#=.===.#
+#===##.#
+########
+########

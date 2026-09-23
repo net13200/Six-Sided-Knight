@@ -114,7 +114,8 @@ Enemy intent (next move or attack) is deterministic and shown on the board.
 
 ## 9a. Progression
 
-- Chapters of 10 levels. Level 1 is open; each level unlocks when the previous one is beaten.
+- Chapters of 10 levels (six chapters, 60 levels). Level 1 is open; each level unlocks when the previous one is beaten.
+- **Gauntlets:** from chapter 2 on, each chapter's last level is a Gauntlet of 3 floors played in a row. HP carries over with +1 between floors (like runs). Stars count over the whole gauntlet: total moves within the summed par, no damage on any floor, every treasure on every floor. Leaving between floors starts the gauntlet over. Every floor after the first is winnable when entered with 2 HP.
 - "Play" from the title screen opens, in one tap, the level the player was last in if it isn't beaten yet, otherwise the first unbeaten level.
 - Per level the save keeps: best stars, fewest moves, completions, and fastest time.
 
@@ -131,6 +132,10 @@ Enemy intent (next move or attack) is deterministic and shown on the board.
 - **Custom die**: in the Forge the player chooses which of their owned faces go on their die and where (each home slot: top, bottom, north, south, east, west). Each face at most once; always six faces. The die is used for **Daily Roll and Depths** only; campaign levels always use their own fixed die.
 - A run keeps the die it started with until it ends (changes apply to the next run).
 - Generated floors with a custom die: the floor is generated for the default die first (the same for everyone). If the player's die can win it (at the floor's HP), it's used as is, with par recomputed for that die. If not (e.g. no Key for a door), a variant floor is generated and proven winnable for that die.
+
+## 9d. Skins
+
+- Cosmetic die skins, unlocked by campaign stars (10, 30, 60, 100, 150) and best daily streak (3, 7, 14). They change only the die's frame, glow and a faint pattern: never the face icons or their role colours, and never anything in play.
 
 ## 10. Daily Roll
 
@@ -180,4 +185,5 @@ The engine is built so these can be added without touching the turn logic:
 
 - **More dice: d4, d8, d10.** A die shape is data (`DieShapeDef` in `src/engine/dice.ts`): its slots, which slot is top/bottom, which slot leads in each direction, and a permutation per roll. Each shape is compiled into an orientation table. Only the d6 exists today. How non-cube dice "roll" on a square grid is a design decision still to be made.
 - **Face upgrades and swaps.** The die's faces are a `loadout` (faces by home slot) separate from its orientation, so swapping or upgrading a face means changing the loadout. Upgraded faces are simply new face definitions (e.g. "Sword+", 4 damage).
-- **Deferred fun ideas**, to revisit once the core loop is fun on its own: enemy intent arrows, hold-to-preview a move, hints from the solver, combos, die personality, Wordle-style share, new mechanics per chapter (ice, plates, teleporters), chapter bosses, daily rule twists, watching the par solution, a 3-star celebration.
+- **Face upgrades** (e.g. Sword+) as store items, using the same loadout mechanism as Freeze and Hook.
+- **Deferred fun ideas**, to revisit once the core loop is fun on its own: enemy intent arrows, hold-to-preview a move, hints from the solver, combos, die personality, Wordle-style share, more mechanics (pressure plates, teleporters), chapter bosses, daily rule twists, watching the par solution, a 3-star celebration.

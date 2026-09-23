@@ -1,0 +1,14 @@
+id: c6-03
+name: Long Reach
+par: 10
+loadout: Shield Hook Bomb Key Sword Coin
+---
+########
+#...*.>#
+#......#
+#...#*a#
+#....#.#
+#...#.##
+#..#.#.#
+#.@....#
+########

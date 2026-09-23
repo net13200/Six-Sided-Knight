@@ -1,0 +1,15 @@
+id: c5-01
+name: Cold Snap
+par: 8
+hint: Freeze stops an enemy for 2 turns
+loadout: Shield Heart Bomb Key Sword Freeze
+---
+########
+#....#.#
+#..@.#.#
+#.....##
+#.k#...#
+#*...#.#
+#..#...#
+#..a..>#
+########

@@ -1,0 +1,14 @@
+id: c4-10
+name: Keep Gauntlet
+par: 10
+hint: 3 floors in a row. HP carries over
+---
+########
+#.a*.>.#
+#..#a..#
+#...#..#
+#...@#.#
+#...#..#
+###....#
+#.#....#
+########

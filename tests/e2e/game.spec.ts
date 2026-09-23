@@ -138,7 +138,7 @@ test.describe('Six Sided Knight', () => {
 
   test('every tutorial level can be finished in the browser', async ({ page }) => {
     test.slow();
-    for (let i = 0; i < campaign.length; i++) {
+    for (let i = 0; i < 10; i++) {
       await page.goto(`/?level=${i + 1}`);
       for (const dir of solutionFor(i)) await page.keyboard.press(KEY[dir]);
       await expect.poll(() => scene(page), { timeout: 5000 }).toBe('results');

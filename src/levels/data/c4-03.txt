@@ -1,0 +1,14 @@
+id: c4-03
+name: Splash Shot
+par: 6
+hint: A Bomb's splash reaches around corners
+---
+########
+#......#
+#.@....#
+#......#
+##.k####
+##.a.>##
+########
+########
+########

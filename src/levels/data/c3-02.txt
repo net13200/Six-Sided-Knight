@@ -1,0 +1,14 @@
+id: c3-02
+name: Slow and Steady
+par: 14
+hint: Golems move every other turn
+---
+########
+#@.....#
+#......#
+####.###
+#*.g...#
+####.###
+#.....>#
+########
+########

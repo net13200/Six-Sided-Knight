@@ -93,8 +93,9 @@ export class ResultsScene implements Scene {
     }
 
     const s = this.state.stats;
+    const par = this.summary.par ?? level.par;
     const rows: Array<[string, string, boolean]> = [
-      ['Moves', `${s.moves}${level.par !== undefined ? ` / par ${level.par}` : ''}`, stars.par],
+      ['Moves', `${s.moves}${par !== undefined ? ` / par ${par}` : ''}`, stars.par],
       ['Damage taken', String(s.damageTaken), stars.noDamage],
       ['Treasure', `${s.treasuresCollected} / ${s.treasuresTotal}`, stars.allGold],
     ];
@@ -118,7 +119,15 @@ export class ResultsScene implements Scene {
     } else {
       ctx.fillText(`Gold ${this.state.gold}`, 170, 286);
     }
-    if (this.summary.firstClear && this.hasNext) {
+    if (this.summary.newSkins.length > 0) {
+      ctx.fillStyle = C.heal;
+      ctx.font = 'bold 12px system-ui, sans-serif';
+      ctx.fillText(
+        `New skin: ${this.summary.newSkins.map((s) => s.name).join(', ')}! (Forge)`,
+        170,
+        310,
+      );
+    } else if (this.summary.firstClear && this.hasNext) {
       ctx.fillStyle = C.textDim;
       ctx.font = '12px system-ui, sans-serif';
       ctx.fillText(`Level ${this.index + 2} unlocked`, 170, 310);

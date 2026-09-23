@@ -1,0 +1,14 @@
+id: c3-03
+name: Rubble
+par: 6
+hint: Bomb splash chips a Golem too
+---
+########
+#......#
+#.@....#
+#......#
+#.#kgk##
+#.##.###
+#...>..#
+########
+########

@@ -53,13 +53,15 @@ export class LevelsScene implements Scene {
       const stars = save.levels[level.id]?.stars;
       const done = isCompleted(save, level);
       const p = nodePosition(i - this.chapter * CHAPTER_SIZE);
+      const floors = this.game.gauntlets.get(level.id);
+      const gauntlet = floors ? `, gauntlet of ${floors.length + 1} floors` : '';
       const b = el(
         'button',
         {
-          className: `node${done ? ' done' : ''}${unlocked ? '' : ' locked'}`,
+          className: `node${done ? ' done' : ''}${unlocked ? '' : ' locked'}${floors ? ' gauntlet' : ''}`,
           testId: `level-${i + 1}`,
           label: unlocked
-            ? `Level ${i + 1}: ${level.name}${done ? `, ${stars} of 3 stars` : ''}`
+            ? `Level ${i + 1}: ${level.name}${gauntlet}${done ? `, ${stars} of 3 stars` : ''}`
             : `Level ${i + 1}, locked`,
           onClick: () => unlocked && this.game.goPlay(i),
         },
@@ -169,6 +171,18 @@ export class LevelsScene implements Scene {
       const stars = save.levels[levels[i]!.id]?.stars;
       if (stars !== undefined) {
         for (let s = 0; s < 3; s++) drawStar(ctx, p.x - 14 + s * 14, p.y + 38, 6, s < stars);
+      }
+      const floors = this.game.gauntlets.get(levels[i]!.id);
+      if (floors) {
+        // Gauntlet tag: how many floors in a row.
+        ctx.fillStyle = C.hurt;
+        ctx.beginPath();
+        ctx.roundRect(p.x + 12, p.y - NODE / 2 - 6, 26, 14, 7);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 9px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`×${floors.length + 1}`, p.x + 25, p.y - NODE / 2 + 1.5);
       }
       if (i === next) {
         const pulse = this.game.reducedMotion ? 0.5 : (Math.sin(this.t * 4) + 1) / 2;

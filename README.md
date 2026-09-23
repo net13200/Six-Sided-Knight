@@ -3,7 +3,7 @@
 A mobile-first puzzle-dungeon game where you are a rolling die. The face on the side you roll toward is the one that acts: Sword attacks, Key opens doors, Coin opens chests, and so on.
 
 - **Rules:** [SPEC.md](SPEC.md) is the source of truth.
-- **Status:** milestone 4 of 6. Campaign (10 tutorial levels), Daily Roll with streaks and sharing, endless Depths, saved progress, and on-device analytics with a hidden KPI panel.
+- **Status:** milestone 5 of 6. A 60-level campaign in six chapters (each from chapter 2 on ends in a 3-floor Gauntlet), Daily Roll with streaks and sharing, endless Depths, crowns and the Forge (buy faces, build your own die for Daily Roll and Depths), cosmetic die skins, a stats screen, saved progress, and on-device analytics with a hidden KPI panel.
 
 ## Play online
 
@@ -29,13 +29,13 @@ Controls: swipe or tap toward a tile (touch), arrow keys or WASD (keyboard). Z/U
 ```
 src/engine/    pure, deterministic simulation (no DOM): dice math, step(), registries, levels, undo, replays
 src/content/   faces/, tiles/, enemies/ — one definition module each, registered in register.ts
-src/levels/    campaign levels (data/*.txt) and their loader
+src/levels/    campaign levels (data/*.txt), gauntlet floors (gauntlets/*.txt) and their loader
 src/solver/    solvers (BFS, IDA*) and the difficulty rater
 src/gen/       seeded level generator, its Web Worker, and the async level service
 src/game/      browser game: scenes, input, audio, loop; view/ holds rendering and effects
 src/meta/      save data (versioned, with migrations), progression, analytics, KPI maths
 src/platform/  host adapter interface (storage, share, visibility, ...) + browser implementation
-tools/         command-line tools: level validator, solver, replay player
+tools/         command-line tools: level validator, solver, replay player, level lab, rink/room search
 examples/      sample levels (.json and .txt) and golden replays
 tests/unit/    Vitest tests      tests/e2e/  Playwright tests
 ```
@@ -77,7 +77,17 @@ Every `*.replay.json` in `examples/replays` is checked by the test suite and mus
 
 ## Authoring levels
 
-Campaign levels live in `src/levels/data/` as `.txt` files, played in file-name order. Every campaign level is checked by the test suite: it must be solvable, its par must equal the solver's minimum, and all three stars must be achievable.
+Campaign levels live in `src/levels/data/` as `.txt` files, played in file-name order, 10 per chapter. Every campaign level is checked by the test suite: it must be solvable, its par must equal the solver's minimum, and all three stars must be achievable.
+
+A **Gauntlet** is a campaign level with extra floors in `src/levels/gauntlets/`, named `<level id>-<floor>.txt` (e.g. `c2-10-2.txt`). Floors are played in a row with HP carried over (+1 between floors). The tests check each extra floor is winnable at 2 HP and that each star (summed par, no damage, all gold) is achievable across the whole gauntlet.
+
+Authoring aids:
+
+```sh
+npx tsx tools/lab.ts <files or dirs> [--hp 2] [--trace]   # minimums, solutions, rating; --trace prints every step
+npx tsx tools/rink-search.ts <seed> <tries> [extras] [base] [loadout]  # random rooms with long optimal solutions
+REQUIRE=Hook npx tsx tools/rink-search.ts 1 500 'k*' . Shield,Heart,Bomb,Key,Sword,Hook  # ...that need the Hook
+```
 
 Levels are 8x9 grids. JSON (schema 1):
 
@@ -113,9 +123,10 @@ start: top=Shield east=Sword
 | `~`   | healing pool | `\|`  | locked door |
 | `$`   | chest        | `*`   | gem         |
 | `>`   | exit         | `k`   | skeleton    |
-| `s`   | slime        |       |             |
+| `s`   | slime        | `=`   | ice         |
+| `a`   | archer       | `g`   | golem       |
 
-`start`, `hint` (one line, at most 40 characters) and `enemies` are optional. `start` fixes faces in named slots (the default is top=Shield, bottom=Heart, north=Bomb, south=Key, east=Sword, west=Coin). `enemies` sets per-enemy data, e.g. `{ "ready": true }` makes a slime act on turn 1.
+`start`, `hint` (one line, at most 40 characters), `enemies` and `loadout` are optional. `loadout` swaps the die's faces for the level, listed by home slot (top bottom north south east west), e.g. `loadout: Shield Heart Bomb Key Sword Freeze`. `start` fixes faces in named slots (the default is top=Shield, bottom=Heart, north=Bomb, south=Key, east=Sword, west=Coin). `enemies` sets per-enemy data, e.g. `{ "ready": true }` makes a slime act on turn 1.
 
 ## Versions and releases
 

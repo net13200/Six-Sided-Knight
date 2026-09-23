@@ -2,7 +2,7 @@
 import { currentStreak, shareText } from '../../meta/daily';
 import type { Game } from '../game';
 import type { Command } from '../input';
-import type { FloorSummary, Run } from '../runs';
+import type { FloorRun, FloorSummary } from '../runs';
 import { el, icon, iconButton, place } from '../ui';
 import { drawCrownGain, drawFace } from '../view/art';
 import { C } from '../view/palette';
@@ -17,12 +17,13 @@ export class FloorScene implements Scene {
   constructor(
     private readonly game: Game,
     private readonly summary: FloorSummary,
-    private readonly run: Run,
+    private readonly run: FloorRun,
   ) {}
 
   private back(): void {
     if (this.summary.mode === 'daily') this.game.goDaily();
-    else this.game.goDepths();
+    else if (this.summary.mode === 'depths') this.game.goDepths();
+    else this.game.goLevels();
   }
 
   enter(ui: HTMLElement): void {
@@ -103,7 +104,13 @@ export class FloorScene implements Scene {
     ctx.fillText(title, 170, 56);
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
-    ctx.fillText(s.mode === 'daily' ? `Floor ${s.floor} of ${s.floors}` : `The Depths`, 170, 84);
+    ctx.fillText(
+      s.mode === 'depths'
+        ? 'The Depths'
+        : `${s.mode === 'gauntlet' ? 'Gauntlet · ' : ''}Floor ${s.floor} of ${s.floors}`,
+      170,
+      84,
+    );
 
     // HP after the +1 heal (what the next floor starts with).
     const hpNext = s.final ? s.hp : Math.min(5, s.hp + 1);
@@ -123,10 +130,17 @@ export class FloorScene implements Scene {
     ctx.font = 'bold 15px system-ui, sans-serif';
     ctx.fillStyle = C.text;
     ctx.fillText(
-      `${s.moves} moves ${s.final ? 'in total' : 'so far'} · ${s.stars} stars`,
+      s.mode === 'gauntlet'
+        ? `${s.moves} moves so far`
+        : `${s.moves} moves ${s.final ? 'in total' : 'so far'} · ${s.stars} stars`,
       170,
       200,
     );
+    if (s.mode === 'gauntlet') {
+      ctx.fillStyle = C.textDim;
+      ctx.font = '12px system-ui, sans-serif';
+      ctx.fillText('Leaving now means starting the gauntlet over', 170, 232);
+    }
 
     if (s.mode === 'depths') {
       ctx.fillStyle = s.newBest ? C.heal : C.textDim;
@@ -147,6 +161,11 @@ export class FloorScene implements Scene {
         ctx.fillText(`${s.streak}-day streak`, 154, 286);
         ctx.textAlign = 'center';
         if (s.crowns > 0) drawCrownGain(ctx, s.crowns, 170, 316);
+        if (s.newSkins?.length) {
+          ctx.fillStyle = C.heal;
+          ctx.font = 'bold 12px system-ui, sans-serif';
+          ctx.fillText(`New skin: ${s.newSkins.map((k) => k.name).join(', ')}!`, 170, 216);
+        }
       } else {
         ctx.fillStyle = C.textDim;
         ctx.font = '12px system-ui, sans-serif';

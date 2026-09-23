@@ -103,6 +103,18 @@ export class ForgeScene implements Scene {
       place(
         el('button', {
           className: 'btn',
+          testId: 'forge-skins',
+          text: 'Skins',
+          onClick: () => this.game.goSkins(),
+        }),
+        110,
+        432,
+        120,
+        44,
+      ),
+      place(
+        el('button', {
+          className: 'btn',
           testId: 'forge-reset',
           text: 'Reset die',
           onClick: () => this.setDie([...STARTING_FACES]),

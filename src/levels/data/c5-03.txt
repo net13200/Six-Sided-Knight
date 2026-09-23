@@ -1,0 +1,15 @@
+id: c5-03
+name: Ice Statue
+par: 8
+hint: A frozen enemy makes a fine stopper
+loadout: Shield Heart Bomb Key Sword Freeze
+---
+########
+#==*k=.#
+#==#==.#
+#===#==#
+#====#=#
+#====.=#
+#=#=#>=#
+#===@==#
+########

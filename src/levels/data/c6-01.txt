@@ -1,0 +1,15 @@
+id: c6-01
+name: Reel In
+par: 11
+hint: Hook pulls gems from 2-3 tiles away
+loadout: Shield Hook Bomb Key Sword Coin
+---
+########
+#@.....#
+#......#
+#^^^^^.#
+#*^*^*.#
+#^^^^^.#
+#......#
+#.....>#
+########

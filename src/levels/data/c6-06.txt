@@ -1,0 +1,14 @@
+id: c6-06
+name: Grapple
+par: 15
+loadout: Shield Hook Bomb Key Sword Coin
+---
+########
+#@....*#
+#......#
+#.#....#
+##.##$##
+#.#...##
+#......#
+##>.k.##
+########

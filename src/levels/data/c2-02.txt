@@ -1,0 +1,14 @@
+id: c2-02
+name: Skating Rink
+par: 4
+hint: You stop at walls and on plain floor
+---
+########
+#>=====#
+##=##==#
+#======#
+#==#===#
+#======#
+#@===#.#
+########
+########

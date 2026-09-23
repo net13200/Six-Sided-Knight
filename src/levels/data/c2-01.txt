@@ -1,0 +1,14 @@
+id: c2-01
+name: Thin Ice
+par: 2
+hint: Ice slides you. Your faces stay put
+---
+########
+########
+########
+#@====*#
+######>#
+########
+########
+########
+########

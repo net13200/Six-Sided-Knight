@@ -1,0 +1,15 @@
+id: c6-02
+name: Come Here
+par: 8
+hint: Hook pulls enemies next to you
+loadout: Shield Heart Bomb Key Sword Hook
+---
+########
+#.@....#
+#......#
+#^^^.^^#
+#^^^.^^#
+#^^^a^^#
+#^^^.^^#
+#...>..#
+########

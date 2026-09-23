@@ -431,3 +431,6 @@ button:focus-visible {
   font-size: 16px;
   white-space: nowrap;
 }
+.node.gauntlet {
+  border-radius: 16px;
+}

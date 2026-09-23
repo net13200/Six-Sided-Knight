@@ -111,3 +111,45 @@ test.describe('Forge, crowns and custom dice', () => {
     await expect.poll(() => scene(page)).toBe('menu');
   });
 });
+
+test.describe('Gauntlets and skins', () => {
+  let errors: string[];
+  test.beforeEach(({ page }) => {
+    errors = trackErrors(page);
+  });
+  test.afterEach(() => {
+    expect(errors).toEqual([]);
+  });
+
+  test('a gauntlet plays 3 floors with HP carried over, then shows one result', async ({
+    page,
+  }) => {
+    test.slow();
+    await page.goto('/?level=20');
+    for (let floor = 1; floor <= 3; floor++) {
+      await playCurrentLevel(page);
+      if (floor < 3) {
+        await expect.poll(() => scene(page), { timeout: 5000 }).toBe('floor');
+        await page.getByTestId('floor-next').click();
+        const s = await gameState(page);
+        expect(s.levelId).toBe(`c2-10-${floor + 1}`);
+      }
+    }
+    await expect.poll(() => scene(page), { timeout: 5000 }).toBe('results');
+    const save = await page.evaluate(() => JSON.parse(localStorage.getItem('ssk.save')!));
+    expect(save.levels['c2-10'].completions).toBe(1);
+    expect(save.levels['c2-10'].stars).toBeGreaterThanOrEqual(1);
+  });
+
+  test('skins: locked until earned, then equip one', async ({ page }) => {
+    await seedVeteran(page); // 20 campaign stars: Bone unlocked, Moss (30) not
+    await page.getByTestId('forge').click();
+    await page.getByTestId('forge-skins').click();
+    await expect.poll(() => scene(page)).toBe('skins');
+    await expect(page.getByTestId('skin-moss')).toBeDisabled();
+    await page.getByTestId('skin-bone').click();
+    await expect(page.getByTestId('skin-bone')).toHaveAttribute('aria-pressed', 'true');
+    const save = await page.evaluate(() => JSON.parse(localStorage.getItem('ssk.save')!));
+    expect(save.skin).toBe('bone');
+  });
+});
