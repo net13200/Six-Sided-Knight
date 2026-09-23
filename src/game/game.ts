@@ -9,7 +9,7 @@ import { loadCampaign, loadGauntletFloors } from '../levels/campaign';
 import { LevelService } from '../gen/service';
 import { LocalAnalytics } from '../meta/analytics';
 import { continueIndex, recordWin } from '../meta/progress';
-import { SaveStore } from '../meta/save';
+import { SaveStore, type Settings } from '../meta/save';
 import { crownsForStars, earnCrowns } from '../meta/store';
 import type { Platform } from '../platform/platform';
 import { VERSION } from '../version';
@@ -32,7 +32,7 @@ import { activeSkin, newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/
 import { canTransition, type Scene } from './scenes/scene';
 import type { PlaySession } from './session';
 import type { StarResult } from './stars';
-import { C } from './view/palette';
+import { C, displayPrefs, setHighContrast } from './view/palette';
 import type { Stage } from './view/stage';
 
 /** A return after this long away starts a new session. */
@@ -58,7 +58,6 @@ export class Game {
   /** Extra floors of gauntlet levels, by level id. */
   readonly gauntlets: Map<string, LevelData[]>;
   readonly audio = new Audio();
-  readonly reducedMotion: boolean;
   readonly save: SaveStore;
   readonly analytics: LocalAnalytics;
   readonly levelService: LevelService;
@@ -74,7 +73,6 @@ export class Game {
     this.levels = loadCampaign(this.rules);
     this.gauntlets = loadGauntletFloors(this.rules);
     this.levelService = new LevelService(this.rules);
-    this.reducedMotion = platform.prefersReducedMotion();
     this.save = new SaveStore(platform.storage, platform.now());
     this.audio.muted = this.save.data.settings.muted;
     this.analytics = new LocalAnalytics(platform.storage, platform.now, randomId, VERSION);
@@ -82,6 +80,29 @@ export class Game {
     this.analytics.verbose = options.debug === true;
     this.analytics.startSession(SESSION_GAP_MS);
     this.applySkin();
+    this.applyDisplay();
+  }
+
+  /** Reduce motion: the player's choice, or the system setting if they haven't chosen. */
+  get reducedMotion(): boolean {
+    return this.save.data.settings.reduceMotion ?? this.platform.prefersReducedMotion();
+  }
+
+  /** Applies the display settings (contrast, label size) to drawing and the DOM. */
+  applyDisplay(): void {
+    const s = this.save.data.settings;
+    setHighContrast(s.highContrast);
+    displayPrefs.largeLabels = s.largeLabels;
+    this.stage.root.classList.toggle('high-contrast', s.highContrast);
+    this.stage.root.classList.toggle('large-labels', s.largeLabels);
+  }
+
+  setDisplay(
+    patch: Partial<Pick<Settings, 'highContrast' | 'largeLabels' | 'reduceMotion'>>,
+  ): void {
+    this.save.update((d) => Object.assign(d.settings, patch));
+    this.applyDisplay();
+    this.stage.root.dispatchEvent(new CustomEvent('ssk:settings'));
   }
 
   /** Draws the die with the equipped skin from now on. */

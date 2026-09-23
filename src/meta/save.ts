@@ -28,6 +28,12 @@ export interface Settings {
   muted: boolean;
   /** Local analytics recording. True = the player opted out. */
   analyticsOptOut: boolean;
+  /** Stronger text and edge contrast (0.6.0). */
+  highContrast: boolean;
+  /** Bigger move labels next to the die (0.6.0). */
+  largeLabels: boolean;
+  /** Reduce motion: null = follow the system setting (0.6.0). */
+  reduceMotion: boolean | null;
 }
 
 export interface LifetimeStats {
@@ -133,7 +139,13 @@ export function freshSave(now: number): SaveData {
     depths: freshDepths(),
     hints: {},
     createdAt: now,
-    settings: { muted: false, analyticsOptOut: false },
+    settings: {
+      muted: false,
+      analyticsOptOut: false,
+      highContrast: false,
+      largeLabels: false,
+      reduceMotion: null,
+    },
     levels: {},
     lastLevelId: null,
     stats: {
@@ -268,10 +280,20 @@ export function normalize(data: Json, now: number): SaveData {
       inProgress: normalizeRun(depths.inProgress),
     },
     createdAt: typeof d.createdAt === 'number' ? d.createdAt : base.createdAt,
-    settings: { ...base.settings, ...(d.settings ?? {}) },
+    settings: normalizeSettings({ ...base.settings, ...(d.settings ?? {}) }),
     levels,
     lastLevelId: typeof d.lastLevelId === 'string' ? d.lastLevelId : null,
     stats: { ...stats, faceMoves },
+  };
+}
+
+function normalizeSettings(s: Settings): Settings {
+  return {
+    muted: s.muted === true,
+    analyticsOptOut: s.analyticsOptOut === true,
+    highContrast: s.highContrast === true,
+    largeLabels: s.largeLabels === true,
+    reduceMotion: typeof s.reduceMotion === 'boolean' ? s.reduceMotion : null,
   };
 }
 

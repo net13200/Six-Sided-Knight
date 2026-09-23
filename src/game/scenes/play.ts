@@ -23,9 +23,10 @@ import { animateBump, animateTurn } from '../view/animate';
 import { drawFace } from '../view/art';
 import { drawBoard, drawCompass } from '../view/board';
 import { predictOutcome, type Outcome } from '../view/outcome';
+import { describeBoard, describeTurn } from '../view/describe';
 import { Fx } from '../view/fx';
 import { BAR_Y, BOARD_X, BOARD_Y, TILE, tileAt } from '../view/layout';
-import { C } from '../view/palette';
+import { C, displayPrefs } from '../view/palette';
 import { muteButton } from './common';
 import { InspectView } from './inspect';
 import type { Scene } from './scene';
@@ -39,6 +40,8 @@ export class PlayScene implements Scene {
   private overlay: HTMLElement | null = null;
   private finishing = false;
   private ui: HTMLElement | null = null;
+  /** Screen-reader announcements (visually hidden live region). */
+  private announcer: HTMLElement | null = null;
   /** Active play time in this scene (paused while the tab is hidden). */
   private activeMs = 0;
   private flushedMs = 0;
@@ -70,6 +73,12 @@ export class PlayScene implements Scene {
 
   enter(ui: HTMLElement): void {
     this.ui = ui;
+    this.announcer = el('div', { className: 'sr-only', testId: 'announcer' });
+    this.announcer.setAttribute('role', 'status');
+    this.announcer.setAttribute('aria-live', 'polite');
+    ui.append(this.announcer);
+    this.announce(`${this.session.title}. ${this.level.hint ?? ''} Press H to hear the board.`);
+    this.refreshDescription();
     this.game.analytics.track('level_start', { level: this.level.id, mode: this.session.mode });
     this.game.save.update((d) => d.stats.levelsStarted++);
     this.session.onStart?.();
@@ -133,6 +142,9 @@ export class PlayScene implements Scene {
       case 'inspect':
         this.openInspect();
         break;
+      case 'describe':
+        this.announce(describeBoard(this.game.rules, this.state, this.moveOutcomes(this.state)));
+        break;
       case 'move':
         this.move(cmd.dir);
         break;
@@ -151,6 +163,8 @@ export class PlayScene implements Scene {
         this.fx.finishAll();
         this.history = undo(this.history);
         this.recorder.record('u');
+        this.announce(`Move undone. HP ${this.state.player.hp} of ${this.state.player.maxHp}.`);
+        this.refreshDescription();
         this.game.audio.play('undo');
         this.hideOverlay();
         break;
@@ -161,6 +175,8 @@ export class PlayScene implements Scene {
         this.fx.finishAll();
         this.history = retry(this.history);
         this.recorder.record('r');
+        this.announce('Level restarted.');
+        this.refreshDescription();
         this.game.audio.play('undo');
         this.hideOverlay();
         break;
@@ -176,13 +192,17 @@ export class PlayScene implements Scene {
     if (this.finishing || this.state.status !== 'playing') return;
     this.fx.finishAll();
     const before = this.state;
+    const predicted = this.moveOutcomes(before).find(([d]) => d === dir)?.[1];
     const { history, result } = play(this.game.rules, this.history, { type: 'move', dir });
     this.recorder.record(dir);
     if (!result.consumed) {
       animateBump(this.fx, this.game.audio, dir);
+      if (predicted) this.announce(`${predicted.text}. ${predicted.then ?? ''}`);
       return;
     }
     this.history = history;
+    if (predicted) this.announce(describeTurn(before, result.state, predicted));
+    this.refreshDescription();
     const face = leadingFace(before.player.die, dir);
     this.faceMoves.set(face, (this.faceMoves.get(face) ?? 0) + 1);
     animateTurn(this.fx, this.game.audio, result.events, before, result.state);
@@ -240,6 +260,7 @@ export class PlayScene implements Scene {
   }
 
   exit(): void {
+    this.game.stage.canvas.setAttribute('aria-label', 'Game board');
     if (!this.won) {
       this.game.analytics.track('level_quit', {
         level: this.level.id,
@@ -313,7 +334,7 @@ export class PlayScene implements Scene {
     if (this.level.hint && s.stats.moves < 3) {
       ctx.save();
       ctx.globalAlpha = 1 - s.stats.moves / 3;
-      ctx.font = '600 12px system-ui, sans-serif';
+      ctx.font = `600 ${displayPrefs.largeLabels ? 14 : 12}px system-ui, sans-serif`;
       const w = ctx.measureText(this.level.hint).width + 20;
       ctx.fillStyle = 'rgba(20,18,28,0.85)';
       ctx.beginPath();
@@ -325,6 +346,19 @@ export class PlayScene implements Scene {
       ctx.fillText(this.level.hint, 170, BOARD_Y + 9 * TILE - 19);
       ctx.restore();
     }
+  }
+
+  private announce(text: string): void {
+    if (!this.announcer) return;
+    // Clearing first makes screen readers repeat identical messages.
+    this.announcer.textContent = '';
+    this.announcer.textContent = text.trim();
+  }
+
+  /** The canvas's accessible name describes the board (screen readers read it on focus). */
+  private refreshDescription(): void {
+    const text = describeBoard(this.game.rules, this.state, this.moveOutcomes(this.state));
+    this.game.stage.canvas.setAttribute('aria-label', `Game board. ${text}`);
   }
 
   private moveOutcomes(s: GameState): Array<readonly [Dir, Outcome]> {

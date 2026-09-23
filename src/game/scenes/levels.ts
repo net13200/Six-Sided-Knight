@@ -15,7 +15,7 @@ import { C } from '../view/palette';
 import { drawStar } from './common';
 import type { Scene } from './scene';
 
-const NODE = 56;
+const NODE = 60;
 
 /** Serpentine layout: rows of three, alternating direction. */
 export function nodePosition(i: number): { x: number; y: number } {
@@ -80,9 +80,9 @@ export class LevelsScene implements Scene {
           [icon('play'), el('span', { text: `Play level ${next + 1}` })],
         ),
         78,
-        418,
+        416,
         184,
-        56,
+        60,
       ),
       place(
         iconButton('back', 'Menu', () => this.game.goMenu(), 'back'),
@@ -99,10 +99,10 @@ export class LevelsScene implements Scene {
         ui.append(
           place(
             iconButton('back', 'Prev', () => this.game.goLevels(this.chapter - 1), 'chapter-prev'),
-            6,
-            8,
-            52,
-            52,
+            4,
+            4,
+            60,
+            60,
           ),
         );
       }
@@ -110,10 +110,10 @@ export class LevelsScene implements Scene {
         ui.append(
           place(
             iconButton('next', 'Next', () => this.game.goLevels(this.chapter + 1), 'chapter-next'),
-            282,
-            8,
-            52,
-            52,
+            276,
+            4,
+            60,
+            60,
           ),
         );
       }

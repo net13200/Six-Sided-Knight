@@ -46,3 +46,28 @@ export const C = {
   block: '#8fc6ff',
   alert: '#ffb238',
 } as const;
+
+/** Display settings that change how things are drawn (set from the player's settings). */
+export const displayPrefs = {
+  highContrast: false,
+  largeLabels: false,
+  /** Bumped whenever colours change, so cached drawings are redrawn. */
+  version: 0,
+};
+
+const NORMAL = { ...C };
+/** Brighter secondary text and stronger edges for the high-contrast setting. */
+const HIGH_CONTRAST: Partial<Record<keyof typeof C, string>> = {
+  textDim: '#c4bdd6',
+  floorA: '#2a2638',
+  floorB: '#353046',
+  wallTop: '#4a4266',
+  wallEdge: '#6a6190',
+  danger: 'rgba(255,60,80,0.32)',
+};
+
+export function setHighContrast(on: boolean): void {
+  if (displayPrefs.highContrast !== on) displayPrefs.version++;
+  displayPrefs.highContrast = on;
+  Object.assign(C as Record<string, string>, NORMAL, on ? HIGH_CONTRAST : {});
+}

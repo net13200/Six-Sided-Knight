@@ -24,6 +24,8 @@ export class Stage {
     this.canvas.className = 'stage-canvas';
     this.canvas.setAttribute('aria-label', 'Game board');
     this.canvas.setAttribute('role', 'img');
+    // Focusable so screen readers can land on the board and read its description.
+    this.canvas.tabIndex = 0;
     this.ui = document.createElement('div');
     this.ui.className = 'stage-ui';
     this.root.append(this.canvas, this.ui);

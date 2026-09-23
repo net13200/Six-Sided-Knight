@@ -5,7 +5,7 @@ import { drawDieCube } from './cube';
 import type { Fx, Visuals } from './fx';
 import { BOARD_X, BOARD_Y, TILE, tileCenter } from './layout';
 import { drawOutcomeChips, type Outcome } from './outcome';
-import { C } from './palette';
+import { C, displayPrefs } from './palette';
 
 /** A wall with no non-wall tile around it (8-neighbourhood) is drawn as empty darkness. */
 function isVoid(state: GameState, x: number, y: number): boolean {
@@ -30,7 +30,8 @@ export function drawBoard(
   fx: Fx,
   outcomes?: ReadonlyArray<readonly [Dir, Outcome]>,
 ): void {
-  const t = fx.time;
+  // Reduced motion: idle animation (bobbing, glows, pulses) stands still.
+  const t = fx.reducedMotion ? 0 : fx.time;
   ctx.save();
   ctx.translate(v.shakeX, v.shakeY);
 
@@ -120,7 +121,12 @@ export function drawBoard(
 }
 
 /** Cached image of the board's tiles at the current pixel density. */
-let layer: { tiles: readonly string[]; k: number; canvas: HTMLCanvasElement } | null = null;
+let layer: {
+  tiles: readonly string[];
+  k: number;
+  version: number;
+  canvas: HTMLCanvasElement;
+} | null = null;
 
 function boardLayer(
   ctx: CanvasRenderingContext2D,
@@ -128,7 +134,9 @@ function boardLayer(
   state: GameState,
 ): HTMLCanvasElement {
   const k = ctx.getTransform().a; // device pixels per logical pixel
-  if (layer && layer.tiles === state.tiles && layer.k === k) return layer.canvas;
+  const version = displayPrefs.version;
+  if (layer && layer.tiles === state.tiles && layer.k === k && layer.version === version)
+    return layer.canvas;
   const canvas = layer?.canvas ?? document.createElement('canvas');
   canvas.width = Math.round(8 * TILE * k);
   canvas.height = Math.round(9 * TILE * k);
@@ -142,7 +150,7 @@ function boardLayer(
       drawTile(c, rules.tiles.get(id), BOARD_X + x * TILE, BOARD_Y + y * TILE, TILE, x, y, 0);
     }
   }
-  layer = { tiles: state.tiles, k, canvas };
+  layer = { tiles: state.tiles, k, version, canvas };
   return canvas;
 }
 
@@ -168,20 +176,44 @@ export function dangerTiles(rules: Rules, state: GameState): Pos[] {
 function drawDangerLanes(ctx: CanvasRenderingContext2D, rules: Rules, s: GameState, t: number) {
   const tiles = dangerTiles(rules, s);
   if (tiles.length === 0) return;
+  const strong = displayPrefs.highContrast;
+  const pulse = 0.5 + 0.5 * Math.sin(t * 4);
   ctx.save();
-  ctx.fillStyle = C.danger;
-  ctx.strokeStyle = `rgba(255,90,106,${0.35 + 0.15 * Math.sin(t * 4)})`;
-  ctx.lineWidth = 1.2;
   for (const p of tiles) {
     const x = BOARD_X + p.x * TILE;
     const y = BOARD_Y + p.y * TILE;
+    // Red wash plus diagonal hatching: readable by pattern, not only by colour.
+    ctx.fillStyle = strong ? 'rgba(255,60,80,0.32)' : C.danger;
     ctx.fillRect(x, y, TILE, TILE);
+    ctx.save();
     ctx.beginPath();
-    ctx.moveTo(x + TILE / 2 - 4, y + TILE / 2);
-    ctx.lineTo(x + TILE / 2 + 4, y + TILE / 2);
-    ctx.moveTo(x + TILE / 2, y + TILE / 2 - 4);
-    ctx.lineTo(x + TILE / 2, y + TILE / 2 + 4);
+    ctx.rect(x, y, TILE, TILE);
+    ctx.clip();
+    ctx.strokeStyle = strong ? 'rgba(120,0,20,0.75)' : 'rgba(150,20,40,0.45)';
+    ctx.lineWidth = strong ? 2.5 : 2;
+    ctx.beginPath();
+    for (let k = -TILE; k < TILE; k += 8) {
+      ctx.moveTo(x + k, y + TILE);
+      ctx.lineTo(x + k + TILE, y);
+    }
     ctx.stroke();
+    ctx.restore();
+    // A target mark, outlined dark so it shows on light ice too.
+    const cx = x + TILE / 2;
+    const cy = y + TILE / 2;
+    for (const [color, w] of [
+      ['rgba(20,6,10,0.8)', 4],
+      [`rgba(255,120,135,${strong ? 1 : 0.7 + 0.3 * pulse})`, 2],
+    ] as const) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = w;
+      ctx.beginPath();
+      ctx.moveTo(cx - 5, cy);
+      ctx.lineTo(cx + 5, cy);
+      ctx.moveTo(cx, cy - 5);
+      ctx.lineTo(cx, cy + 5);
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }

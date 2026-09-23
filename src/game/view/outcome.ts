@@ -12,7 +12,7 @@ import {
   type Rules,
 } from '../../engine';
 import { drawFace } from './art';
-import { C } from './palette';
+import { C, displayPrefs } from './palette';
 
 export type OutcomeKind =
   | 'kill'
@@ -218,18 +218,21 @@ export function drawOutcomeChips(
   cx: number,
   cy: number,
 ): void {
+  // Larger labels setting: bigger text and chips, fully opaque.
+  const k = displayPrefs.largeLabels ? 1.35 : 1;
   for (const [dir, o] of outcomes) {
     const chip = o.chip;
     if (!chip) continue;
     const { dx, dy } = DIR_DELTA[dir];
-    const x = cx + dx * 28;
-    const y = cy + dy * 28;
-    ctx.font = 'bold 8px system-ui, sans-serif';
-    const w = Math.max(14, ctx.measureText(chip.label).width + (chip.icon ? 15 : 8));
+    const x = cx + dx * (28 + (k - 1) * 8);
+    const y = cy + dy * (28 + (k - 1) * 8);
+    ctx.font = `bold ${8 * k}px system-ui, sans-serif`;
+    const w = Math.max(14 * k, ctx.measureText(chip.label).width + (chip.icon ? 15 : 8) * k);
+    const h = 12 * k;
     ctx.save();
-    ctx.globalAlpha = 0.9;
+    ctx.globalAlpha = k > 1 || displayPrefs.highContrast ? 1 : 0.9;
     ctx.beginPath();
-    ctx.roundRect(x - w / 2, y - 6, w, 12, 6);
+    ctx.roundRect(x - w / 2, y - h / 2, w, h, h / 2);
     ctx.fillStyle = '#0c0a12';
     ctx.fill();
     ctx.strokeStyle = chip.color;
@@ -238,9 +241,9 @@ export function drawOutcomeChips(
     ctx.restore();
     let tx = x;
     if (chip.icon) {
-      const ix = x - w / 2 + 7;
+      const ix = x - w / 2 + 7 * k;
       drawChipIcon(ctx, chip, ix, y);
-      tx = x + 3.5;
+      tx = x + 3.5 * k;
     }
     ctx.fillStyle = chip.color;
     ctx.textAlign = 'center';

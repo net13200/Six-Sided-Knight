@@ -76,7 +76,13 @@ describe('save loading', () => {
     const { save } = loadSave(storage, NOW);
     expect(save.levels.a).toEqual({ stars: 3, bestMoves: 0, completions: 0, bestTimeMs: 0 });
     expect(save.levels.b).toBeUndefined();
-    expect(save.settings).toEqual({ muted: false, analyticsOptOut: false });
+    expect(save.settings).toEqual({
+      muted: false,
+      analyticsOptOut: false,
+      highContrast: false,
+      largeLabels: false,
+      reduceMotion: null,
+    });
     expect(save.stats.levelsCompleted).toBe(0);
   });
 
@@ -102,7 +108,8 @@ describe('save loading', () => {
     expect(store.outcome).toBe('migrated');
     expect(store.data.version).toBe(SAVE_VERSION);
     expect(store.data.levels).toEqual(v1.levels);
-    expect(store.data.settings).toEqual(v1.settings);
+    expect(store.data.settings).toMatchObject(v1.settings);
+    expect(store.data.settings.reduceMotion).toBeNull(); // new settings get defaults
     expect(store.data.lastLevelId).toBe('c1-02');
     expect(store.data.createdAt).toBe(123);
     expect(store.data.daily).toEqual({

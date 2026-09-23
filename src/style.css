@@ -434,3 +434,49 @@ button:focus-visible {
 .node.gauntlet {
   border-radius: 16px;
 }
+.sheet .toggle strong {
+  font-size: 15px;
+}
+.high-contrast .icon-btn,
+.high-contrast .btn,
+.high-contrast .node,
+.high-contrast .sheet {
+  border-color: #a39cc0;
+}
+.high-contrast .btn.mode small,
+.high-contrast .toggle small,
+.high-contrast .sheet .fine {
+  color: #c4bdd6;
+}
+.large-labels .icon-btn {
+  font-size: 12px;
+}
+.large-labels .btn.mode small {
+  font-size: 12.5px;
+}
+/* Visually hidden but read by screen readers. */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.stage-canvas:focus-visible {
+  outline: 2px solid #ffd75e;
+  outline-offset: -2px;
+}
+/* Sheets: rows and buttons tall enough to tap when the stage is scaled down. */
+.sheet {
+  overflow-y: auto;
+}
+.sheet .btn {
+  min-height: 52px;
+  flex: none;
+}
+.toggle {
+  min-height: 50px;
+  align-items: center;
+}

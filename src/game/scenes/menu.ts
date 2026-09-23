@@ -37,41 +37,41 @@ export class MenuScene implements Scene {
     const small = (id: string, text: string, onClick: () => void) =>
       el('button', { className: 'btn small', testId: id, text, onClick });
     ui.append(
-      place(playBtn, 60, 262, 220, 56),
+      place(playBtn, 60, 254, 220, 60),
       place(
         this.modeButton('daily', 'Daily Roll', this.dailyLabel(), () => this.game.goDaily()),
         60,
-        328,
+        320,
         107,
-        52,
+        60,
       ),
       place(
         this.modeButton('depths', 'Depths', this.depthsLabel(), () => this.game.goDepths()),
         173,
-        328,
+        320,
         107,
-        52,
+        60,
       ),
       place(
         small('levels', 'Map', () => this.game.goLevels()),
         74,
-        388,
+        386,
         62,
-        48,
+        60,
       ),
       place(
         small('forge', 'Forge', () => this.game.goForge()),
         139,
-        388,
+        386,
         62,
-        48,
+        60,
       ),
       place(
         small('stats', 'Stats', () => this.game.goStats()),
         204,
-        388,
+        386,
         62,
-        48,
+        60,
       ),
       place(
         iconButton('gear', 'Settings', () => this.openSettings(), 'settings'),
@@ -132,11 +132,33 @@ export class MenuScene implements Scene {
       return lab;
     };
     const stats = this.game.save.data.stats;
+    const set = this.game.save.data.settings;
     this.sheet = place(
       el('div', { className: 'sheet', testId: 'settings-sheet' }, [
         el('h2', { text: 'Settings' }),
         toggle('setting-sound', 'Sound', 'Sound effects', !this.game.muted, () =>
           this.game.toggleMute(),
+        ),
+        toggle(
+          'setting-contrast',
+          'High contrast',
+          'Brighter text and edges, stronger danger lanes',
+          set.highContrast,
+          (on) => this.game.setDisplay({ highContrast: on }),
+        ),
+        toggle(
+          'setting-labels',
+          'Larger labels',
+          'Bigger move labels and hints',
+          set.largeLabels,
+          (on) => this.game.setDisplay({ largeLabels: on }),
+        ),
+        toggle(
+          'setting-motion',
+          'Reduce motion',
+          'No shaking, bobbing or pulsing',
+          this.game.reducedMotion,
+          (on) => this.game.setDisplay({ reduceMotion: on }),
         ),
         toggle(
           'setting-analytics',
@@ -156,10 +178,10 @@ export class MenuScene implements Scene {
           onClick: () => this.closeSettings(),
         }),
       ]),
-      20,
-      90,
-      300,
-      310,
+      14,
+      14,
+      312,
+      452,
     );
     this.ui.append(this.sheet);
   }
@@ -209,6 +231,6 @@ export class MenuScene implements Scene {
     ctx.textAlign = 'center';
     ctx.fillStyle = C.textDim;
     ctx.font = '11px system-ui, sans-serif';
-    ctx.fillText(VERSION_LABEL, 170, 452);
+    ctx.fillText(VERSION_LABEL, 170, 466);
   }
 }
