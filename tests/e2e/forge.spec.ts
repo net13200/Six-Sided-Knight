@@ -99,8 +99,21 @@ test.describe('Forge, crowns and custom dice', () => {
     await expect.poll(() => scene(page), { timeout: 15_000 }).toBe('play');
     const s = await gameState(page);
     expect(s.player.die.loadout).toEqual(save.die);
+    // The floor itself is the same for everyone (only the die differs).
+    expect(s.levelId).toMatch(/^daily-\d{4}-\d{2}-\d{2}-1$/);
+  });
+
+  test('between Daily Roll floors you can change your die and come back', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('daily').click();
+    await page.getByTestId('daily-start').click();
     await playCurrentLevel(page);
     await expect.poll(() => scene(page), { timeout: 5000 }).toBe('floor');
+    await page.getByTestId('your-die').click();
+    await expect.poll(() => scene(page)).toBe('forge');
+    await page.getByTestId('back').click();
+    await expect.poll(() => scene(page)).toBe('floor');
+    await expect(page.getByTestId('floor-next')).toBeVisible();
   });
 
   test('stats screen shows lifetime numbers', async ({ page }) => {

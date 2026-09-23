@@ -67,6 +67,23 @@ export class FloorScene implements Scene {
         62,
       ),
     );
+    // The Daily Roll uses your current die on each floor: change it between floors.
+    if (s.mode === 'daily') {
+      ui.append(
+        place(
+          iconButton(
+            'die',
+            'Your die',
+            () => this.game.goForge(() => this.game.goFloor(s, this.run)),
+            'your-die',
+          ),
+          210,
+          404,
+          64,
+          62,
+        ),
+      );
+    }
   }
 
   private async share(button: HTMLButtonElement): Promise<void> {

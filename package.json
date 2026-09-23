@@ -1,6 +1,6 @@
 {
   "name": "six-sided-knight",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "description": "A puzzle-dungeon game where you are a rolling die.",
   "type": "module",

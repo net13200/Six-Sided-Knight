@@ -14,6 +14,8 @@ export interface PlaySession {
   readonly startHp: number;
   /** HUD title, e.g. "3. Turn the Blade" or "Daily Roll · floor 2/3". */
   readonly title: string;
+  /** A warning shown at the start of play (e.g. "your die can't win this floor"). */
+  readonly notice?: string;
   /** Campaign position, or null for generated floors. */
   readonly campaignIndex: number | null;
   /** Called once when play begins. */

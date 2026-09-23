@@ -2,6 +2,10 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.5.1 — One daily for everyone
+
+- The Daily Roll is now always the same floors and par for everyone, whatever their die. If your die can't win a floor, you're warned at its start: change your die (between floors, or leave and come back) — that's part of the challenge. Depths still makes a variant floor when your die can't win one.
+
 ## 0.5.0 — More dungeon
 
 - **50 new levels:** chapters 2-6 (Deep Halls, The Vaults, Ember Keep, Frost Crypt, The Throne), 60 in total. Each chapter from 2 on ends in a **Gauntlet**: 3 floors in a row with HP carried over.
@@ -9,7 +13,7 @@ Versions follow [semantic versioning](https://semver.org). The version shown in 
 - **New faces:** Freeze (stops an enemy for 2 turns) and Hook (pulls an enemy or a gem 2-3 tiles away to you).
 - **New enemies:** Archer (never moves, shoots along its row and column; its lanes are shown in red) and Golem (only Bombs crack it, moves every other turn).
 - **Crowns:** every star you earn for the first time pays 10 crowns. Stars you already had are paid once when you update.
-- **The Forge:** buy Freeze (200) and Hook (300), and build your own die (which faces, and where) for Daily Roll and Depths. Campaign levels keep their own die. If your die can't win the shared daily floor, you get a variant made for your die.
+- **The Forge:** buy Freeze (200) and Hook (300), and build your own die (which faces, and where) for Daily Roll and Depths. Campaign levels keep their own die.
 - **Skins:** 9 cosmetic die skins, unlocked with stars and daily streaks. Looks only.
 - **Stats screen:** chapter stars, lifetime totals, runs, crowns and your most-used faces.
 - Daily Rolls from 2026-09-24 (and Depths) can include ice, archers and golems.

@@ -7,16 +7,19 @@
  *
  * Same seed + same params = same level, on every device.
  *
- * Custom dice (Daily Roll, Depths): the dungeon is generated with the default
- * die first, so everyone gets the same one. If the player's own die can't
- * win it, a variant is generated for that die instead. Par is always the
- * minimum for the die that plays it.
+ * Custom dice: the dungeon is always generated with the default die first.
+ * - Shared floors (Daily Roll): everyone gets that same floor and the same
+ *   par. If the player's die can't win it, the result says so
+ *   (`winnable: false`) and it's up to the player to change their die.
+ * - Personal floors (Depths): if the player's die can't win it, a variant is
+ *   generated for that die instead, with par for that die.
  *
  * Feature sets: 1 = the original tiles and enemies (kept stable so past
  * dailies never change), 2 = adds ice, archers and golems.
  */
 import { Rng, createState, validateLevel, type LevelData, type Rules } from '../engine';
 import { rate, type Rating } from '../solver/rate';
+import { solve } from '../solver/solve';
 
 export interface GenParams {
   readonly seed: number;
@@ -31,6 +34,8 @@ export interface GenParams {
   readonly loadout?: readonly string[];
   /** Which tiles and enemies may appear (default 1). */
   readonly features?: 1 | 2;
+  /** Same floor for everyone, whatever their die (Daily Roll). */
+  readonly shared?: boolean;
 }
 
 export interface Generated {
@@ -40,6 +45,8 @@ export interface Generated {
   readonly inBand: boolean;
   /** True when the default dungeon couldn't be won with the player's die, so this one was made for it. */
   readonly variant?: boolean;
+  /** Shared floors only: false when the player's die is proven unable to win it. */
+  readonly winnable?: boolean;
 }
 
 const W = 8;
@@ -76,8 +83,17 @@ export function generateLevel(rules: Rules, params: GenParams): Generated {
   const base = generateFor(rules, { ...params, loadout: undefined });
   if (!custom) return base;
 
-  // The shared dungeon, if the player's die can win it.
   const level: LevelData = { ...base.level, loadout: [...custom] };
+  if (params.shared) {
+    // Same floor and par for everyone; just report whether this die can win it.
+    const r = solve(rules, createState(rules, level, { hp: params.hp ?? 5 }), {
+      algorithm: 'idastar',
+      maxNodes: 200_000,
+    });
+    // Only a proof that it can't be won counts; running out of budget doesn't.
+    return { ...base, level, winnable: r.status !== 'unsolvable' };
+  }
+  // The shared dungeon, if the player's die can win it.
   const rating = rate(rules, createState(rules, level, { hp: params.hp ?? 5 }));
   if (rating.solvable) return { ...base, level: { ...level, par: rating.minMoves }, rating };
   // Otherwise a variant made for this die.

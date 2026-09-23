@@ -286,6 +286,25 @@ export class PlayScene implements Scene {
       ctx.restore();
     }
 
+    // A warning from the session (e.g. this die can't win the floor), until the first move.
+    if (this.session.notice && s.stats.moves === 0) {
+      ctx.save();
+      ctx.font = 'bold 11px system-ui, sans-serif';
+      const w = ctx.measureText(this.session.notice).width + 20;
+      ctx.fillStyle = 'rgba(80,14,24,0.92)';
+      ctx.beginPath();
+      ctx.roundRect(170 - w / 2, BOARD_Y + 6, w, 22, 11);
+      ctx.fill();
+      ctx.strokeStyle = C.hurt;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.fillStyle = '#ffd9dd';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(this.session.notice, 170, BOARD_Y + 17);
+      ctx.restore();
+    }
+
     // One-line hint that fades once the player gets going.
     if (this.level.hint && s.stats.moves < 3) {
       ctx.save();

@@ -152,3 +152,27 @@ describe('generated floors and custom dice', () => {
     expect(glyphs.has('g')).toBe(true);
   }, 120_000);
 });
+
+describe('shared floors (Daily Roll)', () => {
+  const noKey = ['Shield', 'Heart', 'Bomb', 'Freeze', 'Sword', 'Hook'];
+
+  it('every die gets the same floor and par; winnable says whether this die can win it', () => {
+    let unwinnable = 0;
+    for (let seed = 1; seed <= 25; seed++) {
+      const p = { seed, band: [25, 45] as [number, number], id: 'd', name: 'D', maxAttempts: 6 };
+      const base = generateLevel(rules, { ...p, shared: true });
+      const mine = generateLevel(rules, { ...p, shared: true, loadout: noKey });
+      expect(mine.level.grid).toEqual(base.level.grid);
+      expect(mine.level.par).toBe(base.level.par);
+      expect(mine.level.loadout).toEqual(noKey);
+      const r = solve(rules, createState(rules, mine.level), {
+        algorithm: 'idastar',
+        maxNodes: 200_000,
+      });
+      expect(mine.winnable, `seed ${seed}`).toBe(r.status !== 'unsolvable');
+      if (!mine.winnable) unwinnable++;
+    }
+    // Some floors need a Key: this die can't win those.
+    expect(unwinnable).toBeGreaterThan(0);
+  }, 120_000);
+});

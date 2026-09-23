@@ -42,6 +42,7 @@ export function dailyFloorParams(
 ): GenParams {
   return {
     features: date >= DAILY_FEATURES_2_FROM ? 2 : 1,
+    shared: true,
     ...(loadout ? { loadout } : {}),
     seed: seedFrom(`ssk-daily:${date}:${floor}`),
     band: DAILY_BANDS[floor - 1] ?? DAILY_BANDS[DAILY_BANDS.length - 1]!,

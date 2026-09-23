@@ -71,15 +71,13 @@ export class Run implements FloorRun {
     return this.progress.key;
   }
 
-  /** Runs are played with the player's custom die, fixed when the run starts. */
+  /**
+   * Runs are played with the player's custom die. Depths fixes it for the
+   * whole run; the Daily Roll uses the current die on every floor, so the
+   * player can change it between floors (the floors themselves never change).
+   */
   static newDaily(game: Game, date: string, practice = false): Run {
-    const die = playerLoadout(game.save.data);
-    return new Run(
-      game,
-      'daily',
-      { key: date, floor: 1, hp: 5, moves: 0, stars: 0, die },
-      practice,
-    );
+    return new Run(game, 'daily', { key: date, floor: 1, hp: 5, moves: 0, stars: 0 }, practice);
   }
 
   static newDepths(game: Game, seed: number): Run {
@@ -94,8 +92,9 @@ export class Run implements FloorRun {
     });
   }
 
-  /** The die for this run. */
+  /** The die for the next floor. */
   get die(): readonly string[] {
+    if (this.mode === 'daily') return playerLoadout(this.game.save.data);
     return this.progress.die ?? STARTING_FACES;
   }
 
@@ -108,11 +107,11 @@ export class Run implements FloorRun {
   /** Generates (or fetches the prefetched) current floor, then starts playing it. */
   async play(): Promise<void> {
     this.persist();
-    const { level } = await this.game.levelService.generate(this.params());
-    this.game.goPlaySession(this.session(level));
+    const { level, winnable } = await this.game.levelService.generate(this.params());
+    this.game.goPlaySession(this.session(level, winnable !== false));
   }
 
-  private session(level: LevelData): PlaySession {
+  private session(level: LevelData, winnable = true): PlaySession {
     const p = this.progress;
     const title =
       this.mode === 'daily'
@@ -123,6 +122,7 @@ export class Run implements FloorRun {
       level,
       startHp: p.hp,
       title,
+      ...(winnable ? {} : { notice: "Your die can't win this floor. Change it in the Forge" }),
       campaignIndex: null,
       onStart: () => {
         const more = this.mode === 'depths' || p.floor < DAILY_FLOORS;

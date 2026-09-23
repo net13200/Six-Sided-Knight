@@ -22,8 +22,8 @@ export const TRANSITIONS: Readonly<Record<SceneName, readonly SceneName[]>> = {
   results: ['play', 'levels', 'menu'],
   daily: ['menu', 'play', 'forge'],
   depths: ['menu', 'play', 'depths', 'forge'],
-  floor: ['play', 'daily', 'depths', 'menu', 'levels'],
-  forge: ['menu', 'daily', 'depths', 'skins'],
+  floor: ['play', 'daily', 'depths', 'menu', 'levels', 'forge'],
+  forge: ['menu', 'daily', 'depths', 'skins', 'floor'],
   stats: ['menu'],
   skins: ['forge'],
 };
