@@ -1,6 +1,6 @@
 /** Draws the board, entities and effects from a GameState plus event-driven visuals. */
 import { TurnContext, type Dir, type GameState, type Pos, type Rules } from '../../engine';
-import { drawEnemy, drawTile } from './art';
+import { ANIMATED_TILES, drawEnemy, drawTile } from './art';
 import { drawDieCube } from './cube';
 import type { Fx, Visuals } from './fx';
 import { BOARD_X, BOARD_Y, TILE, tileCenter } from './layout';
@@ -34,12 +34,15 @@ export function drawBoard(
   ctx.save();
   ctx.translate(v.shakeX, v.shakeY);
 
-  // Tiles
+  // Tiles: the static ones come from a cached image (redrawn only when tiles
+  // change); animated tiles and tiles still showing their old look are drawn on top.
+  ctx.drawImage(boardLayer(ctx, rules, state), BOARD_X, BOARD_Y, 8 * TILE, 9 * TILE);
   for (let y = 0; y < state.height; y++) {
     for (let x = 0; x < state.width; x++) {
       const ghost = fx.tileGhosts.find((g) => g.x === x && g.y === y);
       const id = ghost ? ghost.tile : state.tiles[y * state.width + x]!;
-      if (isVoid(state, x, y)) continue; // solid rock nobody can see into
+      if (!ghost && !ANIMATED_TILES.has(id)) continue;
+      if (isVoid(state, x, y)) continue;
       drawTile(ctx, rules.tiles.get(id), BOARD_X + x * TILE, BOARD_Y + y * TILE, TILE, x, y, t);
     }
   }
@@ -116,8 +119,38 @@ export function drawBoard(
   }
 }
 
+/** Cached image of the board's tiles at the current pixel density. */
+let layer: { tiles: readonly string[]; k: number; canvas: HTMLCanvasElement } | null = null;
+
+function boardLayer(
+  ctx: CanvasRenderingContext2D,
+  rules: Rules,
+  state: GameState,
+): HTMLCanvasElement {
+  const k = ctx.getTransform().a; // device pixels per logical pixel
+  if (layer && layer.tiles === state.tiles && layer.k === k) return layer.canvas;
+  const canvas = layer?.canvas ?? document.createElement('canvas');
+  canvas.width = Math.round(8 * TILE * k);
+  canvas.height = Math.round(9 * TILE * k);
+  const c = canvas.getContext('2d')!;
+  c.setTransform(k, 0, 0, k, -BOARD_X * k, -BOARD_Y * k);
+  c.clearRect(BOARD_X, BOARD_Y, 8 * TILE, 9 * TILE);
+  for (let y = 0; y < state.height; y++) {
+    for (let x = 0; x < state.width; x++) {
+      const id = state.tiles[y * state.width + x]!;
+      if (isVoid(state, x, y)) continue; // solid rock nobody can see into
+      drawTile(c, rules.tiles.get(id), BOARD_X + x * TILE, BOARD_Y + y * TILE, TILE, x, y, 0);
+    }
+  }
+  layer = { tiles: state.tiles, k, canvas };
+  return canvas;
+}
+
 /** Tiles ranged enemies (archers) will shoot next turn: a red wash with arrow ticks. */
+let dangerCache: { state: GameState; tiles: Pos[] } | null = null;
+
 export function dangerTiles(rules: Rules, state: GameState): Pos[] {
+  if (dangerCache?.state === state) return dangerCache.tiles;
   const out: Pos[] = [];
   let ctx: TurnContext | null = null;
   for (const e of state.enemies) {
@@ -128,6 +161,7 @@ export function dangerTiles(rules: Rules, state: GameState): Pos[] {
     ctx ??= new TurnContext(rules, state);
     out.push(...def.dangerTiles(ctx, e));
   }
+  dangerCache = { state, tiles: out };
   return out;
 }
 

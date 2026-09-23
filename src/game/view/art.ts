@@ -389,7 +389,7 @@ const TILE_ART: Record<string, TileArt> = {
     ctx.lineWidth = 2;
     ctx.strokeRect(px + 3, py + 3, s - 6, s - 6);
   },
-  ice(ctx, px, py, s, tx, ty, t) {
+  ice(ctx, px, py, s, tx, ty) {
     ctx.fillStyle = C.ice;
     ctx.fillRect(px, py, s, s);
     ctx.fillStyle = C.iceDeep;
@@ -397,8 +397,8 @@ const TILE_ART: Record<string, TileArt> = {
     ctx.strokeStyle = 'rgba(40,90,120,0.35)';
     ctx.lineWidth = 1.2;
     ctx.strokeRect(px + 0.5, py + 0.5, s - 1, s - 1);
-    // glints, drifting slowly
-    const g = (Math.sin(t * 1.3 + tx * 0.9 + ty * 1.7) + 1) / 2;
+    // glints (static, so the board can be cached)
+    const g = hash2(tx + 7, ty + 3);
     ctx.strokeStyle = `rgba(255,255,255,${0.45 + 0.35 * g})`;
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -418,6 +418,9 @@ const TILE_ART: Record<string, TileArt> = {
     ctx.stroke();
   },
 };
+
+/** Tiles whose art changes over time; everything else is drawn once and cached. */
+export const ANIMATED_TILES: ReadonlySet<string> = new Set(['gem', 'pool', 'exit']);
 
 export function drawTile(
   ctx: Ctx,

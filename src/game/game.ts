@@ -222,11 +222,17 @@ export class Game {
     this.scene?.update?.(dt);
   }
 
-  render(): void {
+  private frame = 0;
+
+  /** Draws a frame. Returns false when the frame was skipped (idle, half rate). */
+  render(): boolean {
+    this.frame++;
+    if (this.frame % 2 === 1 && this.scene?.idle?.()) return false;
     const ctx = this.stage.beginFrame();
     ctx.fillStyle = C.bg;
     ctx.fillRect(0, 0, 340, 480);
     this.scene?.render(ctx);
+    return true;
   }
 
   /** Called when the page is hidden or shown again. */

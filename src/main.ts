@@ -26,9 +26,22 @@ bindInput(
   () => game.audio.unlock(),
 );
 
+// ?perf records how long each frame's update + draw takes (see PERFORMANCE.md).
+const perf: number[] | null = params.has('perf') ? [] : null;
 const loop = new Loop(
   (dt) => game.update(dt),
-  () => game.render(),
+  () => {
+    if (!perf) {
+      game.render();
+      return;
+    }
+    const t0 = performance.now();
+    if (!game.render()) return;
+    // ?perf=flush also waits for the canvas to finish painting (raster time).
+    if (params.get('perf') === 'flush') stage.ctx.getImageData(0, 0, 1, 1);
+    perf.push(performance.now() - t0);
+    if (perf.length > 600) perf.shift();
+  },
 );
 platform.onVisibilityChange((visible) => {
   loop.setPaused(!visible);
@@ -66,6 +79,7 @@ window.__ssk = {
   scene: () => game.scene?.name,
   state: () =>
     game.scene && 'state' in game.scene ? (game.scene as { state: unknown }).state : null,
+  perf: () => perf,
   levelIndex: () =>
     game.scene && 'index' in game.scene ? (game.scene as { index: number }).index : null,
 };

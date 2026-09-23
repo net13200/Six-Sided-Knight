@@ -20,7 +20,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test:e2e": "playwright test",
-    "replay": "tsx tools/replay.ts"
+    "replay": "tsx tools/replay.ts",
+    "size": "node tools/check-size.mjs"
   },
   "engines": {
     "node": ">=20"

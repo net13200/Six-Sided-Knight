@@ -5,7 +5,8 @@ import { MIN_ARRIVAL_HP } from './daily';
 
 /** Difficulty band for a floor: starts easy, climbs, then plateaus near the top. */
 export function depthsBand(floor: number): [number, number] {
-  const center = Math.min(78, 14 + (floor - 1) * 4);
+  // Capped at what the generator reliably reaches (higher bands just cost time; see PERFORMANCE.md).
+  const center = Math.min(64, 14 + (floor - 1) * 4);
   return [Math.max(0, center - 8), center + 8];
 }
 

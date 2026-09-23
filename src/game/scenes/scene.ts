@@ -39,5 +39,10 @@ export interface Scene {
   exit?(): void;
   update?(dt: number): void;
   render(ctx: CanvasRenderingContext2D): void;
+  /**
+   * True when only gentle idle animation is on screen (nothing the player is
+   * waiting on). The game then redraws at half rate to save battery.
+   */
+  idle?(): boolean;
   command?(cmd: Command): void;
 }

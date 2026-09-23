@@ -24,11 +24,11 @@ else {
   ctx.roundRect(2, 2, 96, 96, 22);
   ctx.fill();
 }
-const glow = ctx.createRadialGradient(50, 50, 8, 50, 50, 50);
-glow.addColorStop(0, 'rgba(255,215,94,0.28)');
-glow.addColorStop(1, 'rgba(255,215,94,0)');
-ctx.fillStyle = glow;
-ctx.fillRect(0, 0, 100, 100);
+// A flat gold halo ring (a smooth gradient would make the PNGs ~5x bigger).
+ctx.beginPath();
+ctx.arc(50, 52, maskable ? 34 : 42, 0, Math.PI * 2);
+ctx.fillStyle = '#231f2e';
+ctx.fill();
 
 // The hero die: Shield on top, faces around it (as on the title screen).
 const s = maskable ? 0.72 : 0.9; // maskable safe zone is the central 80%

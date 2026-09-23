@@ -145,7 +145,7 @@ Enemy intent (next move or attack) is deterministic and shown on the board.
 
 ## 11. Depths
 
-- An endless run of generated floors. Difficulty band climbs 4 points per floor from 6-22, plateauing at 70-86.
+- An endless run of generated floors. Difficulty band climbs 4 points per floor from 6-22, plateauing at 56-72 (from floor 13; the highest band the generator reliably reaches).
 - Same HP rules as the Daily Roll; every floor is winnable when entered with 2 HP. Undo works as everywhere else.
 - A run lasts until the player ends it. Record: deepest floor cleared. A run in progress survives leaving the game.
 

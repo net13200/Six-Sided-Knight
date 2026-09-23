@@ -268,6 +268,7 @@ test.describe('Six Sided Knight', () => {
       const c = document.querySelector('canvas')!;
       return { width: c.width, cssWidth: c.getBoundingClientRect().width, dpr: devicePixelRatio };
     });
-    expect(width).toBeGreaterThanOrEqual(Math.floor(cssWidth * Math.min(dpr, 3)) - 1);
+    // Backing store matches the screen up to 2x (the cap; see PERFORMANCE.md).
+    expect(width).toBeGreaterThanOrEqual(Math.floor(cssWidth * Math.min(dpr, 2)) - 1);
   });
 });

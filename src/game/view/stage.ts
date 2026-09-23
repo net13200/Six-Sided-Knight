@@ -40,7 +40,8 @@ export class Stage {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     this.scale = Math.min(vw / LOGICAL_W, vh / LOGICAL_H);
-    this.dpr = Math.min(window.devicePixelRatio || 1, 3);
+    // Above 2x the extra sharpness is invisible on a phone but costs ~1.7x the pixels to paint.
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.offsetX = Math.round((vw - LOGICAL_W * this.scale) / 2);
     this.offsetY = Math.round((vh - LOGICAL_H * this.scale) / 2);
     this.root.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;

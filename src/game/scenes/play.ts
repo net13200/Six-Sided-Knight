@@ -230,6 +230,10 @@ export class PlayScene implements Scene {
     this.overlay = null;
   }
 
+  idle(): boolean {
+    return !this.fx.busy && !this.inspect && !this.finishing;
+  }
+
   update(dt: number): void {
     this.fx.update(dt);
     if (!this.finishing) this.activeMs += dt * 1000;
