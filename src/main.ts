@@ -26,6 +26,19 @@ bindInput(
   () => game.audio.unlock(),
 );
 
+// Music starts right away where the browser allows it (e.g. an installed app).
+// Otherwise it starts on the first touch or key press anywhere: the splash,
+// a button, the board. Capture phase, so nothing can swallow it.
+game.audio.unlock();
+const WAKE_EVENTS = ['pointerdown', 'touchend', 'click', 'keydown'] as const;
+const wake = () => {
+  game.audio.unlock();
+  if (game.audio.running) {
+    for (const t of WAKE_EVENTS) window.removeEventListener(t, wake, true);
+  }
+};
+for (const t of WAKE_EVENTS) window.addEventListener(t, wake, true);
+
 // ?perf records how long each frame's update + draw takes (see PERFORMANCE.md).
 const perf: number[] | null = params.has('perf') ? [] : null;
 const loop = new Loop(
@@ -81,6 +94,7 @@ window.__ssk = {
     game.scene && 'state' in game.scene ? (game.scene as { state: unknown }).state : null,
   perf: () => perf,
   music: () => game.audio.currentTrack,
+  audioRunning: () => game.audio.running,
   levelIndex: () =>
     game.scene && 'index' in game.scene ? (game.scene as { index: number }).index : null,
 };

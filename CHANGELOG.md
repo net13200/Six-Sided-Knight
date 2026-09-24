@@ -5,6 +5,7 @@ Versions follow [semantic versioning](https://semver.org). The version shown in 
 ## Unreleased
 
 - **A story.** Oddmere's Queen wished never to decide anything again, the Old Well overdid it, and now everyone is a die. You're the one who still rolls on purpose. Four illustrated pages before level 1, a card as each chapter begins, and an ending after the last level. Each plays once and can be skipped. "Story" (top left of the title screen) replays it.
+- **Music starts right away.** It plays as soon as the game opens where the browser allows it (usually the installed app). Where it doesn't (iPhone), it starts on your first touch anywhere, the splash or a menu button included, instead of waiting for your first move.
 
 ## 0.7.1 — Stars that stick
 

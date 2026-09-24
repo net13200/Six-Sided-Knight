@@ -2,7 +2,8 @@ import { MusicPlayer, type TrackId } from './music';
 
 /**
  * Sound effects synthesized with WebAudio (no audio files). The context is
- * created on the first user gesture, as browsers require.
+ * created at startup; where the browser blocks sound until the player
+ * interacts, it starts on the first touch or key press anywhere.
  */
 export type SfxName =
   | 'roll'
@@ -66,10 +67,18 @@ export class Audio {
     this.music?.setVolume(this.isMuted ? 0 : this.musicVolume * 0.6);
   }
 
-  /** Call from a user gesture (pointerdown/keydown). Safe to call repeatedly. */
+  /** Whether sound is actually playing (not blocked by the browser or suspended). */
+  get running(): boolean {
+    return this.ctx?.state === 'running';
+  }
+
+  /**
+   * Starts sound. Called at startup (works where the browser allows sound
+   * without a gesture) and again from gestures. Safe to call repeatedly.
+   */
   unlock(): void {
     if (this.ctx) {
-      if (this.ctx.state === 'suspended') void this.ctx.resume();
+      if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
       return;
     }
     const Ctor =
@@ -102,7 +111,7 @@ export class Audio {
   }
 
   resume(): void {
-    if (this.ctx && this.ctx.state === 'suspended') void this.ctx.resume();
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
   }
 
   play(name: SfxName, delay = 0): void {
