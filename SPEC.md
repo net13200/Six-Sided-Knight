@@ -173,7 +173,7 @@ Enemy intent (next move or attack) is deterministic and shown on the board.
 
 - No ads, payments, or monetization code. No dark patterns.
 - Analytics: no personal data, with a clear opt-out.
-- All art and audio are procedural and original.
+- All art and audio (sound effects and music) are procedural and original.
 
 ## 14. Roadmap (not in scope yet — "start simple, upgrade later")
 

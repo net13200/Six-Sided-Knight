@@ -34,6 +34,8 @@ export interface Settings {
   largeLabels: boolean;
   /** Reduce motion: null = follow the system setting (0.6.0). */
   reduceMotion: boolean | null;
+  /** Background music volume, 0 (off) to 1 (0.7.0). */
+  musicVolume: number;
 }
 
 export interface LifetimeStats {
@@ -145,6 +147,7 @@ export function freshSave(now: number): SaveData {
       highContrast: false,
       largeLabels: false,
       reduceMotion: null,
+      musicVolume: 0.5,
     },
     levels: {},
     lastLevelId: null,
@@ -294,6 +297,10 @@ function normalizeSettings(s: Settings): Settings {
     highContrast: s.highContrast === true,
     largeLabels: s.largeLabels === true,
     reduceMotion: typeof s.reduceMotion === 'boolean' ? s.reduceMotion : null,
+    musicVolume:
+      typeof s.musicVolume === 'number' && Number.isFinite(s.musicVolume)
+        ? Math.max(0, Math.min(1, s.musicVolume))
+        : 0.5,
   };
 }
 

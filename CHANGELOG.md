@@ -2,6 +2,12 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.7.0 — Music
+
+- **Background music**, composed for the game and synthesized live (no audio files): "Hall of the Die" on the title and menus, "Quiet Stones" in levels and the Daily Roll, "Into the Depths" in Depths and Gauntlets.
+- Endless: each loop starts exactly where the last one ended, and instruments drop in and out from pass to pass, so it never sounds like it stops and restarts. The music keeps going between levels and floors; changing area cross-fades.
+- **Music volume slider** in Settings (0 turns it off). The Sound switch still silences everything.
+
 ## 0.6.2 — Snappier splash
 
 - The SugiGames kanji animation draws about 20% faster (strokes 420 → 340 ms, gaps 90 → 60 ms), matching SugiPaint and SugiGames.

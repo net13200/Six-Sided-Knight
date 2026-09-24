@@ -80,6 +80,7 @@ window.__ssk = {
   state: () =>
     game.scene && 'state' in game.scene ? (game.scene as { state: unknown }).state : null,
   perf: () => perf,
+  music: () => game.audio.currentTrack,
   levelIndex: () =>
     game.scene && 'index' in game.scene ? (game.scene as { index: number }).index : null,
 };

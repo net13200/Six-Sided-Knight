@@ -4,6 +4,7 @@
  * Depths floors are all sessions, so the play screen has no mode-specific code.
  */
 import type { GameState, LevelData } from '../engine';
+import type { TrackId } from './music';
 import type { StarResult } from './stars';
 
 export type PlayMode = 'campaign' | 'daily' | 'depths';
@@ -14,6 +15,8 @@ export interface PlaySession {
   readonly startHp: number;
   /** HUD title, e.g. "3. Turn the Blade" or "Daily Roll · floor 2/3". */
   readonly title: string;
+  /** Background music while playing (default: the calm puzzle track). */
+  readonly music?: TrackId;
   /** A warning shown at the start of play (e.g. "your die can't win this floor"). */
   readonly notice?: string;
   /** Campaign position, or null for generated floors. */

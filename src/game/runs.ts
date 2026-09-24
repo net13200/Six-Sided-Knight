@@ -121,6 +121,7 @@ export class Run implements FloorRun {
       mode: this.mode,
       level,
       startHp: p.hp,
+      music: this.mode === 'depths' ? 'depths' : 'puzzle',
       title,
       ...(winnable ? {} : { notice: "Your die can't win this floor. Change it in the Forge" }),
       campaignIndex: null,

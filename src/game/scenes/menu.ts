@@ -1,6 +1,5 @@
 /** Title screen. "Play" continues where the player left off in one tap. */
 import { currentStreak, utcDate } from '../../meta/daily';
-import { totalStars } from '../../meta/progress';
 import { VERSION_LABEL } from '../../version';
 import type { Game } from '../game';
 import type { Command } from '../input';
@@ -139,18 +138,21 @@ export class MenuScene implements Scene {
       lab.htmlFor = id;
       return lab;
     };
-    const stats = this.game.save.data.stats;
     const set = this.game.save.data.settings;
     this.sheet = place(
-      el('div', { className: 'sheet', testId: 'settings-sheet' }, [
-        el('h2', { text: 'Settings' }),
-        toggle('setting-sound', 'Sound', 'Sound effects', !this.game.muted, () =>
+      el('div', { className: 'sheet settings', testId: 'settings-sheet' }, [
+        el('div', { className: 'sheet-title' }, [
+          el('h2', { text: 'Settings' }),
+          el('small', { className: 'fine', text: VERSION_LABEL }),
+        ]),
+        toggle('setting-sound', 'Sound', 'Sound effects and music', !this.game.muted, () =>
           this.game.toggleMute(),
         ),
+        this.musicSlider(),
         toggle(
           'setting-contrast',
           'High contrast',
-          'Brighter text and edges, stronger danger lanes',
+          'Brighter text, edges and danger lanes',
           set.highContrast,
           (on) => this.game.setDisplay({ highContrast: on }),
         ),
@@ -171,14 +173,10 @@ export class MenuScene implements Scene {
         toggle(
           'setting-analytics',
           'Play statistics',
-          'Helps tune level difficulty. Stays on this device; nothing is sent anywhere.',
+          'On this device only; nothing is sent',
           this.game.analyticsEnabled,
           (on) => this.game.setAnalyticsEnabled(on),
         ),
-        el('p', {
-          className: 'fine',
-          text: `${stats.levelsCompleted} levels cleared · ${totalStars(this.game.save.data)} stars · ${Math.round(stats.playTimeMs / 60000)} min played · ${VERSION_LABEL}`,
-        }),
         el('button', {
           className: 'btn',
           testId: 'settings-close',
@@ -187,11 +185,39 @@ export class MenuScene implements Scene {
         }),
       ]),
       14,
-      14,
+      12,
       312,
-      452,
+      456,
     );
     this.ui.append(this.sheet);
+  }
+
+  /** Music volume: 0 turns the music off. */
+  private musicSlider(): HTMLElement {
+    const input = el('input', { testId: 'setting-music' });
+    input.type = 'range';
+    input.id = 'setting-music';
+    input.min = '0';
+    input.max = '100';
+    input.step = '5';
+    input.value = String(Math.round(this.game.save.data.settings.musicVolume * 100));
+    const value = el('small', { className: 'slider-value' });
+    const sync = () => {
+      const v = Number(input.value);
+      value.textContent = v === 0 ? 'Off' : `${v}%`;
+      input.setAttribute('aria-valuetext', v === 0 ? 'Off' : `${v} percent`);
+    };
+    sync();
+    input.addEventListener('input', () => {
+      sync();
+      this.game.setMusicVolume(Number(input.value) / 100);
+    });
+    const label = el('label', { className: 'slider' }, [
+      el('span', {}, [el('strong', { text: 'Music' }), value]),
+      input,
+    ]);
+    label.htmlFor = 'setting-music';
+    return label;
   }
 
   private closeSettings(): void {

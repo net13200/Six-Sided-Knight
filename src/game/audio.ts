@@ -1,3 +1,5 @@
+import { MusicPlayer, type TrackId } from './music';
+
 /**
  * Sound effects synthesized with WebAudio (no audio files). The context is
  * created on the first user gesture, as browsers require.
@@ -28,7 +30,41 @@ export class Audio {
   private master: GainNode | null = null;
   private noise: AudioBuffer | null = null;
   private lastPlayed = new Map<SfxName, number>();
-  muted = false;
+  private music: MusicPlayer | null = null;
+  private track: TrackId | null = null;
+  private musicVolume = 0.5;
+  private isMuted = false;
+
+  /** Mutes sound effects and music. */
+  get muted(): boolean {
+    return this.isMuted;
+  }
+  set muted(on: boolean) {
+    this.isMuted = on;
+    this.applyMusicVolume();
+  }
+
+  /** The music track the game wants playing (for tests and debugging). */
+  get currentTrack(): TrackId | null {
+    return this.track;
+  }
+
+  /** Background music track to play (starts after the first user gesture). */
+  setTrack(id: TrackId | null): void {
+    this.track = id;
+    this.music?.play(id);
+  }
+
+  /** Music volume 0 (off) to 1. */
+  setMusicVolume(v: number): void {
+    this.musicVolume = Math.max(0, Math.min(1, v));
+    this.applyMusicVolume();
+  }
+
+  private applyMusicVolume(): void {
+    // Music sits under the sound effects.
+    this.music?.setVolume(this.isMuted ? 0 : this.musicVolume * 0.6);
+  }
 
   /** Call from a user gesture (pointerdown/keydown). Safe to call repeatedly. */
   unlock(): void {
@@ -45,6 +81,9 @@ export class Audio {
       this.master = this.ctx.createGain();
       this.master.gain.value = 0.5;
       this.master.connect(this.ctx.destination);
+      this.music = new MusicPlayer(this.ctx, this.master);
+      this.applyMusicVolume();
+      this.music.play(this.track);
       const len = Math.floor(this.ctx.sampleRate * 0.3);
       this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
       const data = this.noise.getChannelData(0);

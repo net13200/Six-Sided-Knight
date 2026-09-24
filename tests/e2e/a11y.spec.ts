@@ -79,3 +79,20 @@ test.describe('accessibility', () => {
     expect(problems).toEqual([]);
   });
 });
+
+test.describe('music', () => {
+  test('volume slider persists; each screen picks its music', async ({ page }) => {
+    await page.goto('/');
+    const track = () => page.evaluate(() => (window.__ssk as { music(): string | null }).music());
+    await expect.poll(track).toBe('hall');
+    await page.getByTestId('settings').click();
+    await page.getByTestId('setting-music').fill('25');
+    await page.getByTestId('settings-close').click();
+    const s = await page.evaluate(() => JSON.parse(localStorage.getItem('ssk.save')!).settings);
+    expect(s.musicVolume).toBeCloseTo(0.25);
+    await page.getByTestId('play').click();
+    await expect.poll(track).toBe('puzzle');
+    await page.goto('/?level=20'); // a gauntlet
+    await expect.poll(track).toBe('depths');
+  });
+});

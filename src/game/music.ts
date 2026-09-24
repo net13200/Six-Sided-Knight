@@ -18,13 +18,27 @@ export type Voice = 'pluck' | 'harp' | 'recorder' | 'pad' | 'bass' | 'bell' | 'd
 /** [start in steps, MIDI note (0 for drums), length in steps, volume 0..1] */
 export type Note = readonly [number, number, number, number?];
 
+export interface Part {
+  readonly voice: Voice;
+  readonly gain: number;
+  readonly notes: readonly Note[];
+  /**
+   * Which passes of the arrangement cycle this part plays on (default: all).
+   * Parts dropping in and out make each pass a little different, so the
+   * music never sounds like it ends and starts again.
+   */
+  readonly passes?: readonly number[];
+}
+
 export interface Track {
   readonly name: string;
   /** Seconds per step. */
   readonly step: number;
   /** Loop length in steps. */
   readonly length: number;
-  readonly parts: ReadonlyArray<{ voice: Voice; gain: number; notes: readonly Note[] }>;
+  /** Passes before the arrangement repeats exactly. */
+  readonly cycle: number;
+  readonly parts: readonly Part[];
 }
 
 const hz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
@@ -131,8 +145,22 @@ export const HALL: Track = {
   name: 'Hall of the Die',
   step: 0.2,
   length: 96,
+  // Pass 1 adds a harp an octave below the tune; pass 2 is an instrumental
+  // break (no tune); pass 3 lets the drum rest.
+  cycle: 4,
   parts: [
-    { voice: 'recorder', gain: 0.5, notes: [...HALL_MELODY, ...shift(HALL_ANSWER, 48)] },
+    {
+      voice: 'recorder',
+      gain: 0.5,
+      notes: [...HALL_MELODY, ...shift(HALL_ANSWER, 48)],
+      passes: [0, 1, 3],
+    },
+    {
+      voice: 'harp',
+      gain: 0.22,
+      notes: [...shift(HALL_MELODY, 0, -12), ...shift(HALL_ANSWER, 48, -12)],
+      passes: [1],
+    },
     {
       voice: 'pluck',
       gain: 0.32,
@@ -148,6 +176,7 @@ export const HALL: Track = {
     },
     {
       voice: 'drum',
+      passes: [0, 1, 2],
       gain: 0.5,
       notes: Array.from({ length: 16 }, (_, bar) => [
         [bar * 6, 0, 1, 1] as Note,
@@ -157,6 +186,7 @@ export const HALL: Track = {
     },
     {
       voice: 'tick',
+      passes: [0, 1, 2],
       gain: 0.1,
       notes: Array.from({ length: 16 * 6 }, (_, i) => [i, 0, 1, i % 3 === 0 ? 1 : 0.5] as Note),
     },
@@ -193,6 +223,8 @@ export const PUZZLE: Track = {
   name: 'Quiet Stones',
   step: 0.4,
   length: 128,
+  // Pass 0: harp, bells, pad. Pass 1: harp and pad only. Pass 2: harp and bells.
+  cycle: 3,
   parts: [
     { voice: 'harp', gain: 0.3, notes: [...puzzleHarp, ...shift(puzzleHarp, 64)] },
     // Softer bells the first time round, then an octave up: the loop breathes.
@@ -200,11 +232,13 @@ export const PUZZLE: Track = {
       voice: 'bell',
       gain: 0.22,
       notes: [...shift(PUZZLE_BELLS, 0, 0, 0.6), ...shift(PUZZLE_BELLS, 64, 12)],
+      passes: [0, 2],
     },
     {
       voice: 'pad',
       gain: 0.16,
       notes: [...PUZZLE_ROOTS, ...PUZZLE_ROOTS].map((r, bar) => [bar * 8, r - 12, 8] as Note),
+      passes: [0, 1],
     },
   ],
 };
@@ -231,6 +265,8 @@ export const DEPTHS: Track = {
   name: 'Into the Depths',
   step: 0.3,
   length: 64,
+  // The whistle comes and goes; bells and harp take turns.
+  cycle: 4,
   parts: [
     {
       voice: 'pad',
@@ -244,7 +280,7 @@ export const DEPTHS: Track = {
         [48, 45, 16],
       ],
     },
-    { voice: 'recorder', gain: 0.22, notes: DEPTHS_WHISTLE },
+    { voice: 'recorder', gain: 0.22, notes: DEPTHS_WHISTLE, passes: [1, 3] },
     {
       voice: 'drum',
       gain: 0.28,
@@ -255,6 +291,7 @@ export const DEPTHS: Track = {
     },
     {
       voice: 'bell',
+      passes: [0, 2, 3],
       gain: 0.14,
       notes: [
         [4, 62, 8],
@@ -265,6 +302,7 @@ export const DEPTHS: Track = {
     },
     {
       voice: 'harp',
+      passes: [0, 1, 2],
       gain: 0.18,
       notes: arpeggio(
         [50, 50, 51, 50],
@@ -453,6 +491,10 @@ export function playVoice(
   }
 }
 
+export function playsOnPass(part: Part, track: Track, pass: number): boolean {
+  return !part.passes || part.passes.includes(pass % track.cycle);
+}
+
 /** Schedules one full pass of a track starting at time `t0`. Returns when it ends. */
 export function scheduleLoop(
   ctx: BaseAudioContext,
@@ -460,8 +502,10 @@ export function scheduleLoop(
   noise: AudioBuffer,
   track: Track,
   t0: number,
+  pass = 0,
 ): number {
   for (const part of track.parts) {
+    if (!playsOnPass(part, track, pass)) continue;
     for (const [s, m, l, v = 1] of part.notes) {
       if (s >= track.length) continue;
       playVoice(ctx, out, noise, part.voice, m, t0 + s * track.step, l * track.step, part.gain * v);
@@ -507,4 +551,140 @@ export function createRoom(ctx: BaseAudioContext, out: AudioNode): AudioNode {
     lp.connect(wet).connect(out);
   }
   return input;
+}
+
+/** Note start times (seconds) over several passes, as the player schedules them. */
+export function noteTimes(track: Track, passes: number): number[] {
+  const times: number[] = [];
+  for (let pass = 0; pass < passes; pass++) {
+    const t0 = pass * track.length * track.step;
+    for (const part of track.parts) {
+      if (!playsOnPass(part, track, pass)) continue;
+      for (const [s] of part.notes) if (s < track.length) times.push(t0 + s * track.step);
+    }
+  }
+  return times.sort((a, b) => a - b);
+}
+
+// ---------- the live player ----------
+
+interface Event {
+  readonly step: number;
+  readonly part: Part;
+  readonly note: Note;
+}
+
+/**
+ * Plays tracks endlessly. Notes are scheduled a few seconds ahead in small
+ * batches (so a track can stop or change at any moment), and each pass
+ * starts exactly where the last one ended: no gap, no restart feeling.
+ * Changing track cross-fades.
+ */
+export class MusicPlayer {
+  private bus: GainNode;
+  private room: AudioNode;
+  private noise: AudioBuffer;
+  private current: {
+    id: TrackId;
+    gain: GainNode;
+    events: Event[];
+    index: number;
+    pass: number;
+    passStart: number;
+  } | null = null;
+  private timer: ReturnType<typeof setInterval> | null = null;
+  private volume = 0.4;
+
+  constructor(
+    private readonly ctx: AudioContext,
+    out: AudioNode,
+  ) {
+    this.bus = ctx.createGain();
+    this.bus.gain.value = this.volume;
+    this.bus.connect(out);
+    this.room = createRoom(ctx, this.bus);
+    this.noise = makeNoise(ctx);
+    this.timer = setInterval(() => this.pump(), 250);
+  }
+
+  get trackId(): TrackId | null {
+    return this.current?.id ?? null;
+  }
+
+  /** 0 (off) to 1. */
+  setVolume(v: number): void {
+    this.volume = Math.max(0, Math.min(1, v));
+    const t = this.ctx.currentTime;
+    this.bus.gain.cancelScheduledValues(t);
+    this.bus.gain.setTargetAtTime(this.volume, t, 0.08);
+  }
+
+  /** Switches to a track (cross-fading), or keeps playing if it's already on. */
+  play(id: TrackId | null): void {
+    if (this.current?.id === id) return;
+    const t = this.ctx.currentTime;
+    if (this.current) {
+      const old = this.current.gain;
+      old.gain.cancelScheduledValues(t);
+      old.gain.setValueAtTime(old.gain.value, t);
+      old.gain.linearRampToValueAtTime(0, t + 1.5);
+      setTimeout(() => old.disconnect(), 4000);
+      this.current = null;
+    }
+    if (!id) return;
+    const track = TRACKS[id];
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(1, t + 1.2);
+    gain.connect(this.room);
+    const events: Event[] = track.parts
+      .flatMap((part) => part.notes.map((note) => ({ step: note[0], part, note })))
+      .filter((e) => e.step < track.length)
+      .sort((a, b) => a.step - b.step);
+    this.current = { id, gain, events, index: 0, pass: 0, passStart: t + 0.1 };
+    this.pump();
+  }
+
+  /** Schedules everything due in the next few seconds. */
+  private pump(): void {
+    const cur = this.current;
+    if (!cur || this.ctx.state !== 'running') return;
+    const track = TRACKS[cur.id];
+    const horizon = this.ctx.currentTime + 3;
+    // Never schedule into the past (e.g. after the app was in the background).
+    if (cur.passStart + track.length * track.step < this.ctx.currentTime) {
+      cur.passStart = this.ctx.currentTime + 0.05;
+      cur.index = 0;
+      cur.pass++;
+    }
+    for (;;) {
+      if (cur.index >= cur.events.length) {
+        // Next pass starts exactly where this one ends.
+        cur.passStart += track.length * track.step;
+        cur.pass++;
+        cur.index = 0;
+      }
+      const e = cur.events[cur.index]!;
+      const t = cur.passStart + e.step * track.step;
+      if (t > horizon) break;
+      cur.index++;
+      if (t < this.ctx.currentTime || !playsOnPass(e.part, track, cur.pass)) continue;
+      const [, midi, len, v = 1] = e.note;
+      playVoice(
+        this.ctx,
+        cur.gain,
+        this.noise,
+        e.part.voice,
+        midi,
+        t,
+        len * track.step,
+        e.part.gain * v,
+      );
+    }
+  }
+
+  dispose(): void {
+    if (this.timer) clearInterval(this.timer);
+    this.bus.disconnect();
+  }
 }

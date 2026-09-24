@@ -51,6 +51,7 @@ export class Gauntlet implements FloorRun {
       mode: 'campaign',
       level,
       startHp: this.hp,
+      music: 'depths',
       title: `${this.index + 1}. ${first.name} · ${this.floor + 1}/${n}`,
       campaignIndex: this.index,
       onStart: () => this.game.save.update((d) => (d.lastLevelId = first.id)),

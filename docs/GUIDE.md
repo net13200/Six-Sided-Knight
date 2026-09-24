@@ -56,4 +56,4 @@ Spend crowns on new faces, then build your own die (which faces, and on which si
 
 ## Settings
 
-Sound, High contrast, Larger labels, Reduce motion, and Play statistics (on-device only; see [PRIVACY.md](../PRIVACY.md)).
+Sound (effects and music), Music volume, High contrast, Larger labels, Reduce motion, and Play statistics (on-device only; see [PRIVACY.md](../PRIVACY.md)).

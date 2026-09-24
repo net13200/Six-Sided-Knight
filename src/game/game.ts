@@ -15,6 +15,7 @@ import type { Platform } from '../platform/platform';
 import { VERSION } from '../version';
 import { Audio } from './audio';
 import type { Command } from './input';
+import type { TrackId } from './music';
 import { Gauntlet } from './gauntlet';
 import type { FloorRun, FloorSummary } from './runs';
 import { DailyScene } from './scenes/daily';
@@ -75,6 +76,7 @@ export class Game {
     this.levelService = new LevelService(this.rules);
     this.save = new SaveStore(platform.storage, platform.now());
     this.audio.muted = this.save.data.settings.muted;
+    this.audio.setMusicVolume(this.save.data.settings.musicVolume);
     this.analytics = new LocalAnalytics(platform.storage, platform.now, randomId, VERSION);
     this.analytics.optedOut = this.save.data.settings.analyticsOptOut;
     this.analytics.verbose = options.debug === true;
@@ -95,6 +97,12 @@ export class Game {
     displayPrefs.largeLabels = s.largeLabels;
     this.stage.root.classList.toggle('high-contrast', s.highContrast);
     this.stage.root.classList.toggle('large-labels', s.largeLabels);
+  }
+
+  /** Background music volume, 0 (off) to 1. */
+  setMusicVolume(v: number): void {
+    this.save.update((d) => (d.settings.musicVolume = Math.max(0, Math.min(1, v))));
+    this.audio.setMusicVolume(this.save.data.settings.musicVolume);
   }
 
   setDisplay(
@@ -123,6 +131,8 @@ export class Game {
     this.scene?.exit?.();
     this.stage.ui.replaceChildren();
     this.scene = next;
+    const music = musicFor(next);
+    if (music !== 'keep') this.audio.setTrack(music);
     this.stage.root.dataset.scene = next.name;
     next.enter(this.stage.ui);
   }
@@ -278,6 +288,7 @@ export class Game {
   toggleMute(): void {
     this.save.update((d) => (d.settings.muted = !d.settings.muted));
     this.audio.muted = this.save.data.settings.muted;
+    this.audio.setMusicVolume(this.save.data.settings.musicVolume);
     this.stage.root.dispatchEvent(new CustomEvent('ssk:settings'));
   }
 
@@ -291,6 +302,16 @@ export class Game {
     if (enabled) this.analytics.startSession();
     this.stage.root.dispatchEvent(new CustomEvent('ssk:settings'));
   }
+}
+
+/**
+ * Which music a scene plays. Result and between-floor screens keep whatever
+ * is playing, so a run of levels sounds like one continuous piece.
+ */
+function musicFor(scene: Scene): TrackId | 'keep' {
+  if (scene instanceof PlayScene) return scene.session.music ?? 'puzzle';
+  if (scene.name === 'results' || scene.name === 'floor') return 'keep';
+  return 'hall';
 }
 
 /** Random install id for grouping local events. Not personal, never sent anywhere. */

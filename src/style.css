@@ -503,3 +503,40 @@ button:focus-visible {
   font-weight: 700;
   font-size: 15px;
 }
+.slider {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 50px;
+  justify-content: center;
+}
+.slider span {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.slider strong {
+  font-size: 15px;
+}
+.slider .slider-value {
+  color: #8d86a0;
+  font-size: 12px;
+}
+.high-contrast .slider .slider-value {
+  color: #c4bdd6;
+}
+.slider input[type='range'] {
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  accent-color: #ffd75e;
+}
+.sheet.settings {
+  gap: 4px;
+  padding: 14px 16px;
+}
+.sheet-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
