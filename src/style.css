@@ -540,3 +540,27 @@ button:focus-visible {
   justify-content: space-between;
   align-items: baseline;
 }
+
+/* Story pages: text under the illustration. */
+.story-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  color: #ece6d6;
+  pointer-events: none;
+}
+.story-text strong {
+  color: #ffd75e;
+  font-size: 17px;
+}
+.story-text p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.large-labels .story-text p {
+  font-size: 16px;
+  line-height: 1.3;
+}

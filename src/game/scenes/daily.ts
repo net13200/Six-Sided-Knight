@@ -120,6 +120,8 @@ export class DailyScene implements Scene {
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
     ctx.fillText(`${this.date} (UTC) · the same dungeon for everyone`, 170, 80);
+    ctx.font = 'italic 12px system-ui, sans-serif';
+    ctx.fillText('The Well reshuffles three rooms every dawn, out of habit.', 170, 99);
 
     drawFlame(ctx, 170, 142, streak > 0);
     ctx.fillStyle = C.text;

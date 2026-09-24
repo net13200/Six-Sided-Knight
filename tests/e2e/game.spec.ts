@@ -5,6 +5,7 @@ import {
   levelIndex,
   losingPathFor,
   scene,
+  skipStory,
   solutionFor,
   swipe,
   tileClient,
@@ -23,12 +24,30 @@ test.describe('Six Sided Knight', () => {
     expect(errors).toEqual([]);
   });
 
-  test('menu starts level 1 in one tap', async ({ page }) => {
+  test('the first Play tells the story, then starts level 1; the story shows only once', async ({
+    page,
+  }) => {
     await page.goto('/');
     await expect.poll(() => scene(page)).toBe('menu');
     await page.getByTestId('play').click();
+    await expect.poll(() => scene(page)).toBe('story');
+    await expect(page.getByTestId('story-text')).toContainText('Oddmere');
+    for (let i = 0; i < 4; i++) await page.getByTestId('story-next').click();
+    await expect(page.getByTestId('story-text')).toContainText('Chapter 1');
+    await expect(page.getByTestId('story-next')).toContainText('Begin');
+    await page.getByTestId('story-next').click();
     await expect.poll(() => scene(page)).toBe('play');
     expect(await levelIndex(page)).toBe(0);
+    // Once seen, Play goes straight to the level.
+    await page.goto('/');
+    await page.getByTestId('play').click();
+    await expect.poll(() => scene(page)).toBe('play');
+    // "Story" on the title screen replays it.
+    await page.goto('/');
+    await page.getByTestId('story').click();
+    await expect(page.getByTestId('story-text')).toContainText('Oddmere');
+    await page.getByTestId('story-skip').click();
+    await expect.poll(() => scene(page)).toBe('menu');
   });
 
   test('shows the version number on the title screen and in the KPI panel', async ({ page }) => {
@@ -166,6 +185,7 @@ test.describe('Six Sided Knight', () => {
     await page.getByTestId('levels').click();
     await expect(page.getByTestId('level-2')).toBeDisabled();
     await page.getByTestId('level-1').click();
+    await skipStory(page);
     for (const dir of solutionFor(0)) await page.keyboard.press(KEY[dir]);
     await expect.poll(() => scene(page), { timeout: 5000 }).toBe('results');
     await page.getByTestId('results-levels').click();
@@ -193,6 +213,7 @@ test.describe('Six Sided Knight', () => {
   test('progress survives a reload and Play continues where you left off', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('play').click();
+    await skipStory(page);
     for (const dir of solutionFor(0)) await page.keyboard.press(KEY[dir]);
     await expect.poll(() => scene(page), { timeout: 5000 }).toBe('results');
     await page.goto('/');
@@ -215,7 +236,7 @@ test.describe('Six Sided Knight', () => {
     await page.goto('/');
     await expect.poll(() => scene(page)).toBe('menu');
     await page.getByTestId('play').click();
-    await expect.poll(() => scene(page)).toBe('play');
+    await skipStory(page);
     const backup = await page.evaluate(() =>
       Object.keys(localStorage).some((k) => k.startsWith('ssk.save.corrupt.')),
     );

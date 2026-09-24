@@ -8,7 +8,7 @@ import type { GameState, LevelData, Rules } from '../engine';
 import { loadCampaign, loadGauntletFloors } from '../levels/campaign';
 import { LevelService } from '../gen/service';
 import { LocalAnalytics } from '../meta/analytics';
-import { continueIndex, recordWin } from '../meta/progress';
+import { CHAPTER_SIZE, continueIndex, isCompleted, isUnlocked, recordWin } from '../meta/progress';
 import { SaveStore, type Settings } from '../meta/save';
 import { crownsForStars, earnCrowns } from '../meta/store';
 import type { Platform } from '../platform/platform';
@@ -28,6 +28,8 @@ import { PlayScene } from './scenes/play';
 import { ResultsScene } from './scenes/results';
 import { SkinsScene } from './scenes/skins';
 import { StatsScene } from './scenes/stats';
+import { StoryScene } from './scenes/story';
+import { ENDING, STORY_KEYS, storyBeforeLevel, storySoFar, type StoryPage } from './story';
 import { setDieSkin } from './view/cube';
 import { activeSkin, newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/skins';
 import { canTransition, type Scene } from './scenes/scene';
@@ -148,10 +150,24 @@ export class Game {
     this.go(new LevelsScene(this, chapter));
   }
 
-  /** Plays a campaign level. */
-  goPlay(index: number): void {
+  /**
+   * Plays a campaign level. The first time a chapter begins (and before the
+   * very first level) its story plays first, unless `story` is false.
+   */
+  goPlay(index: number, opts: { story?: boolean } = {}): void {
     const i = Math.max(0, Math.min(index, this.levels.length - 1));
     const level = this.levels[i]!;
+    if (opts.story !== false) {
+      const { pages, keys } = storyBeforeLevel(
+        i,
+        (k) => this.storySeen(k),
+        isCompleted(this.save.data, level),
+      );
+      if (pages.length > 0) {
+        this.goStory(pages, () => this.goPlay(i, { story: false }), keys, 'Begin');
+        return;
+      }
+    }
     const extra = this.gauntlets.get(level.id);
     if (extra) {
       void new Gauntlet(this, i, [level, ...extra]).play();
@@ -170,6 +186,45 @@ export class Game {
       },
       onBack: () => this.goLevels(),
     });
+  }
+
+  /** Shows story pages, marks `keys` as seen, then calls `done`. */
+  goStory(
+    pages: readonly StoryPage[],
+    done: () => void,
+    keys: string[] = [],
+    finalLabel?: string,
+  ): void {
+    if (keys.length > 0) this.save.update((d) => keys.forEach((k) => (d.hints[k] = true)));
+    this.go(new StoryScene(this, pages, done, finalLabel));
+  }
+
+  storySeen(key: string): boolean {
+    return this.save.data.hints[key] === true;
+  }
+
+  /** "Story" on the title screen: everything seen so far. */
+  goStorySoFar(): void {
+    let open = 0;
+    for (let c = 0; c * CHAPTER_SIZE < this.levels.length; c++) {
+      if (isUnlocked(this.save.data, this.levels, c * CHAPTER_SIZE)) open = c + 1;
+    }
+    this.goStory(
+      storySoFar((k) => this.storySeen(k), open),
+      () => this.goMenu(),
+      [],
+      'Done',
+    );
+  }
+
+  /** The ending, the first time the last level is beaten. */
+  get endingPending(): boolean {
+    const last = this.levels[this.levels.length - 1];
+    return !!last && isCompleted(this.save.data, last) && !this.storySeen(STORY_KEYS.ending);
+  }
+
+  goEnding(): void {
+    this.goStory(ENDING, () => this.goMenu(), [STORY_KEYS.ending], 'The end');
   }
 
   goPlaySession(session: PlaySession): void {

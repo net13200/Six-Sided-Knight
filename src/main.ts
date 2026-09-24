@@ -55,7 +55,7 @@ window.addEventListener('pagehide', () => game.visibilityChanged(false));
 
 // ?level=3 jumps straight into a level (handy for testing and sharing).
 const levelParam = Number(params.get('level'));
-if (levelParam >= 1) game.goPlay(levelParam - 1);
+if (levelParam >= 1) game.goPlay(levelParam - 1, { story: false });
 else game.goMenu();
 loop.start();
 

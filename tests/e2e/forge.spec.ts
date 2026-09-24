@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { gameState, playCurrentLevel, scene, solutionFor, trackErrors } from './helpers';
+import { gameState, playCurrentLevel, scene, skipStory, solutionFor, trackErrors } from './helpers';
 
 /** A 0.4.x (save v2) player with 26 stars, so the migration pays 260 crowns. */
 async function seedVeteran(page: Page): Promise<void> {
@@ -59,6 +59,7 @@ test.describe('Forge, crowns and custom dice', () => {
   test('a new star pays crowns', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('play').click();
+    await skipStory(page);
     for (const dir of solutionFor(0))
       await page.keyboard.press(`Arrow${{ N: 'Up', E: 'Right', S: 'Down', W: 'Left' }[dir]}`);
     await expect.poll(() => scene(page), { timeout: 5000 }).toBe('results');

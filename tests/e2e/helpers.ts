@@ -114,3 +114,10 @@ export async function playCurrentLevel(page: Page): Promise<void> {
   await expect.poll(async () => (await gameState(page)).stats.moves).toBe(0);
   for (const dir of await solveCurrent(page)) await page.keyboard.press(KEY[dir]);
 }
+
+/** The story plays before a first level 1: skip it and wait for the level. */
+export async function skipStory(page: Page): Promise<void> {
+  await expect.poll(() => scene(page)).toBe('story');
+  await page.getByTestId('story-skip').click();
+  await expect.poll(() => scene(page)).toBe('play');
+}

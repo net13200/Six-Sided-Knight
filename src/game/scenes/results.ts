@@ -29,7 +29,9 @@ export class ResultsScene implements Scene {
       { className: 'btn primary', testId: 'next', onClick: () => this.next() },
       this.hasNext
         ? [el('span', { text: 'Next level' }), icon('next')]
-        : [el('span', { text: 'Back to the map' })],
+        : this.game.endingPending
+          ? [el('span', { text: 'Epilogue' }), icon('next')]
+          : [el('span', { text: 'Back to the map' })],
     );
     ui.append(
       place(primary, 50, 330, 240, 58),
@@ -52,6 +54,7 @@ export class ResultsScene implements Scene {
 
   private next(): void {
     if (this.hasNext) this.game.goPlay(this.index + 1);
+    else if (this.game.endingPending) this.game.goEnding();
     else this.game.goLevels();
   }
 

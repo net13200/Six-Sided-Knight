@@ -81,6 +81,13 @@ export class MenuScene implements Scene {
         60,
       ),
       place(
+        iconButton('book', 'Story', () => this.game.goStorySoFar(), 'story'),
+        4,
+        4,
+        64,
+        62,
+      ),
+      place(
         iconButton('gear', 'Settings', () => this.openSettings(), 'settings'),
         4,
         415,

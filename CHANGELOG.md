@@ -2,6 +2,10 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## Unreleased
+
+- **A story.** Oddmere's Queen wished never to decide anything again, the Old Well overdid it, and now everyone is a die. You're the one who still rolls on purpose. Four illustrated pages before level 1, a card as each chapter begins, and an ending after the last level. Each plays once and can be skipped. "Story" (top left of the title screen) replays it.
+
 ## 0.7.1 — Stars that stick
 
 - **Stars add up over attempts.** Each star is kept once earned, so you no longer need all three in one run. The results screen shows stars from earlier runs, faded and marked "earlier", and says how many of 3 you hold.

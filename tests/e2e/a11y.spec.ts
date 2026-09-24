@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { scene, trackErrors } from './helpers';
+import { scene, skipStory, trackErrors } from './helpers';
 
 test.describe('accessibility', () => {
   let errors: string[];
@@ -32,6 +32,10 @@ test.describe('accessibility', () => {
     }
     await expect(page.getByTestId('play')).toBeFocused();
     await page.keyboard.press('Enter');
+    // The story comes first: Next is focused, Escape skips it.
+    await expect.poll(() => scene(page)).toBe('story');
+    await expect(page.getByTestId('story-next')).toBeFocused();
+    await page.keyboard.press('Escape');
     await expect.poll(() => scene(page)).toBe('play');
   });
 
@@ -91,6 +95,7 @@ test.describe('music', () => {
     const s = await page.evaluate(() => JSON.parse(localStorage.getItem('ssk.save')!).settings);
     expect(s.musicVolume).toBeCloseTo(0.25);
     await page.getByTestId('play').click();
+    await skipStory(page);
     await expect.poll(track).toBe('puzzle');
     await page.goto('/?level=20'); // a gauntlet
     await expect.poll(track).toBe('depths');

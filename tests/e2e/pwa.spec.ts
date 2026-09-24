@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { scene } from './helpers';
+import { scene, skipStory } from './helpers';
 
 test.describe('installable app', () => {
   test('has a standalone manifest with icons', async ({ page, request }) => {
@@ -31,7 +31,7 @@ test.describe('installable app', () => {
     await page.reload();
     await expect.poll(() => scene(page)).toBe('menu');
     await page.getByTestId('play').click();
-    await expect.poll(() => scene(page)).toBe('play');
+    await skipStory(page);
     // Generated floors work offline too (the generator runs in a cached worker).
     await page.keyboard.press('Escape');
     await page.goto('/');
@@ -49,7 +49,7 @@ test.describe('SugiGames splash', () => {
     await expect(page.getByTestId('splash')).toHaveCount(0, { timeout: 8000 });
     await expect.poll(() => scene(page)).toBe('menu');
     await page.getByTestId('play').click();
-    await expect.poll(() => scene(page)).toBe('play');
+    await skipStory(page);
   });
 
   test('a tap skips it', async ({ page }) => {

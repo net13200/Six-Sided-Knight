@@ -121,6 +121,12 @@ Stars add up over attempts: each one is kept once earned, so they needn't come i
 - "Play" from the title screen opens, in one tap, the level the player was last in if it isn't beaten yet, otherwise the first unbeaten level.
 - Per level the save keeps: the stars earned (which ones, over all attempts), fewest moves, completions, and fastest time.
 
+## 9a-2. Story
+
+- Setting: Oddmere. The Queen wished at the Old Well never to decide anything again; everyone became a die. The player is the one die that rolls on purpose, and means to finish a sentence they were halfway through. No villain: the ending finds the Queen at the bottom of the Well and she rolls on purpose again. Those who prefer chance stay in the Depths (the endless mode).
+- Shown as short illustrated pages (`src/game/story.ts`, art drawn in code): the intro (4 pages) before a first level 1, one card per chapter before the chapter's first level, and the ending (4 pages) after the last level is first beaten ("Epilogue" on its results). Each shows once (flags in the save's `hints`); Skip or Escape skips. Players who already beat a chapter's first level don't see its card.
+- "Story" on the title screen replays everything reached so far. `?level=N` links skip the story.
+
 ## 9b. Analytics and privacy
 
 - Only local, on-device analytics. No personal data, no network calls.
