@@ -2,7 +2,7 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
-## Unreleased
+## 0.7.1 — Stars that stick
 
 - **Stars add up over attempts.** Each star is kept once earned, so you no longer need all three in one run. The results screen shows stars from earlier runs, faded and marked "earlier", and says how many of 3 you hold.
 - **Level 8 (Spring)** now really teaches healing: the spike corridors can't be crossed without getting hurt, and it takes both pools to get back to full HP. Its second star is "finish at full HP".
