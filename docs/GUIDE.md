@@ -14,6 +14,8 @@ You are a die. Every move rolls you one tile, and **the face on the side you rol
 | Hear the board  | (screen reader: focus the board) | H or ?                  |
 | Menu / Sound    | Buttons                          | Esc / M                 |
 
+The first time you play a level with something new, a lesson card explains it; play starts when you tap "Got it". Once you've finished the tutorial, **Help** on the title screen has all the rules in one place.
+
 A bump into a wall (or a door without the Key) costs no turn. Labels next to the die show what each move would do before you make it.
 
 ## Faces

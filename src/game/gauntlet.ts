@@ -8,6 +8,7 @@ import type { GameState, LevelData } from '../engine';
 import { healBetweenFloors } from '../meta/daily';
 import type { Game } from './game';
 import type { FloorRun, FloorSummary } from './runs';
+import type { Lesson } from './lessons';
 import type { PlaySession } from './session';
 import { computeStars } from './stars';
 
@@ -26,6 +27,8 @@ export class Gauntlet implements FloorRun {
     private readonly game: Game,
     private readonly index: number,
     private readonly floors: readonly LevelData[],
+    /** The gauntlet's lesson, before the first floor (if not read yet). */
+    private readonly lesson: Lesson | null = null,
   ) {}
 
   get key(): string {
@@ -54,6 +57,7 @@ export class Gauntlet implements FloorRun {
       music: 'depths',
       title: `${this.index + 1}. ${first.name} · ${this.floor + 1}/${n}`,
       campaignIndex: this.index,
+      lesson: this.floor === 0 ? this.lesson : null,
       onStart: () => this.game.save.update((d) => (d.lastLevelId = first.id)),
       onWin: (state, _stars, ms) => this.cleared(state, ms),
       onBack: () => this.game.goLevels(),

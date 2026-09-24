@@ -29,6 +29,8 @@ import { BAR_Y, BOARD_X, BOARD_Y, TILE, tileAt } from '../view/layout';
 import { C, displayPrefs } from '../view/palette';
 import { muteButton } from './common';
 import { InspectView } from './inspect';
+import { LessonCard } from './lesson-card';
+import { lessonKey } from '../lessons';
 import type { Scene } from './scene';
 
 export class PlayScene implements Scene {
@@ -49,6 +51,8 @@ export class PlayScene implements Scene {
   /** Moves per leading face not yet written to the lifetime stats. */
   private faceMoves = new Map<string, number>();
   private inspect: InspectView | null = null;
+  /** The lesson card, while it's up (play waits for it). */
+  private lesson: LessonCard | null = null;
   /** Move outcomes for the current state (recomputed when the state changes). */
   private outcomes: { state: GameState; list: Array<readonly [Dir, Outcome]> } | null = null;
 
@@ -121,6 +125,23 @@ export class PlayScene implements Scene {
         62,
       ),
     );
+    this.openLesson(ui);
+  }
+
+  /** The level's lesson, the first time: it types itself out and play waits for "Got it". */
+  private openLesson(ui: HTMLElement): void {
+    const lesson = this.session.lesson;
+    if (!lesson) return;
+    this.lesson = new LessonCard(
+      lesson,
+      () => {
+        this.lesson = null;
+        this.game.save.update((d) => (d.hints[lessonKey(this.level.id)] = true));
+        this.game.stage.canvas.focus();
+      },
+      this.game.reducedMotion,
+    );
+    this.lesson.open(ui, BOARD_Y + 70);
   }
 
   private openInspect(): void {
@@ -134,6 +155,12 @@ export class PlayScene implements Scene {
   }
 
   command(cmd: Command): void {
+    if (this.lesson) {
+      // The board waits for the lesson to be read.
+      if (cmd.type === 'confirm' || cmd.type === 'back') this.lesson.advance();
+      else if (cmd.type === 'tap' && this.lesson.typing) this.lesson.advance();
+      return;
+    }
     if (this.inspect) {
       this.inspect.command(cmd);
       return;
@@ -256,10 +283,11 @@ export class PlayScene implements Scene {
 
   update(dt: number): void {
     this.fx.update(dt);
-    if (!this.finishing) this.activeMs += dt * 1000;
+    if (!this.finishing && !this.lesson) this.activeMs += dt * 1000;
   }
 
   exit(): void {
+    this.lesson?.close();
     this.game.stage.canvas.setAttribute('aria-label', 'Game board');
     if (!this.won) {
       this.game.analytics.track('level_quit', {
@@ -292,6 +320,12 @@ export class PlayScene implements Scene {
     drawCompass(ctx, s.player.die, 170, BAR_Y + 34);
 
     // One-time hint for the inspect view, once the level hint has faded.
+    if (this.lesson) {
+      // Dim the board under the lesson card.
+      ctx.fillStyle = 'rgba(10,8,16,0.6)';
+      ctx.fillRect(0, BOARD_Y, 340, BAR_Y - BOARD_Y);
+      return;
+    }
     const levelHintShowing = this.level.hint !== undefined && s.stats.moves < 3;
     if (!levelHintShowing && this.showInspectHint()) {
       const text = 'Tap the die to inspect it';

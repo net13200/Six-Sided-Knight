@@ -5,6 +5,7 @@
  */
 import type { GameState, LevelData } from '../engine';
 import type { TrackId } from './music';
+import type { Lesson } from './lessons';
 import type { StarResult } from './stars';
 
 export type PlayMode = 'campaign' | 'daily' | 'depths';
@@ -19,6 +20,8 @@ export interface PlaySession {
   readonly music?: TrackId;
   /** A warning shown at the start of play (e.g. "your die can't win this floor"). */
   readonly notice?: string;
+  /** A lesson to read before playing (shown on the level's first play). */
+  readonly lesson?: Lesson | null;
   /** Campaign position, or null for generated floors. */
   readonly campaignIndex: number | null;
   /** Called once when play begins. */

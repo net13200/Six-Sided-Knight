@@ -115,9 +115,18 @@ export async function playCurrentLevel(page: Page): Promise<void> {
   for (const dir of await solveCurrent(page)) await page.keyboard.press(KEY[dir]);
 }
 
-/** The story plays before a first level 1: skip it and wait for the level. */
+/** Reads the lesson card that opens a level's first play: "Got it" until it's gone. */
+export async function dismissLesson(page: Page): Promise<void> {
+  const card = page.getByTestId('lesson');
+  await expect(card).toBeVisible();
+  // The first tap may only finish the typing.
+  while (await card.isVisible()) await page.getByTestId('lesson-ok').click();
+}
+
+/** The story plays before a first level 1, then its lesson: skip both. */
 export async function skipStory(page: Page): Promise<void> {
   await expect.poll(() => scene(page)).toBe('story');
   await page.getByTestId('story-skip').click();
   await expect.poll(() => scene(page)).toBe('play');
+  await dismissLesson(page);
 }

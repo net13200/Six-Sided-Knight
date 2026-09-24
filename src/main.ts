@@ -66,9 +66,9 @@ platform.onVisibilityChange((visible) => {
 // Closing or reloading the page ends the session (a reload soon after resumes it).
 window.addEventListener('pagehide', () => game.visibilityChanged(false));
 
-// ?level=3 jumps straight into a level (handy for testing and sharing).
+// ?level=3 jumps straight into a level, skipping story and lessons (handy for testing and sharing).
 const levelParam = Number(params.get('level'));
-if (levelParam >= 1) game.goPlay(levelParam - 1, { story: false });
+if (levelParam >= 1) game.goPlay(levelParam - 1, { story: false, lessons: false });
 else game.goMenu();
 loop.start();
 

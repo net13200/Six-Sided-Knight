@@ -29,6 +29,7 @@ import { ResultsScene } from './scenes/results';
 import { SkinsScene } from './scenes/skins';
 import { StatsScene } from './scenes/stats';
 import { StoryScene } from './scenes/story';
+import { lessonFor, lessonKey, type Lesson } from './lessons';
 import { ENDING, STORY_KEYS, storyBeforeLevel, storySoFar, type StoryPage } from './story';
 import { setDieSkin } from './view/cube';
 import { activeSkin, newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/skins';
@@ -152,9 +153,10 @@ export class Game {
 
   /**
    * Plays a campaign level. The first time a chapter begins (and before the
-   * very first level) its story plays first, unless `story` is false.
+   * very first level) its story plays first, unless `story` is false. A level
+   * with a lesson shows it on the first play, unless `lessons` is false.
    */
-  goPlay(index: number, opts: { story?: boolean } = {}): void {
+  goPlay(index: number, opts: { story?: boolean; lessons?: boolean } = {}): void {
     const i = Math.max(0, Math.min(index, this.levels.length - 1));
     const level = this.levels[i]!;
     if (opts.story !== false) {
@@ -164,13 +166,14 @@ export class Game {
         isCompleted(this.save.data, level),
       );
       if (pages.length > 0) {
-        this.goStory(pages, () => this.goPlay(i, { story: false }), keys, 'Begin');
+        this.goStory(pages, () => this.goPlay(i, { ...opts, story: false }), keys, 'Begin');
         return;
       }
     }
+    const lesson = opts.lessons === false ? null : this.pendingLesson(level);
     const extra = this.gauntlets.get(level.id);
     if (extra) {
-      void new Gauntlet(this, i, [level, ...extra]).play();
+      void new Gauntlet(this, i, [level, ...extra], lesson).play();
       return;
     }
     this.goPlaySession({
@@ -179,6 +182,7 @@ export class Game {
       startHp: 5,
       title: `${i + 1}. ${level.name}`,
       campaignIndex: i,
+      lesson,
       onStart: () => this.save.update((d) => (d.lastLevelId = level.id)),
       onWin: (state, stars, ms) => {
         const summary = this.recordWin(i, state, stars, ms);
@@ -186,6 +190,17 @@ export class Game {
       },
       onBack: () => this.goLevels(),
     });
+  }
+
+  /** Every tutorial level beaten (unlocks "How to play" on the title screen). */
+  get tutorialDone(): boolean {
+    return this.levels.slice(0, TUTORIAL_LENGTH).every((l) => isCompleted(this.save.data, l));
+  }
+
+  /** A level's lesson if it hasn't been read yet. */
+  pendingLesson(level: LevelData): Lesson | null {
+    const lesson = lessonFor(level);
+    return lesson && !this.save.data.hints[lessonKey(level.id)] ? lesson : null;
   }
 
   /** Shows story pages, marks `keys` as seen, then calls `done`. */

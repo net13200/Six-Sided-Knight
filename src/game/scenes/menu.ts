@@ -7,6 +7,7 @@ import { el, icon, iconButton, place } from '../ui';
 import { drawCrowns } from '../view/art';
 import { cameraMatrix, drawCube3d } from '../view/cube';
 import { C } from '../view/palette';
+import { HOW_TO_PLAY } from '../how-to-play';
 import { muteButton } from './common';
 import type { Scene } from './scene';
 
@@ -96,6 +97,18 @@ export class MenuScene implements Scene {
       ),
       place(muteButton(this.game), 272, 415, 64, 62),
     );
+    // A text reference for players who have finished the tutorial.
+    if (this.game.tutorialDone) {
+      ui.append(
+        place(
+          iconButton('help', 'Help', () => this.openHowTo(), 'how-to'),
+          272,
+          34,
+          64,
+          62,
+        ),
+      );
+    }
   }
 
   private modeButton(
@@ -197,6 +210,41 @@ export class MenuScene implements Scene {
       456,
     );
     this.ui.append(this.sheet);
+  }
+
+  /** "How to play": the rules as plain text. */
+  private openHowTo(): void {
+    if (this.sheet || !this.ui) return;
+    const body = el(
+      'div',
+      { className: 'how-to-body' },
+      HOW_TO_PLAY.flatMap((sec) => [
+        el('h3', { text: sec.heading }),
+        ...sec.lines.map((line) => el('p', { text: line })),
+      ]),
+    );
+    body.tabIndex = 0;
+    body.setAttribute('aria-label', 'How to play');
+    this.sheet = place(
+      el('div', { className: 'sheet how-to', testId: 'how-to-sheet' }, [
+        el('h2', { text: 'How to play' }),
+        body,
+        el('button', {
+          className: 'btn',
+          testId: 'how-to-close',
+          text: 'Done',
+          onClick: () => this.closeSettings(),
+        }),
+      ]),
+      14,
+      12,
+      312,
+      456,
+    );
+    this.sheet.setAttribute('role', 'dialog');
+    this.sheet.setAttribute('aria-modal', 'true');
+    this.ui.append(this.sheet);
+    body.focus();
   }
 
   /** Music volume: 0 turns the music off. */

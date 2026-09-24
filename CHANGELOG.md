@@ -2,8 +2,10 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
-## Unreleased
+## 0.8.0 — Once upon a roll
 
+- **Lessons you actually read.** The first time you play a level with a hint, a card types the lesson out over the board, and play waits until you tap "Got it" (a tap while it types shows the rest). The tutorial levels and each new mechanic (ice, golems, archers, Freeze, Hook, gauntlets) get a fuller explanation. The short hint still shows on the board.
+- **How to play**: once you've finished the tutorial, a Help button on the title screen opens the rules as plain text: rolling, faces, tiles, enemies, stars, modes and keys.
 - **A story.** Oddmere's Queen wished never to decide anything again, the Old Well overdid it, and now everyone is a die. You're the one who still rolls on purpose. Four illustrated pages before level 1, a card as each chapter begins, and an ending after the last level. Each plays once and can be skipped. "Story" (top left of the title screen) replays it.
 - **Music starts right away.** It plays as soon as the game opens where the browser allows it (usually the installed app). Where it doesn't (iPhone), it starts on your first touch anywhere, the splash or a menu button included, instead of waiting for your first move.
 

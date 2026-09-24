@@ -127,6 +127,11 @@ Stars add up over attempts: each one is kept once earned, so they needn't come i
 - Shown as short illustrated pages (`src/game/story.ts`, art drawn in code): the intro (4 pages) before a first level 1, one card per chapter before the chapter's first level, and the ending (4 pages) after the last level is first beaten ("Epilogue" on its results). Each shows once (flags in the save's `hints`); Skip or Escape skips. Players who already beat a chapter's first level don't see its card.
 - "Story" on the title screen replays everything reached so far. `?level=N` links skip the story.
 
+## 9a-3. Lessons and help
+
+- The first play of a level with a hint opens a lesson card over the board (`src/game/lessons.ts`): tutorial levels and each chapter's new mechanic have a fuller lesson, other levels show their hint. The text types out (instantly with reduced motion; screen readers get it whole), moves wait until "Got it", and a tap while typing shows the rest. Read once per level (`lesson:<id>` in `hints`); play time doesn't count while it's open. `?level=N` links skip lessons.
+- Once all tutorial levels are beaten, "Help" on the title screen opens How to play: the rules as plain text (`src/game/how-to-play.ts`).
+
 ## 9b. Analytics and privacy
 
 - Only local, on-device analytics. No personal data, no network calls.
