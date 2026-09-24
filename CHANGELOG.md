@@ -2,6 +2,10 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.6.2 — Snappier splash
+
+- The SugiGames kanji animation draws about 20% faster (strokes 420 → 340 ms, gaps 90 → 60 ms), matching SugiPaint and SugiGames.
+
 ## 0.6.1 — A clearer die
 
 - The die on the board is bigger than its tile, with a large white top face and thicker edges, so it's easy to read at a glance.

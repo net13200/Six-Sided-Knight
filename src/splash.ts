@@ -7,8 +7,8 @@
  * Skipped for automated browsers (tests drive the game directly) unless the
  * URL has ?splash; shown briefly without animation for reduced motion.
  */
-const STROKE_MS = 420;
-const GAP_MS = 90;
+const STROKE_MS = 340;
+const GAP_MS = 60;
 const HOLD_MS = 1450;
 
 export function runSplash(): void {
