@@ -211,21 +211,22 @@ function retaliation(rules: Rules, s: GameState, events: readonly GameEvent[]): 
   return `Then the ${who} hits you: -${dmg} HP`;
 }
 
-/** Draws outcome labels straddling the die's tile edges. */
+/** Draws outcome labels on the far edge of each neighbouring tile. */
 export function drawOutcomeChips(
   ctx: CanvasRenderingContext2D,
   outcomes: ReadonlyArray<readonly [Dir, Outcome]>,
   cx: number,
   cy: number,
 ): void {
-  // Larger labels setting: bigger text and chips, fully opaque.
-  const k = displayPrefs.largeLabels ? 1.35 : 1;
+  // Labels sit at the far edge of the tile the move goes to, so they never
+  // cover the die or what's on that tile. Larger labels setting: 1.35x.
+  const k = (displayPrefs.largeLabels ? 1.35 : 1) * 1.25;
   for (const [dir, o] of outcomes) {
     const chip = o.chip;
     if (!chip) continue;
     const { dx, dy } = DIR_DELTA[dir];
-    const x = cx + dx * (28 + (k - 1) * 8);
-    const y = cy + dy * (28 + (k - 1) * 8);
+    const x = cx + dx * 54;
+    const y = cy + dy * 54;
     ctx.font = `bold ${8 * k}px system-ui, sans-serif`;
     const w = Math.max(14 * k, ctx.measureText(chip.label).width + (chip.icon ? 15 : 8) * k);
     const h = 12 * k;

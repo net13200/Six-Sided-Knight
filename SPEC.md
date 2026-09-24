@@ -165,8 +165,8 @@ Enemy intent (next move or attack) is deterministic and shown on the board.
 
 ## 12a. Reading the die (UI)
 
-- The die is drawn as a cube seen from above: top face in the middle, each side face on the side it will hit, faces tinted by role. The bottom face shows under the die and in the compass.
-- Next to the die, labels show the outcome of each possible move, computed by running the real rules on a copy of the state. Walls and plain moves get no label.
+- The die is drawn as a cube seen from above, larger than its tile: a large top face in the middle, each side face on the side it will hit, side faces tinted by role. The bottom face shows under the die and in the compass.
+- On the far edge of each neighbouring tile, labels show the outcome of each possible move, computed by running the real rules on a copy of the state. Walls and plain moves get no label.
 - Inspect view (tap the die or the compass, or press I): a 3D die the player can spin, all six faces, and a preview of any roll with its outcome, what enemies do next, and HP afterwards. Previews never change the game.
 
 ## 13. Hard constraints

@@ -5,10 +5,18 @@ import { VERSION_LABEL } from '../../version';
 import type { Game } from '../game';
 import type { Command } from '../input';
 import { el, icon, iconButton, place } from '../ui';
-import { drawBadge, drawCrowns, drawDieBody, drawFace } from '../view/art';
+import { drawCrowns } from '../view/art';
+import { cameraMatrix, drawCube3d } from '../view/cube';
 import { C } from '../view/palette';
 import { muteButton } from './common';
 import type { Scene } from './scene';
+
+/** The logo die: the starting die in its home orientation. */
+const LOGO_DIE = {
+  shape: 'd6',
+  loadout: ['Shield', 'Heart', 'Bomb', 'Key', 'Sword', 'Coin'],
+  orient: 0,
+} as const;
 
 export class MenuScene implements Scene {
   readonly name = 'menu';
@@ -212,19 +220,17 @@ export class MenuScene implements Scene {
     ctx.font = '13px system-ui, sans-serif';
     ctx.fillText('You are the die. Every side is a tool.', 170, 116);
 
-    // A gently bobbing hero die with its faces around it.
-    const bob = this.game.reducedMotion ? 0 : Math.sin(this.t * 2) * 4;
-    const cx = 170;
-    const cy = 186 + bob;
-    drawDieBody(ctx, cx, cy, 64, 64);
-    drawFace(ctx, 'Shield', cx, cy - 2, 40);
-    const around: Array<[string, number, number]> = [
-      ['Bomb', 0, -1],
-      ['Sword', 1, 0],
-      ['Key', 0, 1],
-      ['Coin', -1, 0],
-    ];
-    for (const [face, dx, dy] of around) drawBadge(ctx, face, cx + dx * 52, cy + dy * 52, 13);
+    // The logo: a big 3D die (Shield on top, Sword and Key facing you), gently swaying.
+    const still = this.game.reducedMotion;
+    const bob = still ? 0 : Math.sin(this.t * 2) * 3;
+    const yaw = still ? -38 : -38 + Math.sin(this.t * 0.7) * 8;
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.beginPath();
+    ctx.ellipse(170, 238, 44 - bob, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    drawCube3d(ctx, LOGO_DIE, 170, 184 + bob, 50, cameraMatrix(yaw, -32));
 
     drawCrowns(ctx, this.game.save.data.wallet.crowns, 330, 18);
 

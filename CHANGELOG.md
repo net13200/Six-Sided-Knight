@@ -2,6 +2,13 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.6.1 — A clearer die
+
+- The die on the board is bigger than its tile, with a large white top face and thicker edges, so it's easy to read at a glance.
+- Move labels now sit on the far edge of the tile the move goes to, instead of covering the die.
+- New logo: a big 3D die on the title screen, and a new app icon where the die fills the icon.
+- Level hints move to the top of the board when the die starts low, so they never cover it.
+
 ## 0.6.0 — Polish and release-ready (milestone 6)
 
 - **Accessibility:** screen-reader support (every move is announced; H reads the board: your faces, what each direction does, the exit and nearby enemies). New settings: High contrast, Larger labels, Reduce motion. Archer lanes are hatched so they read without colour. Every button is a comfortable tap target, even in landscape.

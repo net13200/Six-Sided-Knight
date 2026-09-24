@@ -63,8 +63,10 @@ export function drawDieCube(
   skin: SkinDef = currentSkin,
 ): void {
   const faces = facesOf(die, orient);
-  const R = 22; // a touch larger than half a tile: nothing else is drawn at the die's edges
-  const r = 9.5;
+  // Bigger than its tile (the die is the one thing you must always read), with
+  // a large top face; move labels sit on the neighbouring tiles, not on the die.
+  const R = 28;
+  const r = 17;
   ctx.save();
   ctx.translate(cx, cy);
   ctx.scale(look.sx, look.sy);
@@ -80,9 +82,9 @@ export function drawDieCube(
   // Shadow, with the bottom face peeking out of it.
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
   ctx.beginPath();
-  ctx.roundRect(-R + 3, -R + 5, R * 2, R * 2, 7);
+  ctx.roundRect(-R + 3, -R + 5, R * 2, R * 2, 8);
   ctx.fill();
-  if (showBottom) drawBottomBadge(ctx, faces.bottom ?? '', R - 1, R + 3, 6.5, 0.9);
+  if (showBottom) drawBottomBadge(ctx, faces.bottom ?? '', R - 1, R + 2, 7.5, 0.95);
 
   for (const [slot, dx, dy] of SIDES) {
     const face = faces[slot] ?? '';
@@ -114,37 +116,30 @@ export function drawDieCube(
       path();
     }
     ctx.strokeStyle = C.outline;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 2;
     ctx.stroke();
     const mid = (r + R) / 2;
-    ctx.save();
-    ctx.translate(dx * mid, dy * mid);
-    if (dx === 0) ctx.scale(1, 0.8);
-    else ctx.scale(0.8, 1);
-    drawFace(ctx, face, 0, 0, 15);
-    ctx.restore();
+    drawFace(ctx, face, dx * mid, dy * mid, 12);
   }
 
   // Top face
   ctx.beginPath();
-  ctx.roundRect(-r, -r, r * 2, r * 2, 3);
-  ctx.fillStyle = roleColor(faces.top ?? '');
-  ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.roundRect(-r, -r, r * 2, r * 2, 4);
+  ctx.fillStyle = '#fbf6ea';
   ctx.fill();
   ctx.strokeStyle = C.outline;
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 2.5;
   ctx.stroke();
-  drawFace(ctx, faces.top ?? '', 0, 0, 16);
+  drawFace(ctx, faces.top ?? '', 0, 0, 29);
 
   ctx.beginPath();
-  ctx.roundRect(-R, -R, R * 2, R * 2, 6);
+  ctx.roundRect(-R, -R, R * 2, R * 2, 7);
   ctx.strokeStyle = C.outline;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 3;
   ctx.stroke();
   if (skin.id !== 'classic') {
     ctx.beginPath();
-    ctx.roundRect(-R + 1.5, -R + 1.5, R * 2 - 3, R * 2 - 3, 5);
+    ctx.roundRect(-R + 2, -R + 2, R * 2 - 4, R * 2 - 4, 6);
     ctx.strokeStyle = skin.rim;
     ctx.lineWidth = 2;
     ctx.stroke();

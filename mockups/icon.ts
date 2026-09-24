@@ -1,9 +1,9 @@
 /**
- * Renders the app icon with the game's own art (tools/make-icons.mjs
+ * Renders the app icon (the logo's 3D die) with the game's own art (tools/make-icons.mjs
  * screenshots it). ?size=512&maskable=1 — maskable icons keep the art inside
  * the central safe zone and fill the whole square with background.
  */
-import { drawBadge, drawDieBody, drawFace } from '../src/game/view/art';
+import { cameraMatrix, drawCube3d } from '../src/game/view/cube';
 import { C } from '../src/game/view/palette';
 
 const q = new URLSearchParams(location.search);
@@ -24,24 +24,11 @@ else {
   ctx.roundRect(2, 2, 96, 96, 22);
   ctx.fill();
 }
-// A flat gold halo ring (a smooth gradient would make the PNGs ~5x bigger).
-ctx.beginPath();
-ctx.arc(50, 52, maskable ? 34 : 42, 0, Math.PI * 2);
-ctx.fillStyle = '#231f2e';
-ctx.fill();
-
-// The hero die: Shield on top, faces around it (as on the title screen).
-const s = maskable ? 0.72 : 0.9; // maskable safe zone is the central 80%
-ctx.translate(50, 52);
-ctx.scale(s, s);
-drawDieBody(ctx, 0, 0, 44, 44);
-drawFace(ctx, 'Shield', 0, -1.5, 28);
-for (const [face, dx, dy] of [
-  ['Bomb', 0, -1],
-  ['Sword', 1, 0],
-  ['Key', 0, 1],
-  ['Coin', -1, 0],
-] as const) {
-  drawBadge(ctx, face, dx * 36, dy * 36, 9);
-}
+// The logo die, as big as the icon allows (maskable icons keep to the central safe zone).
+const die = {
+  shape: 'd6',
+  loadout: ['Shield', 'Heart', 'Bomb', 'Key', 'Sword', 'Coin'],
+  orient: 0,
+};
+drawCube3d(ctx, die, 50, 51, maskable ? 44 : 46, cameraMatrix(-38, -32));
 document.title = 'ready';

@@ -338,12 +338,14 @@ export class PlayScene implements Scene {
       const w = ctx.measureText(this.level.hint).width + 20;
       ctx.fillStyle = 'rgba(20,18,28,0.85)';
       ctx.beginPath();
-      ctx.roundRect(170 - w / 2, BOARD_Y + 9 * TILE - 30, w, 22, 11);
+      // Kept away from the die: at the bottom of the board, or the top if the die is low.
+      const hy = s.player.y >= 5 ? BOARD_Y + 8 : BOARD_Y + 9 * TILE - 30;
+      ctx.roundRect(170 - w / 2, hy, w, 22, 11);
       ctx.fill();
       ctx.fillStyle = C.text;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(this.level.hint, 170, BOARD_Y + 9 * TILE - 19);
+      ctx.fillText(this.level.hint, 170, hy + 11);
       ctx.restore();
     }
   }
