@@ -11,5 +11,5 @@ export const VERSION: string = typeof __APP_VERSION__ === 'string' ? __APP_VERSI
 export const BUILD_SHA: string = typeof __BUILD_SHA__ === 'string' ? __BUILD_SHA__ : 'local';
 export const BUILD_DATE: string = typeof __BUILD_DATE__ === 'string' ? __BUILD_DATE__ : '';
 
-/** Short label for the UI, e.g. "v0.3.0 (5346c46)". */
-export const VERSION_LABEL = `v${VERSION}${BUILD_SHA !== 'local' ? ` (${BUILD_SHA})` : ''}`;
+/** Label shown to players: just the version, e.g. "v0.7.0". */
+export const VERSION_LABEL = `v${VERSION}`;

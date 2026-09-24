@@ -4,7 +4,7 @@
  * fail heatmap, the tutorial funnel and the KPI hypotheses.
  */
 import { computeKpis, type KpiReport, type LevelKpi } from '../meta/kpi';
-import { BUILD_DATE, VERSION_LABEL } from '../version';
+import { BUILD_DATE, BUILD_SHA, VERSION_LABEL } from '../version';
 import type { Game } from './game';
 import { el } from './ui';
 
@@ -131,7 +131,7 @@ export function openDebugPanel(game: Game): void {
       el('h1', { text: 'KPI panel' }),
       el('p', {
         testId: 'debug-version',
-        text: `${VERSION_LABEL}${BUILD_DATE ? `, built ${BUILD_DATE}` : ''}`,
+        text: `${VERSION_LABEL}${BUILD_SHA !== 'local' ? ` (${BUILD_SHA})` : ''}${BUILD_DATE ? `, built ${BUILD_DATE}` : ''}`,
       }),
       el('p', {
         text: `Local data from this device only. ${game.analytics.events.length} events stored${
