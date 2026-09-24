@@ -2,6 +2,14 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## Unreleased
+
+- **Stars add up over attempts.** Each star is kept once earned, so you no longer need all three in one run. The results screen shows stars from earlier runs, faded and marked "earlier", and says how many of 3 you hold.
+- **Level 8 (Spring)** now really teaches healing: the spike corridors can't be crossed without getting hurt, and it takes both pools to get back to full HP. Its second star is "finish at full HP".
+- **Level 10 (Crowd Control)** now shows off the Bomb's splash: two lines of three skeletons, the outer ones wounded, so one Bomb on the middle knocks out all three.
+- The move label counts splash knockouts ("KO×3").
+- Level files can start enemies wounded (`enemies: 2,6 hp=1`) and set the heal star (`star: full-hp`).
+
 ## 0.7.0 — Music
 
 - **Background music**, composed for the game and synthesized live (no audio files): "Hall of the Die" on the title and menus, "Quiet Stones" in levels and the Daily Roll, "Into the Depths" in Depths and Gauntlets.

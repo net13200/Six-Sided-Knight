@@ -74,14 +74,16 @@ export function predictOutcome(rules: Rules, s: GameState, dir: Dir): Outcome {
   const then = retaliation(rules, s, r.events);
   const base = { then, after: r.state };
 
-  const killed = own.find((e) => e.type === 'killed');
-  if (killed?.type === 'killed') {
-    const name = rules.enemies.get(killed.kind).name;
+  const killed = own.filter((e) => e.type === 'killed');
+  if (killed[0]?.type === 'killed') {
+    // A Bomb's splash can knock out the neighbours too: count them all.
+    const name = rules.enemies.get(killed[0].kind).name;
+    const n = killed.length;
     return {
       ...base,
       kind: 'kill',
-      chip: { label: 'KO', color: C.hurt, icon: 'skull' },
-      text: `Knocks out the ${name}`,
+      chip: { label: n > 1 ? `KO×${n}` : 'KO', color: C.hurt, icon: 'skull' },
+      text: n > 1 ? `Knocks out ${n} enemies at once` : `Knocks out the ${name}`,
     };
   }
   const effect = own.find((e) => e.type === 'effectApplied');

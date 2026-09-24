@@ -32,6 +32,15 @@ describe('stars', () => {
     expect(computeStars(lvl, poor)).toMatchObject({ allGold: false, count: 2 });
   });
 
+  it('on a healing lesson the second star is for finishing at full HP', () => {
+    const won = run(start(['#@*..>##'], { par: 4 }), 'EEEE').at(-1)!.state;
+    const heal = { ...lvl, healStar: true };
+    const healed = { ...won, stats: { ...won.stats, damageTaken: 3 } };
+    const hurt = { ...healed, player: { ...won.player, hp: 4 } };
+    expect(computeStars(heal, healed)).toMatchObject({ noDamage: true, count: 3 });
+    expect(computeStars(heal, hurt)).toMatchObject({ noDamage: false, count: 2 });
+  });
+
   it('gives nothing for an unfinished level', () => {
     expect(computeStars(lvl, start(['#@*..>##'])).count).toBe(0);
   });

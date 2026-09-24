@@ -267,10 +267,18 @@ export interface LevelAnalysis {
   readonly allGold: SolveResult;
 }
 
-export function analyze(rules: Rules, start: GameState, maxNodes = 200_000): LevelAnalysis {
+export function analyze(
+  rules: Rules,
+  start: GameState,
+  maxNodes = 200_000,
+  opts: { healStar?: boolean } = {},
+): LevelAnalysis {
   return {
     any: solve(rules, start, { maxNodes }),
-    noDamage: solve(rules, start, { maxNodes, allow: (s) => s.stats.damageTaken === 0 }),
+    // The second star: no damage, or (healing levels) finishing at full HP.
+    noDamage: opts.healStar
+      ? solve(rules, start, { maxNodes, accept: (s) => s.player.hp >= s.player.maxHp })
+      : solve(rules, start, { maxNodes, allow: (s) => s.stats.damageTaken === 0 }),
     allGold: solve(rules, start, {
       maxNodes,
       accept: (s) => s.stats.treasuresCollected === s.stats.treasuresTotal,

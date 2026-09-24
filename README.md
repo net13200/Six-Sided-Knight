@@ -135,7 +135,7 @@ start: top=Shield east=Sword
 | `s`   | slime        | `=`   | ice         |
 | `a`   | archer       | `g`   | golem       |
 
-`start`, `hint` (one line, at most 40 characters), `enemies` and `loadout` are optional. `loadout` swaps the die's faces for the level, listed by home slot (top bottom north south east west), e.g. `loadout: Shield Heart Bomb Key Sword Freeze`. `start` fixes faces in named slots (the default is top=Shield, bottom=Heart, north=Bomb, south=Key, east=Sword, west=Coin). `enemies` sets per-enemy data, e.g. `{ "ready": true }` makes a slime act on turn 1.
+`start`, `hint` (one line, at most 40 characters), `enemies` and `loadout` are optional. `loadout` swaps the die's faces for the level, listed by home slot (top bottom north south east west), e.g. `loadout: Shield Heart Bomb Key Sword Freeze`. `start` fixes faces in named slots (the default is top=Shield, bottom=Heart, north=Bomb, south=Key, east=Sword, west=Coin). `enemies` adjusts enemies by position, separated by `;`: `hp=N` starts one wounded, other words set its data, e.g. `enemies: 2,6 hp=1; 4,1 ready` (a wounded skeleton, and a slime that acts on turn 1). `star: full-hp` makes the second star "finish at full HP" instead of "no damage" (for healing lessons).
 
 ## Versions and releases
 

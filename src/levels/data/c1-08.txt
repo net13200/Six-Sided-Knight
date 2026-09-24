@@ -1,14 +1,15 @@
 id: c1-08
 name: Spring
-par: 11
-hint: Roll Heart-first into pools
+par: 21
+hint: Hurt? Roll Heart-down into pools
+star: full-hp
 ---
 ########
-#@.....#
-#......#
-#^^^^^^#
+#@.^^..#
+######.#
+#.^^^..#
+#.######
 #......#
 #.~..~.#
-#......#
 #.....>#
 ########

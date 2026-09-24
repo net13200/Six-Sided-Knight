@@ -42,7 +42,7 @@ Knocking out an enemy gives 10 gold (Golem 20) and your die rolls onto its tile.
 
 ## Stars
 
-Each level has three stars: finish in **par** moves or fewer, take **no damage**, and collect **every treasure**. You don't need them all at once. Every star you earn for the first time pays **10 crowns**.
+Each level has three stars: finish in **par** moves or fewer, take **no damage**, and collect **every treasure**. You don't need them all at once: stars add up over your attempts, and the results screen shows the ones you earned earlier. On a healing level the second star is for finishing at **full HP** instead. Every star you earn for the first time pays **10 crowns**.
 
 ## Modes
 

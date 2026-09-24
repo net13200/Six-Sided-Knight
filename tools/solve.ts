@@ -29,7 +29,7 @@ const fmt = (r: SolveResult) =>
 for (const file of files) {
   const lvl = loadLevelFile(file);
   const start = createState(rules, lvl);
-  const a = analyze(rules, start);
+  const a = analyze(rules, start, undefined, { healStar: lvl.healStar });
   const difficulty = rate(rules, start).score;
   const problems: string[] = [];
   if (writePar && a.any.status === 'solved' && file.endsWith('.txt') && lvl.par !== a.any.moves) {

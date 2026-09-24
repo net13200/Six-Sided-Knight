@@ -77,26 +77,47 @@ export class ResultsScene implements Scene {
     ctx.font = '13px system-ui, sans-serif';
     ctx.fillText(`${this.index + 1}. ${level.name}`, 170, 80);
 
-    // Stars pop in one after another.
+    // Stars pop in one after another. Stars kept from earlier attempts show
+    // too (slightly faded, marked "earlier"): stars add up over attempts.
     const got = [stars.par, stars.noDamage, stars.allGold];
+    const earlier = [1, 2, 4].map((bit) => (this.summary.earlierMask & bit) !== 0);
     got.forEach((filled, i) => {
       const appear = this.game.reducedMotion
         ? 1
         : Math.min(1, Math.max(0, (this.t - 0.15 - i * 0.2) * 5));
       const pop = appear < 1 ? appear * (1.3 - 0.3 * appear) : 1;
-      drawStar(ctx, 110 + i * 60, 130, 22 * pop, filled);
+      const x = 110 + i * 60;
+      if (filled) {
+        drawStar(ctx, x, 130, 22 * pop, true);
+      } else if (earlier[i]) {
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        drawStar(ctx, x, 130, 20, true);
+        ctx.restore();
+        ctx.fillStyle = C.textDim;
+        ctx.font = '600 9px system-ui, sans-serif';
+        ctx.fillText('earlier', x, 157);
+      } else {
+        drawStar(ctx, x, 130, 22 * pop, false);
+      }
     });
     if (this.summary.improved && !this.summary.firstClear) {
       ctx.fillStyle = C.heal;
       ctx.font = 'bold 12px system-ui, sans-serif';
-      ctx.fillText('New best!', 170, 166);
+      ctx.fillText(`New star! ${this.summary.totalStars} of 3 on this level`, 170, 172);
+    } else if (this.summary.totalStars > stars.count) {
+      ctx.fillStyle = C.textDim;
+      ctx.font = '12px system-ui, sans-serif';
+      ctx.fillText(`${this.summary.totalStars} of 3 stars on this level`, 170, 172);
     }
 
     const s = this.state.stats;
     const par = this.summary.par ?? level.par;
     const rows: Array<[string, string, boolean]> = [
       ['Moves', `${s.moves}${par !== undefined ? ` / par ${par}` : ''}`, stars.par],
-      ['Damage taken', String(s.damageTaken), stars.noDamage],
+      level.healStar
+        ? ['HP at the end', `${this.state.player.hp} / ${this.state.player.maxHp}`, stars.noDamage]
+        : ['Damage taken', String(s.damageTaken), stars.noDamage],
       ['Treasure', `${s.treasuresCollected} / ${s.treasuresTotal}`, stars.allGold],
     ];
     rows.forEach(([label, value, ok], i) => {
@@ -104,11 +125,12 @@ export class ResultsScene implements Scene {
       ctx.textAlign = 'left';
       ctx.fillStyle = C.text;
       ctx.font = '14px system-ui, sans-serif';
-      ctx.fillText(label, 60, y);
+      ctx.fillText(label, 50, y);
       ctx.textAlign = 'right';
       ctx.font = 'bold 14px system-ui, sans-serif';
       ctx.fillStyle = ok ? C.heal : C.textDim;
-      ctx.fillText(`${value} ${ok ? '✓' : '·'}`, 280, y);
+      const mark = ok ? '✓' : earlier[i] ? '★' : '·';
+      ctx.fillText(`${value} ${mark}`, 290, y);
     });
     ctx.textAlign = 'center';
     ctx.fillStyle = C.gold;

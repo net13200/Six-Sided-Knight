@@ -33,7 +33,7 @@ for (const file of levelFiles(paths)) {
     continue;
   }
   const start = createState(rules, lvl);
-  const a = analyze(rules, start, 400_000);
+  const a = analyze(rules, start, 400_000, { healStar: lvl.healStar });
   const r = rate(rules, start);
   const ok =
     a.any.status === 'solved' && a.noDamage.status === 'solved' && a.allGold.status === 'solved';

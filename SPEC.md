@@ -109,15 +109,17 @@ Enemy intent (next move or attack) is deterministic and shown on the board.
 ## 9. Stars (campaign)
 
 1. Moves ≤ par. Par = the solver's minimum moves to the exit (a level may loosen it).
-2. No damage taken.
+2. No damage taken. A healing lesson (`star: full-hp` in the level file) asks instead to finish at full HP, since its spikes can't be avoided.
 3. All gold: every gem and chest collected (kills are optional).
+
+Stars add up over attempts: each one is kept once earned, so they needn't come in the same run. The results screen shows stars from earlier runs, faded and marked "earlier".
 
 ## 9a. Progression
 
 - Chapters of 10 levels (six chapters, 60 levels). Level 1 is open; each level unlocks when the previous one is beaten.
 - **Gauntlets:** from chapter 2 on, each chapter's last level is a Gauntlet of 3 floors played in a row. HP carries over with +1 between floors (like runs). Stars count over the whole gauntlet: total moves within the summed par, no damage on any floor, every treasure on every floor. Leaving between floors starts the gauntlet over. Every floor after the first is winnable when entered with 2 HP.
 - "Play" from the title screen opens, in one tap, the level the player was last in if it isn't beaten yet, otherwise the first unbeaten level.
-- Per level the save keeps: best stars, fewest moves, completions, and fastest time.
+- Per level the save keeps: the stars earned (which ones, over all attempts), fewest moves, completions, and fastest time.
 
 ## 9b. Analytics and privacy
 

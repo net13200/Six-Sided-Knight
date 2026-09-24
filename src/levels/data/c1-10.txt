@@ -1,14 +1,15 @@
 id: c1-10
 name: Crowd Control
-par: 10
-hint: Bombs hit the neighbours too
+par: 8
+hint: Bomb the middle one: all three fall
+enemies: 2,2 hp=1; 4,2 hp=1; 2,6 hp=1; 4,6 hp=1
 ---
 ########
 ###>####
-###.####
 ##kkk###
-###.####
-#......#
-#......#
-#..@...#
+##...###
+##...###
+##...###
+##kkk###
+##.@.###
 ########

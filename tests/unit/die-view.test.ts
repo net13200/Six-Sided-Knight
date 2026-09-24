@@ -31,6 +31,18 @@ describe('move outcomes (real rules)', () => {
     expect(o.S!.after.player.hp).toBe(4);
   });
 
+  it('counts every knockout from a Bomb splash', () => {
+    const crowd = start(['########', '#.kkk..#', '#..@..>#'], {
+      enemies: [
+        { x: 2, y: 1, hp: 1 },
+        { x: 4, y: 1, hp: 1 },
+      ],
+    });
+    const n = predictOutcome(rules, crowd, 'N');
+    expect(n.chip?.label).toBe('KO×3');
+    expect(n.text).toBe('Knocks out 3 enemies at once');
+  });
+
   it('never changes the real state', () => {
     const snapshot = JSON.stringify(s);
     DIRS.forEach((d) => predictOutcome(rules, s, d));

@@ -32,7 +32,7 @@ import { setDieSkin } from './view/cube';
 import { activeSkin, newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/skins';
 import { canTransition, type Scene } from './scenes/scene';
 import type { PlaySession } from './session';
-import type { StarResult } from './stars';
+import { starMask, type StarResult } from './stars';
 import { C, displayPrefs, setHighContrast } from './view/palette';
 import type { Stage } from './view/stage';
 
@@ -43,6 +43,9 @@ export const TUTORIAL_LENGTH = 10;
 
 export interface WinSummary {
   readonly stars: StarResult;
+  /** Stars kept from earlier attempts (bitmask), before and after this win. */
+  readonly earlierMask: number;
+  readonly totalStars: number;
   readonly improved: boolean;
   readonly firstClear: boolean;
   /** Crowns earned for stars won for the first time. */
@@ -213,12 +216,17 @@ export class Game {
     const level = this.levels[index]!;
     const firstClear = (this.save.data.levels[level.id]?.completions ?? 0) === 0;
     const before = this.save.data.levels[level.id]?.stars ?? 0;
+    const earlierMask = this.save.data.levels[level.id]?.starMask ?? 0;
     const skinsBefore = unlockedSkins(this.save.data);
     let improved = false;
     let crowns = 0;
     this.save.update((d) => {
-      improved = recordWin(d, level.id, { stars: stars.count, moves: state.stats.moves, timeMs });
-      crowns = earnCrowns(d, crownsForStars(stars.count - before));
+      improved = recordWin(d, level.id, {
+        starMask: starMask(stars),
+        moves: state.stats.moves,
+        timeMs,
+      });
+      crowns = earnCrowns(d, crownsForStars((d.levels[level.id]?.stars ?? 0) - before));
       d.stats.levelsCompleted++;
       d.stats.moves += state.stats.moves;
       d.stats.kills += state.stats.kills;
@@ -236,7 +244,8 @@ export class Game {
       this.analytics.track('tutorial_step_complete', { step: index + 1, level: level.id });
     }
     const newSkins = newlyUnlocked(skinsBefore, unlockedSkins(this.save.data));
-    return { stars, improved, firstClear, crowns, newSkins };
+    const totalStars = this.save.data.levels[level.id]?.stars ?? stars.count;
+    return { stars, earlierMask, totalStars, improved, firstClear, crowns, newSkins };
   }
 
   // ---------- loop hooks ----------

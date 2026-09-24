@@ -30,6 +30,31 @@ start: top=Shield east=Sword
     expect(lvl.start).toEqual({ top: 'Shield', east: 'Sword' });
     expect(validateLevel(rules, lvl)).toEqual([]);
   });
+
+  it('parses wounded enemies and the full-HP star', () => {
+    const lvl = parseTextLevel(`id: t
+name: T
+star: full-hp
+enemies: 2,1 hp=1; 4,1 ready
+---
+########
+#.k.s.>#
+#@.....#
+#......#
+#......#
+#......#
+#......#
+#......#
+########
+`);
+    expect(lvl.healStar).toBe(true);
+    expect(lvl.enemies).toEqual([
+      { x: 2, y: 1, hp: 1 },
+      { x: 4, y: 1, data: { ready: true } },
+    ]);
+    const s = createState(rules, lvl);
+    expect(s.enemies.map((e) => e.hp)).toEqual([1, 3]);
+  });
 });
 
 describe('validation', () => {
@@ -53,6 +78,11 @@ describe('validation', () => {
       /impossible/,
     ],
     ['override without enemy', { ...level(['#@..>#']), enemies: [{ x: 3, y: 0 }] }, /override/],
+    [
+      'enemy hp above its maximum',
+      { ...level(['#@.k>#']), enemies: [{ x: 3, y: 0, hp: 3 }] },
+      /hp/,
+    ],
   ])('rejects %s', (_name, lvl, pattern) => {
     const problems = validateLevel(rules, lvl);
     expect(problems.join('\n')).toMatch(pattern);

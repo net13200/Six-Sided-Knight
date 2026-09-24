@@ -42,7 +42,7 @@ describe('campaign', () => {
 
   for (const level of levels) {
     it(`${level.id} is solvable, par is the minimum, and every star is achievable`, () => {
-      const a = analyze(rules, createState(rules, level));
+      const a = analyze(rules, createState(rules, level), undefined, { healStar: level.healStar });
       expect(a.any.status).toBe('solved');
       expect(level.par).toBe(a.any.moves);
       expect(a.noDamage.status, 'no-damage star').toBe('solved');
@@ -70,7 +70,9 @@ describe('gauntlets', () => {
     const floors = [levels.find((l) => l.id === id)!, ...extra];
     it(`${id}: ${floors.length} floors, each winnable at ${MIN_ARRIVAL_HP} HP, par is the minimum`, () => {
       floors.forEach((floor, i) => {
-        const a = analyze(rules, createState(rules, floor));
+        const a = analyze(rules, createState(rules, floor), undefined, {
+          healStar: floor.healStar,
+        });
         expect(a.any.status, floor.id).toBe('solved');
         expect(floor.par, floor.id).toBe(a.any.moves);
         if (i > 0) {

@@ -12,13 +12,16 @@
  *   "par": 6,                                   // optional
  *   "start": { "top": "<face>", "east": "<face>" }, // optional orientation constraints
  *   "enemies": [{ "x": 3, "y": 2, "data": { "wait": 0 } }], // optional per-enemy overrides
- *   "loadout": [<face id>, ...]   // optional: die faces by home slot (to swap faces)
+ *   "loadout": [<face id>, ...],  // optional: die faces by home slot (to swap faces)
+ *   "healStar": true              // optional: 2nd star = finish at full HP (not "no damage")
  * }
  *
  * Plain-text form (.txt), converted by parseTextLevel():
  *   id: c1-01
  *   name: First Roll
  *   par: 6
+ *   enemies: 2,3 hp=1; 4,3 ready    (optional overrides: hp, or data flags/values)
+ *   star: full-hp                    (optional, see healStar)
  *   ---
  *   ########
  *   #@...>.#
@@ -38,6 +41,8 @@ export interface LevelEnemyOverride {
   readonly x: number;
   readonly y: number;
   readonly data?: Readonly<Record<string, number | boolean>>;
+  /** Starting HP, e.g. a wounded enemy (1 to the enemy's full HP). */
+  readonly hp?: number;
 }
 
 export interface LevelData {
@@ -52,6 +57,11 @@ export interface LevelData {
   readonly enemies?: readonly LevelEnemyOverride[];
   /** Die faces by home slot, for levels that swap faces. Default: rules.config.defaultLoadout. */
   readonly loadout?: readonly FaceId[];
+  /**
+   * The second star is "finish at full HP" instead of "take no damage" (for
+   * levels where getting hurt is the point, e.g. teaching healing).
+   */
+  readonly healStar?: boolean;
 }
 
 export class LevelError extends Error {
@@ -84,6 +94,8 @@ export function parseTextLevel(text: string): LevelData {
     hint?: string;
     start?: Record<string, string>;
     loadout?: string[];
+    enemies?: LevelEnemyOverride[];
+    healStar?: boolean;
   } = {
     schema: LEVEL_SCHEMA_VERSION,
     id: meta.id ?? '',
@@ -102,7 +114,34 @@ export function parseTextLevel(text: string): LevelData {
     );
   }
   if (meta.loadout !== undefined) data.loadout = meta.loadout.split(/\s+/).filter(Boolean);
+  if (meta.star === 'full-hp') data.healStar = true;
+  if (meta.enemies !== undefined) data.enemies = parseEnemyOverrides(meta.enemies);
   return data;
+}
+
+/** "2,3 hp=1; 4,3 ready wait=0" -> enemy overrides (hp, or data values/flags). */
+function parseEnemyOverrides(text: string): LevelEnemyOverride[] {
+  return text
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const [pos = '', ...opts] = part.split(/\s+/);
+      const [x, y] = pos.split(',').map(Number);
+      const data: Record<string, number | boolean> = {};
+      let hp: number | undefined;
+      for (const opt of opts) {
+        const [k = '', v] = opt.split('=');
+        if (k === 'hp') hp = Number(v);
+        else data[k] = v === undefined ? true : Number(v);
+      }
+      return {
+        x: x ?? -1,
+        y: y ?? -1,
+        ...(Object.keys(data).length ? { data } : {}),
+        ...(hp !== undefined ? { hp } : {}),
+      };
+    });
 }
 
 function splitOnce(text: string, sep: RegExp): [string, string] {
@@ -137,7 +176,7 @@ export function validateLevel(rules: Rules, raw: unknown): string[] {
   const glyphs = glyphTable(rules);
   let players = 0;
   let goals = 0;
-  const enemyCells = new Set<string>();
+  const enemyCells = new Map<string, string>();
   lvl.grid.forEach((row, y) => {
     if (typeof row !== 'string' || row.length !== GRID_WIDTH) {
       problems.push(`row ${y} must be ${GRID_WIDTH} characters`);
@@ -147,7 +186,7 @@ export function validateLevel(rules: Rules, raw: unknown): string[] {
       const g = glyphs.get(ch);
       if (!g) problems.push(`unknown glyph '${ch}' at (${x},${y})`);
       else if (g.kind === 'player') players++;
-      else if (g.kind === 'enemy') enemyCells.add(`${x},${y}`);
+      else if (g.kind === 'enemy') enemyCells.set(`${x},${y}`, g.id);
       else if (rules.tiles.get(g.id).goal) goals++;
     });
   });
@@ -155,8 +194,13 @@ export function validateLevel(rules: Rules, raw: unknown): string[] {
   if (goals < 1) problems.push('at least one goal tile (exit) required');
 
   for (const o of lvl.enemies ?? []) {
-    if (!enemyCells.has(`${o.x},${o.y}`))
-      problems.push(`enemy override at (${o.x},${o.y}) has no enemy`);
+    const kind = enemyCells.get(`${o.x},${o.y}`);
+    if (!kind) problems.push(`enemy override at (${o.x},${o.y}) has no enemy`);
+    else if (o.hp !== undefined) {
+      const max = rules.enemies.get(kind).hp;
+      if (!Number.isInteger(o.hp) || o.hp < 1 || o.hp > max)
+        problems.push(`enemy at (${o.x},${o.y}): hp must be 1-${max}`);
+    }
   }
   const loadout = lvl.loadout ?? rules.config.defaultLoadout;
   const before = problems.length;
@@ -228,13 +272,14 @@ export function createState(rules: Rules, level: LevelData, opts: CreateOptions 
         return;
       }
       const def = rules.enemies.get(g.id);
-      const override = level.enemies?.find((o) => o.x === x && o.y === y)?.data ?? {};
+      const found = level.enemies?.find((o) => o.x === x && o.y === y);
+      const override = found?.data ?? {};
       enemies.push({
         id: enemies.length + 1,
         kind: def.kind,
         x,
         y,
-        hp: def.hp,
+        hp: found?.hp ?? def.hp,
         data: def.initData ? def.initData(override) : { ...override },
         effects: [],
       });
