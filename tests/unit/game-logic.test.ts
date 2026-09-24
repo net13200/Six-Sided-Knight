@@ -113,6 +113,7 @@ describe('scene machine', () => {
     expect(canTransition('play', 'results')).toBe(true);
     expect(canTransition('results', 'play')).toBe(true);
     expect(canTransition('boot', 'results')).toBe(false);
+    expect(canTransition('levels', 'levels')).toBe(true); // changing chapter on the map
   });
 
   it('every scene is reachable from boot and can get back to the menu', () => {

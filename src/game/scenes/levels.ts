@@ -123,6 +123,11 @@ export class LevelsScene implements Scene {
   command(cmd: Command): void {
     if (cmd.type === 'back') this.game.goMenu();
     if (cmd.type === 'confirm') this.game.goPlay(this.game.continueIndex());
+    // Left/right arrows (or a sideways swipe) change chapter.
+    if (cmd.type === 'move' && (cmd.dir === 'W' || cmd.dir === 'E')) {
+      const to = this.chapter + (cmd.dir === 'E' ? 1 : -1);
+      if (to >= 0 && to < chapterCount(this.game.levels)) this.game.goLevels(to);
+    }
   }
 
   update(dt: number): void {

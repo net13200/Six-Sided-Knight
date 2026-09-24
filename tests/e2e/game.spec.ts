@@ -173,6 +173,23 @@ test.describe('Six Sided Knight', () => {
     await expect(page.getByTestId('level-2')).toBeEnabled();
   });
 
+  test('the map pages between chapters with Prev/Next and the arrow keys', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('levels').click();
+    await expect(page.getByTestId('level-1')).toBeVisible();
+    await expect(page.getByTestId('chapter-prev')).toHaveCount(0);
+    await page.getByTestId('chapter-next').click();
+    await expect(page.getByTestId('level-11')).toBeVisible();
+    await expect(page.getByTestId('level-11')).toBeDisabled();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('level-21')).toBeVisible();
+    await page.keyboard.press('ArrowLeft');
+    await expect(page.getByTestId('level-11')).toBeVisible();
+    await page.getByTestId('chapter-prev').click();
+    await expect(page.getByTestId('level-1')).toBeVisible();
+    expect(await scene(page)).toBe('levels');
+  });
+
   test('progress survives a reload and Play continues where you left off', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('play').click();
