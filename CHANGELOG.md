@@ -4,6 +4,7 @@ Versions follow [semantic versioning](https://semver.org). The version shown in 
 
 ## Unreleased
 
+- **Fix: music died after switching apps.** Coming back now resumes it, including iPhone's "interrupted" state, a paused context the browser won't restart until you touch (any touch now does it, not just the first one), a context the browser closed, or one that claims to play but whose clock is stuck (rebuilt from scratch). Interruptions while you're playing (a call, another app's sound) are recovered too.
 - **Developer tool: watch a solution.** In developer mode (`#debug`), a **▶ Par** button (or P) solves the level in the background and plays the par, no-damage or all-treasure route with pause, step, speed and stop. Watched runs never count. Players don't see it.
 
 ## 0.8.0 — Once upon a roll

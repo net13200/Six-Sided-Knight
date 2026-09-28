@@ -28,16 +28,15 @@ bindInput(
 
 // Music starts right away where the browser allows it (e.g. an installed app).
 // Otherwise it starts on the first touch or key press anywhere: the splash,
-// a button, the board. Capture phase, so nothing can swallow it.
+// a button, the board. These stay on for the whole session, so a touch also
+// brings the music back if the browser kept it paused after switching apps.
+// Capture phase, so nothing can swallow it.
 game.audio.unlock();
-const WAKE_EVENTS = ['pointerdown', 'touchend', 'click', 'keydown'] as const;
-const wake = () => {
-  game.audio.unlock();
-  if (game.audio.running) {
-    for (const t of WAKE_EVENTS) window.removeEventListener(t, wake, true);
-  }
-};
-for (const t of WAKE_EVENTS) window.addEventListener(t, wake, true);
+for (const t of ['pointerdown', 'touchend', 'click', 'keydown'] as const) {
+  window.addEventListener(t, () => game.audio.unlock(), true);
+}
+// Coming back from the back/forward cache doesn't always fire visibilitychange.
+window.addEventListener('pageshow', () => game.audio.resume());
 
 // ?perf records how long each frame's update + draw takes (see PERFORMANCE.md).
 const perf: number[] | null = params.has('perf') ? [] : null;

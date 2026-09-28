@@ -69,49 +69,117 @@ export class Audio {
 
   /** Whether sound is actually playing (not blocked by the browser or suspended). */
   get running(): boolean {
-    return this.ctx?.state === 'running';
+    return this.ctx?.state === 'running' && !this.stalled;
   }
 
+  /** The page is in the background (we paused sound on purpose). */
+  private hidden = false;
+  /** The context says "running" but its clock stopped (seen on iOS after switching apps). */
+  private stalled = false;
+  private watchdog: ReturnType<typeof setTimeout> | null = null;
+
   /**
-   * Starts sound. Called at startup (works where the browser allows sound
-   * without a gesture) and again from gestures. Safe to call repeatedly.
+   * Starts sound, or brings it back. Called at startup (works where the
+   * browser allows sound without a gesture), on every touch or key press,
+   * and when the page becomes visible again. Safe to call repeatedly.
    */
   unlock(): void {
-    if (this.ctx) {
-      if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+    const ctx = this.ctx;
+    if (!ctx) {
+      this.create();
       return;
     }
+    const state = ctx.state as string;
+    if (state === 'closed' || this.stalled) {
+      // The browser closed it, or it's stuck: start over with a fresh one.
+      this.rebuild();
+      return;
+    }
+    // 'suspended', or iOS's 'interrupted' after switching apps or a call.
+    if (state !== 'running') {
+      ctx.resume().then(
+        () => this.checkClock(),
+        () => {},
+      );
+    }
+  }
+
+  private create(): void {
     const Ctor =
       window.AudioContext ??
       (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Ctor) return;
     try {
-      this.ctx = new Ctor();
-      this.master = this.ctx.createGain();
+      const ctx = new Ctor();
+      this.ctx = ctx;
+      this.stalled = false;
+      this.master = ctx.createGain();
       this.master.gain.value = 0.5;
-      this.master.connect(this.ctx.destination);
-      this.music = new MusicPlayer(this.ctx, this.master);
+      this.master.connect(ctx.destination);
+      this.music = new MusicPlayer(ctx, this.master);
       this.applyMusicVolume();
       this.music.play(this.track);
-      const len = Math.floor(this.ctx.sampleRate * 0.3);
-      this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+      const len = Math.floor(ctx.sampleRate * 0.3);
+      this.noise = ctx.createBuffer(1, len, ctx.sampleRate);
       const data = this.noise.getChannelData(0);
       let seed = 12345;
       for (let i = 0; i < len; i++) {
         seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
         data[i] = (seed / 4294967296) * 2 - 1;
       }
+      // The system can pause sound on its own (another app, a call). When
+      // that happens while the game is on screen, ask for it back.
+      ctx.addEventListener('statechange', () => {
+        if (this.ctx !== ctx || this.hidden) return;
+        const state = ctx.state as string;
+        if (state === 'closed') this.rebuild();
+        else if (state !== 'running') ctx.resume().catch(() => {});
+      });
     } catch {
       this.ctx = null;
     }
   }
 
-  suspend(): void {
-    if (this.ctx && this.ctx.state === 'running') void this.ctx.suspend();
+  /** Throws the old context away and starts a fresh one, keeping the track and volume. */
+  private rebuild(): void {
+    const old = this.ctx;
+    this.music?.dispose();
+    this.music = null;
+    this.master = null;
+    this.ctx = null;
+    this.stalled = false;
+    if (old && (old.state as string) !== 'closed') old.close().catch(() => {});
+    this.create();
   }
 
+  /**
+   * After a resume, make sure the clock really moves: some browsers report
+   * "running" but stay silent. If so, the next call to unlock() rebuilds.
+   */
+  private checkClock(): void {
+    const ctx = this.ctx;
+    if (!ctx || this.watchdog) return;
+    const t0 = ctx.currentTime;
+    this.watchdog = setTimeout(() => {
+      this.watchdog = null;
+      if (this.ctx !== ctx || this.hidden || ctx.state !== 'running') return;
+      if (ctx.currentTime - t0 < 0.1) {
+        this.stalled = true;
+        this.rebuild();
+      }
+    }, 600);
+  }
+
+  /** The page went to the background: pause sound. */
+  suspend(): void {
+    this.hidden = true;
+    if (this.ctx && this.ctx.state === 'running') this.ctx.suspend().catch(() => {});
+  }
+
+  /** The page is back: bring sound back (the next touch does it if the browser insists). */
   resume(): void {
-    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+    this.hidden = false;
+    this.unlock();
   }
 
   play(name: SfxName, delay = 0): void {
