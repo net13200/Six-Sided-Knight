@@ -99,8 +99,7 @@ for (let t = 0; t < tries; t++) {
   if (template) {
     const g = template.map((row) => row.split(''));
     const free: Array<[number, number]> = [];
-    for (let y = 0; y < 9; y++)
-      for (let x = 0; x < 8; x++) if (g[y]![x] === '?') free.push([x, y]);
+    for (let y = 0; y < 9; y++) for (let x = 0; x < 8; x++) if (g[y]![x] === '?') free.push([x, y]);
     const pickFree = () => free.splice(rng.int(free.length), 1)[0]!;
     for (const ch of extras) {
       const [x, y] = pickFree();

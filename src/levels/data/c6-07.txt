@@ -1,15 +1,15 @@
 id: c6-07
 name: Frozen Moat
-par: 11
+par: 12
 loadout: Shield Hook Bomb Key Sword Coin
 teaches: hook-enemy, slide
 ---
 ########
+#=#==#=#
+#=>k#==#
+#==#===#
 #======#
-#===>#=#
-#==#=#*#
-#=#=#*=#
-#@.=k.=#
-#.##==.#
-#=====##
+#===#==#
+#=#=@==#
+#==#===#
 ########

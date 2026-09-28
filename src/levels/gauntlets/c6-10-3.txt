@@ -1,15 +1,15 @@
 id: c6-10-3
 name: The Throne III
-par: 16
+par: 9
 loadout: Shield Hook Bomb Key Sword Freeze
-teaches: hook-gem
+teaches: hook-enemy
 ---
 ########
-#g=##==#
-#k===.=#
-#=##=#@#
+#======#
 #=====##
-#==.=>=#
-##=#===#
-#=*.===#
+##=====#
+#=@=##=#
+#===>k=#
+#======#
+##==#=##
 ########

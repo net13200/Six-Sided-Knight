@@ -1,6 +1,7 @@
 id: c4-10
 name: Keep Gauntlet
 par: 16
+run-par: 41
 hint: 3 floors in a row. HP carries over
 teaches: archer
 ---

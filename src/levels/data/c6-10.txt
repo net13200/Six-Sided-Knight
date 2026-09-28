@@ -1,16 +1,17 @@
 id: c6-10
 name: The Throne
-par: 10
+par: 8
+run-par: 35
 hint: 3 floors in a row. HP carries over
 loadout: Shield Hook Bomb Key Sword Freeze
 teaches: hook-enemy
 ---
 ########
-#====#>#
-#@#==g=#
-#===.#=#
-#=####.#
-#=*.=k=#
-#==#=.=#
-#=====##
+#......#
+#...a..#
+#....@.#
+#.#....#
+##.....#
+#>k..#.#
+#......#
 ########

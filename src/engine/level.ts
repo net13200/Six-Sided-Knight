@@ -21,6 +21,7 @@
  *   par: 6
  *   enemies: 2,3 hp=1; 4,3 ready    (optional overrides: hp, or data flags/values)
  *   teaches: splash                  (optional: what the par solution must use)
+ *   run-par: 45                      (gauntlets, first floor: fewest moves for the whole run)
  *   ---
  *   ########
  *   #@...>.#
@@ -61,6 +62,11 @@ export interface LevelData {
    * names, checked by the campaign tests: the par solution must use the idea.
    */
   readonly teaches?: readonly string[];
+  /**
+   * Gauntlets only (on the first floor): the fewest moves for the whole run,
+   * with HP carried over. ★★★ for the gauntlet. Defaults to the summed pars.
+   */
+  readonly runPar?: number;
 }
 
 export class LevelError extends Error {
@@ -77,7 +83,7 @@ export function parseTextLevel(text: string): LevelData {
   const [head, body] = splitOnce(text.replace(/\r\n/g, '\n'), /^---\s*$/m);
   const meta: Record<string, string> = {};
   for (const line of head.split('\n')) {
-    const m = /^\s*([a-zA-Z]+)\s*:\s*(.*?)\s*$/.exec(line);
+    const m = /^\s*([a-zA-Z-]+)\s*:\s*(.*?)\s*$/.exec(line);
     if (m) meta[m[1]!] = m[2]!;
   }
   const grid = body
@@ -95,6 +101,7 @@ export function parseTextLevel(text: string): LevelData {
     loadout?: string[];
     enemies?: LevelEnemyOverride[];
     teaches?: string[];
+    runPar?: number;
   } = {
     schema: LEVEL_SCHEMA_VERSION,
     id: meta.id ?? '',
@@ -114,6 +121,7 @@ export function parseTextLevel(text: string): LevelData {
   }
   if (meta.loadout !== undefined) data.loadout = meta.loadout.split(/\s+/).filter(Boolean);
   if (meta.enemies !== undefined) data.enemies = parseEnemyOverrides(meta.enemies);
+  if (meta['run-par'] !== undefined) data.runPar = Number(meta['run-par']);
   if (meta.teaches !== undefined) data.teaches = meta.teaches.split(/[\s,]+/).filter(Boolean);
   return data;
 }

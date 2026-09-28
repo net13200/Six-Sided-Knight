@@ -1,15 +1,15 @@
 id: c6-10-2
 name: The Throne II
-par: 14
+par: 15
 loadout: Shield Hook Bomb Key Sword Freeze
 teaches: freeze
 ---
 ########
-#==#===#
-#=k@=#=#
-#=>g#=##
-##*##==#
-#=.===.#
-#===##.#
-########
+##>....#
+#.##...#
+#...#..#
+#...k.##
+#....#k#
+#@#....#
+#.....a#
 ########

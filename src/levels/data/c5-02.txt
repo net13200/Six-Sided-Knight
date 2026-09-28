@@ -1,16 +1,16 @@
 id: c5-02
 name: Stand Still
-par: 8
+par: 13
 hint: A frozen archer holds its fire
 loadout: Shield Heart Bomb Key Sword Freeze
 teaches: freeze-archer
 ---
 ########
-###.>.##
-#..k..##
-#...#..#
-#....*##
-#..##@.#
-#..a...#
-########
+#.a.#..#
+##.@#..#
+#..#...#
+#......#
+#....#>#
+#.....##
+#.....k#
 ########

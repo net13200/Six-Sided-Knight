@@ -1,15 +1,15 @@
 id: c6-03
 name: Long Reach
-par: 10
+par: 11
 loadout: Shield Hook Bomb Key Sword Coin
-teaches: hook-gem
+teaches: hook-enemy
 ---
 ########
-#...*.>#
-#......#
-#...#*a#
+#.#=..=#
+#=.=#.=#
+#.#==@.#
+#.=#.k=#
+#..>#==#
+#.==#..#
 #....#.#
-#...#.##
-#..#.#.#
-#.@....#
 ########

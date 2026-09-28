@@ -1,16 +1,17 @@
 id: c5-10
 name: Crypt Gauntlet
-par: 11
+par: 18
+run-par: 49
 hint: 3 floors in a row. HP carries over
 loadout: Shield Heart Bomb Key Sword Freeze
 teaches: freeze
 ---
 ########
-#k@..a.#
-#..#...#
-#..#..##
 #......#
-####..##
-#....k.#
-#..#..>#
+#>....k#
+##.....#
+#.#....#
+#@.#.ka#
+#.#....#
+#......#
 ########

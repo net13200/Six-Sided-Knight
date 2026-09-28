@@ -1,6 +1,7 @@
 id: c2-10
 name: Hall Gauntlet
 par: 9
+run-par: 36
 hint: 3 floors in a row. HP carries over
 teaches: slide
 ---

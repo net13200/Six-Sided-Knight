@@ -1,16 +1,16 @@
 id: c6-02
 name: Come Here
-par: 8
-hint: Hook pulls enemies next to you
-loadout: Shield Heart Bomb Key Sword Hook
+par: 11
+hint: Pull the archer in, then strike
+loadout: Shield Hook Bomb Key Sword Coin
 teaches: hook-enemy
 ---
 ########
-#.@....#
 #......#
-#^^^.^^#
-#^^^.^^#
-#^^^a^^#
-#^^^.^^#
-#...>..#
+#......#
+#....#.#
+#...#..#
+#@.#.a.#
+##a...>#
+#......#
 ########

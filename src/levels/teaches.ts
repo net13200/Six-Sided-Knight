@@ -128,7 +128,12 @@ export function routeFacts(rules: Rules, level: LevelData, path: readonly Dir[])
     covered: 0,
   };
   let s: GameState = createState(rules, level);
+  // Where and when each enemy was frozen: it stays put until it acts again
+  // (the move after its freeze wears off), so it's still a frozen stopper then.
+  const frozenAt = new Map<number, { move: number; x: number; y: number }>();
+  let move = 0;
   for (const dir of path) {
+    move++;
     const before = s;
     const r = step(rules, s, { type: 'move', dir });
     s = r.state;
@@ -148,8 +153,11 @@ export function routeFacts(rules: Rules, level: LevelData, path: readonly Dir[])
       else if (e.type === 'unlocked') f.doors++;
       else if (e.type === 'opened') f.chests++;
       else if (e.type === 'healed') f.heals++;
-      else if (e.type === 'effectApplied') f.freezes.push(kindOf(e.enemyId));
-      else if (e.type === 'pulled') {
+      else if (e.type === 'effectApplied') {
+        f.freezes.push(kindOf(e.enemyId));
+        const en = before.enemies.find((x) => x.id === e.enemyId);
+        if (en) frozenAt.set(e.enemyId, { move, x: en.x, y: en.y });
+      } else if (e.type === 'pulled') {
         if (e.enemyId !== undefined) f.hookEnemies++;
         else f.hookGems++;
       } else if (e.type === 'moved') end = e.to;
@@ -180,7 +188,7 @@ export function routeFacts(rules: Rules, level: LevelData, path: readonly Dir[])
               ? 'spikes'
               : 'floor'
             : enemy
-              ? enemy.effects.length
+              ? stillFrozen(frozenAt.get(enemy.id), enemy, move)
                 ? 'frozen-enemy'
                 : 'enemy'
               : 'wall',
@@ -189,6 +197,19 @@ export function routeFacts(rules: Rules, level: LevelData, path: readonly Dir[])
     if (s.status === 'playing') f.covered += coverCount(rules, s);
   }
   return f;
+}
+
+/**
+ * Was frozen and hasn't moved since (a slow golem or slime stays put a while
+ * after the freeze wears off). Whether the freeze was really needed is checked
+ * separately: without Freeze, par must be longer.
+ */
+function stillFrozen(
+  at: { move: number; x: number; y: number } | undefined,
+  enemy: { x: number; y: number },
+  move: number,
+): boolean {
+  return !!at && move > at.move && at.x === enemy.x && at.y === enemy.y;
 }
 
 /** Archers that have you in line but for an enemy standing in between. */

@@ -34,9 +34,9 @@ export class Gauntlet implements FloorRun {
     return this.floors[0]!.id;
   }
 
-  /** Sum of the floors' par. */
+  /** ★★★ for the whole run: the fewest total moves with HP carried over. */
   get par(): number {
-    return this.floors.reduce((n, f) => n + (f.par ?? 0), 0);
+    return this.floors[0]!.runPar ?? this.floors.reduce((n, f) => n + (f.par ?? 0), 0);
   }
 
   /** Starts (or continues with) the current floor. */
