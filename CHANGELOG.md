@@ -2,6 +2,10 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## Unreleased
+
+- **Developer tool: watch a solution.** In developer mode (`#debug`), a **▶ Par** button (or P) solves the level in the background and plays the par, no-damage or all-treasure route with pause, step, speed and stop. Watched runs never count. Players don't see it.
+
 ## 0.8.0 — Once upon a roll
 
 - **Lessons you actually read.** The first time you play a level with a hint, a card types the lesson out over the board, and play waits until you tap "Got it" (a tap while it types shows the rest). The tutorial levels and each new mechanic (ice, golems, archers, Freeze, Hook, gauntlets) get a fuller explanation. The short hint still shows on the board.

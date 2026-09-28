@@ -30,6 +30,7 @@ import { C, displayPrefs } from '../view/palette';
 import { muteButton } from './common';
 import { InspectView } from './inspect';
 import { LessonCard } from './lesson-card';
+import { SolutionWatch } from './watch';
 import { lessonKey } from '../lessons';
 import type { Scene } from './scene';
 
@@ -53,6 +54,10 @@ export class PlayScene implements Scene {
   private inspect: InspectView | null = null;
   /** The lesson card, while it's up (play waits for it). */
   private lesson: LessonCard | null = null;
+  /** Dev tool: watching a solution (debug mode). */
+  private watch: SolutionWatch | null = null;
+  /** The level's first state (for watching a solution from the start). */
+  private readonly initial: GameState;
   /** Move outcomes for the current state (recomputed when the state changes). */
   private outcomes: { state: GameState; list: Array<readonly [Dir, Outcome]> } | null = null;
 
@@ -62,6 +67,7 @@ export class PlayScene implements Scene {
   ) {
     this.level = session.level;
     this.history = newHistory(createState(game.rules, this.level, { hp: session.startHp }));
+    this.initial = this.history.state;
     this.recorder = new ReplayRecorder(this.level.id);
     this.fx.reducedMotion = game.reducedMotion;
   }
@@ -125,7 +131,47 @@ export class PlayScene implements Scene {
         62,
       ),
     );
+    if (this.game.debug) {
+      ui.append(
+        place(
+          el('button', {
+            className: 'btn small dev-btn',
+            testId: 'watch',
+            text: '▶ Par',
+            label: 'Watch a solution (developer)',
+            onClick: () => this.openWatch(),
+          }),
+          4,
+          BAR_Y - 34,
+          64,
+          30,
+        ),
+      );
+    }
     this.openLesson(ui);
+  }
+
+  /** Dev tool: solve the level (in the worker) and watch a solution play out. */
+  private openWatch(): void {
+    if (!this.game.debug || this.watch || this.lesson || this.inspect || !this.ui) return;
+    if (this.finishing) return;
+    this.hideOverlay();
+    const fx = this.fx;
+    this.watch = new SolutionWatch(this.ui, {
+      reset: () => {
+        this.fx.finishAll();
+        this.history = newHistory(this.initial);
+        this.refreshDescription();
+      },
+      play: (dir) => this.move(dir, true),
+      get busy() {
+        return fx.busy;
+      },
+      ended: () => {
+        this.watch = null;
+      },
+    });
+    this.watch.open(this.game.levelService.solve(this.initial, this.level.healStar === true));
   }
 
   /** The level's lesson, the first time: it types itself out and play waits for "Got it". */
@@ -155,6 +201,15 @@ export class PlayScene implements Scene {
   }
 
   command(cmd: Command): void {
+    if (this.watch) {
+      // While watching, only Escape (stop) does anything.
+      if (cmd.type === 'back') this.watch.stop();
+      return;
+    }
+    if (cmd.type === 'watch') {
+      this.openWatch();
+      return;
+    }
     if (this.lesson) {
       // The board waits for the lesson to be read.
       if (cmd.type === 'confirm' || cmd.type === 'back') this.lesson.advance();
@@ -215,13 +270,14 @@ export class PlayScene implements Scene {
     }
   }
 
-  private move(dir: Dir): void {
+  /** Plays a move. `watching`: a dev-tool solution move, which never counts. */
+  private move(dir: Dir, watching = false): void {
     if (this.finishing || this.state.status !== 'playing') return;
     this.fx.finishAll();
     const before = this.state;
     const predicted = this.moveOutcomes(before).find(([d]) => d === dir)?.[1];
     const { history, result } = play(this.game.rules, this.history, { type: 'move', dir });
-    this.recorder.record(dir);
+    if (!watching) this.recorder.record(dir);
     if (!result.consumed) {
       animateBump(this.fx, this.game.audio, dir);
       if (predicted) this.announce(`${predicted.text}. ${predicted.then ?? ''}`);
@@ -230,9 +286,11 @@ export class PlayScene implements Scene {
     this.history = history;
     if (predicted) this.announce(describeTurn(before, result.state, predicted));
     this.refreshDescription();
+    animateTurn(this.fx, this.game.audio, result.events, before, result.state);
+    // A watched solution: no stars, crowns, stats or analytics.
+    if (watching) return;
     const face = leadingFace(before.player.die, dir);
     this.faceMoves.set(face, (this.faceMoves.get(face) ?? 0) + 1);
-    animateTurn(this.fx, this.game.audio, result.events, before, result.state);
     if (result.state.status === 'won') {
       this.finishing = true;
       this.won = true;
@@ -283,11 +341,13 @@ export class PlayScene implements Scene {
 
   update(dt: number): void {
     this.fx.update(dt);
-    if (!this.finishing && !this.lesson) this.activeMs += dt * 1000;
+    this.watch?.update(dt);
+    if (!this.finishing && !this.lesson && !this.watch) this.activeMs += dt * 1000;
   }
 
   exit(): void {
     this.lesson?.close();
+    this.watch?.stop();
     this.game.stage.canvas.setAttribute('aria-label', 'Game board');
     if (!this.won) {
       this.game.analytics.track('level_quit', {

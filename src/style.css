@@ -619,3 +619,43 @@ button:focus-visible {
 .sheet.how-to .btn {
   flex: none;
 }
+
+/* Dev tool: watching a solution (debug mode only). */
+.btn.dev-btn {
+  font-size: 12px;
+  border-style: dashed;
+  border-color: #56e0b0;
+  color: #56e0b0;
+  background: rgba(20, 18, 28, 0.85);
+}
+.watch-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  background: #1d1a28;
+  border-bottom: 1px dashed #56e0b0;
+}
+.watch-bar .btn {
+  height: 36px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+.watch-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: #56e0b0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sheet.watch-chooser {
+  gap: 8px;
+  border-color: #56e0b0;
+}
+.sheet.watch-chooser .btn {
+  height: 44px;
+  margin-top: 0;
+  font-size: 14px;
+}

@@ -13,7 +13,8 @@ export type Command =
   | { type: 'back' }
   | { type: 'confirm' }
   | { type: 'inspect' }
-  | { type: 'describe' };
+  | { type: 'describe' }
+  | { type: 'watch' };
 
 /** Minimum travel (in CSS pixels) for a pointer gesture to count as a swipe. */
 export const SWIPE_THRESHOLD = 24;
@@ -54,6 +55,7 @@ const KEYS: Record<string, Command> = {
   i: { type: 'inspect' },
   h: { type: 'describe' },
   '?': { type: 'describe' },
+  p: { type: 'watch' },
   Escape: { type: 'back' },
   Enter: { type: 'confirm' },
 };

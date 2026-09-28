@@ -3,12 +3,15 @@
  * hard floor never blocks the frame loop), otherwise inline. Results are
  * cached by level id, and `prefetch` warms the cache for the next floor.
  */
-import type { Rules } from '../engine';
+import type { GameState, Rules } from '../engine';
+import { analyze, type LevelAnalysis } from '../solver/solve';
 import { generateLevel, type GenParams, type Generated } from './generate';
+import type { WorkerRequest } from './worker';
 
 type Pending = {
-  params: GenParams;
-  resolve: (g: Generated) => void;
+  /** The same work done inline, if the worker breaks. */
+  inline: () => unknown;
+  resolve: (result: unknown) => void;
   reject: (e: Error) => void;
 };
 
@@ -26,7 +29,7 @@ export class LevelService {
     try {
       this.worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
       this.worker.onmessage = (
-        e: MessageEvent<{ id: number; result?: Generated; error?: string }>,
+        e: MessageEvent<{ id: number; result?: unknown; error?: string }>,
       ) => {
         const p = this.pending.get(e.data.id);
         if (!p) return;
@@ -61,11 +64,25 @@ export class LevelService {
   }
 
   private run(params: GenParams): Promise<Generated> {
-    if (!this.worker) return Promise.resolve().then(() => generateLevel(this.rules, params));
+    return this.post({ id: 0, params }, () => generateLevel(this.rules, params));
+  }
+
+  /**
+   * Solutions for all three stars from `state` (dev tools: watching the par
+   * solution). Off the main thread, so hard levels never freeze the screen.
+   */
+  solve(state: GameState, healStar = false): Promise<LevelAnalysis> {
+    return this.post({ id: 0, kind: 'solve', state, healStar }, () =>
+      analyze(this.rules, state, 400_000, { healStar }),
+    );
+  }
+
+  private post<T>(req: WorkerRequest, inline: () => T): Promise<T> {
+    if (!this.worker) return Promise.resolve().then(inline);
     const id = this.nextId++;
-    return new Promise<Generated>((resolve, reject) => {
-      this.pending.set(id, { params, resolve, reject });
-      this.worker!.postMessage({ id, params });
+    return new Promise<T>((resolve, reject) => {
+      this.pending.set(id, { inline, resolve: resolve as (r: unknown) => void, reject });
+      this.worker!.postMessage({ ...req, id });
     });
   }
 
@@ -77,7 +94,7 @@ export class LevelService {
     this.pending.clear();
     for (const p of jobs) {
       try {
-        p.resolve(generateLevel(this.rules, p.params));
+        p.resolve(p.inline());
       } catch (e) {
         p.reject(e as Error);
       }

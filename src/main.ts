@@ -78,7 +78,10 @@ registerServiceWorker();
 // Hidden KPI panel: #debug or ?debug.
 if (debug) openDebugPanel(game);
 window.addEventListener('hashchange', () => {
-  if (location.hash === '#debug') openDebugPanel(game);
+  if (location.hash === '#debug') {
+    game.debug = true;
+    openDebugPanel(game);
+  }
 });
 
 // Read-only hook for automated tests and debugging.

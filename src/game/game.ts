@@ -69,6 +69,8 @@ export class Game {
   readonly analytics: LocalAnalytics;
   readonly levelService: LevelService;
   scene: Scene | null = null;
+  /** Developer mode (#debug or ?debug): KPI panel, watching solutions. */
+  debug: boolean;
   private hiddenAt = 0;
 
   constructor(
@@ -85,7 +87,8 @@ export class Game {
     this.audio.setMusicVolume(this.save.data.settings.musicVolume);
     this.analytics = new LocalAnalytics(platform.storage, platform.now, randomId, VERSION);
     this.analytics.optedOut = this.save.data.settings.analyticsOptOut;
-    this.analytics.verbose = options.debug === true;
+    this.debug = options.debug === true;
+    this.analytics.verbose = this.debug;
     this.analytics.startSession(SESSION_GAP_MS);
     this.applySkin();
     this.applyDisplay();

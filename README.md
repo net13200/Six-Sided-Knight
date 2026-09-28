@@ -178,6 +178,12 @@ Open the hidden panel by adding `#debug` to the URL (or `?debug`, which also log
 
 Use **Copy data (JSON)** to export the raw log. The maths lives in `src/meta/kpi.ts`, and each number has a unit test.
 
+### Watching a solution (developer mode)
+
+In developer mode (`#debug` or `?debug`), every level shows a dashed **▶ Par** button at the bottom left of the board (or press **P**). The solver works out, in the worker, the best route for each star: **Par** (fewest moves), **No damage** (or full HP on healing levels) and **All treasure**. Pick one and it plays from the level's start with the usual animations. The bar at the top has pause/play, **Step**, speed (×1, ×2, ×4) and **Stop** (back to the start, ready to play for real). It works on campaign levels, gauntlet floors, and Daily Roll and Depths floors.
+
+A watched run never counts: no stars, crowns, stats or analytics, and reaching the stairs doesn't open the results. The code is in `src/game/scenes/watch.ts`; the solver request is `LevelService.solve` (`src/gen/service.ts`).
+
 ## Adding a face, tile or enemy
 
 The turn logic (`src/engine/step.ts`) never names specific content; it only calls hooks. To add content, write one definition module and register it in `src/content/register.ts`. A test (`tests/unit/extensibility.test.ts`) enforces that the engine contains no content names.

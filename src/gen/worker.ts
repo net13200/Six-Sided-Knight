@@ -1,14 +1,24 @@
-/** Web Worker: generates levels off the main thread so play never stutters. */
+/** Web Worker: generates levels (and solves them, for the dev tools) off the main thread. */
 import { defaultRules } from '../content/register';
+import type { GameState } from '../engine';
+import { analyze } from '../solver/solve';
 import { generateLevel, type GenParams } from './generate';
 
 const rules = defaultRules();
 
-self.onmessage = (e: MessageEvent<{ id: number; params: GenParams }>) => {
-  const { id, params } = e.data;
+export type WorkerRequest =
+  | { id: number; kind?: 'generate'; params: GenParams }
+  | { id: number; kind: 'solve'; state: GameState; healStar: boolean };
+
+self.onmessage = (e: MessageEvent<WorkerRequest>) => {
+  const req = e.data;
   try {
-    (self as unknown as Worker).postMessage({ id, result: generateLevel(rules, params) });
+    const result =
+      req.kind === 'solve'
+        ? analyze(rules, req.state, 400_000, { healStar: req.healStar })
+        : generateLevel(rules, req.params);
+    (self as unknown as Worker).postMessage({ id: req.id, result });
   } catch (err) {
-    (self as unknown as Worker).postMessage({ id, error: String(err) });
+    (self as unknown as Worker).postMessage({ id: req.id, error: String(err) });
   }
 };
