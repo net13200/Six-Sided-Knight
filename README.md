@@ -63,7 +63,7 @@ tests/unit/    Vitest tests      tests/e2e/  Playwright tests
 npm run validate-levels
 npm run validate-levels -- examples/levels/demo.json
 
-# Solve levels: minimum moves, whether each star is achievable, difficulty score
+# Solve levels: minimum moves (par), difficulty score
 npm run solve                                   # all campaign levels
 npm run solve -- src/levels/data/c1-03.txt      # one level, with solutions
 npm run solve -- --write-par                    # set par = solver minimum in .txt files
@@ -86,9 +86,9 @@ Every `*.replay.json` in `examples/replays` is checked by the test suite and mus
 
 ## Authoring levels
 
-Campaign levels live in `src/levels/data/` as `.txt` files, played in file-name order, 10 per chapter. Every campaign level is checked by the test suite: it must be solvable, its par must equal the solver's minimum, and all three stars must be achievable.
+Campaign levels live in `src/levels/data/` as `.txt` files, played in file-name order, 10 per chapter. Every campaign level is checked by the test suite: it must be winnable from 3 HP, its par must equal the solver's minimum, and its par route must use what the level teaches (`teaches:`, see below).
 
-A **Gauntlet** is a campaign level with extra floors in `src/levels/gauntlets/`, named `<level id>-<floor>.txt` (e.g. `c2-10-2.txt`). Floors are played in a row with HP carried over (+1 between floors). The tests check each extra floor is winnable at 2 HP and that each star (summed par, no damage, all gold) is achievable across the whole gauntlet.
+A **Gauntlet** is a campaign level with extra floors in `src/levels/gauntlets/`, named `<level id>-<floor>.txt` (e.g. `c2-10-2.txt`). Floors are played in a row with HP carried over and no healing. The tests check each extra floor is winnable from 1 HP, and that `run-par` on the first floor (★★★ for the whole run) is the fewest moves with HP carried over (`npx tsx tools/run-par.ts` writes it).
 
 Authoring aids:
 
@@ -96,7 +96,13 @@ Authoring aids:
 npx tsx tools/lab.ts <files or dirs> [--hp 2] [--trace]   # minimums, solutions, rating; --trace prints every step
 npx tsx tools/rink-search.ts <seed> <tries> [extras] [base] [loadout]  # random rooms with long optimal solutions
 REQUIRE=Hook npx tsx tools/rink-search.ts 1 500 'k*' . Shield,Heart,Bomb,Key,Sword,Hook  # ...that need the Hook
+npx tsx tools/teach-audit.ts [c3 | file.txt]      # every level against the rules and its teaches: tag
+npx tsx tools/teach-search.ts --teach splash --extras kkk --tidy --clean   # rooms whose par route uses an idea
+npx tsx tools/teach-search.ts --template t.txt --palette '....#' --teach golem  # ...from a hand-drawn template ('?' cells)
+npx tsx tools/run-par.ts                          # write run-par for every gauntlet
 ```
+
+**Teaches.** Each level says what it's about, e.g. `teaches: freeze-stopper` or `teaches: golem, key`. The par route (fewest moves) must use it, and a tool must be needed (switch it off and par gets longer or the level can't be won); hazards like archers must shape the route (without them par is shorter). The ideas and checks are in `src/levels/teaches.ts`: `move strike sword block key coin guard heal slime splash slide slide-floor slide-enemy slide-spikes golem golem-splash archer cover freeze freeze-archer freeze-stopper hook-gem hook-enemy`.
 
 Levels are 8x9 grids. JSON (schema 1):
 
@@ -135,7 +141,7 @@ start: top=Shield east=Sword
 | `s`   | slime        | `=`   | ice         |
 | `a`   | archer       | `g`   | golem       |
 
-`start`, `hint` (one line, at most 40 characters), `enemies` and `loadout` are optional. `loadout` swaps the die's faces for the level, listed by home slot (top bottom north south east west), e.g. `loadout: Shield Heart Bomb Key Sword Freeze`. `start` fixes faces in named slots (the default is top=Shield, bottom=Heart, north=Bomb, south=Key, east=Sword, west=Coin). `enemies` adjusts enemies by position, separated by `;`: `hp=N` starts one wounded, other words set its data, e.g. `enemies: 2,6 hp=1; 4,1 ready` (a wounded skeleton, and a slime that acts on turn 1). `star: full-hp` makes the second star "finish at full HP" instead of "no damage" (for healing lessons).
+`start`, `hint` (one line, at most 40 characters), `enemies` and `loadout` are optional. `loadout` swaps the die's faces for the level, listed by home slot (top bottom north south east west), e.g. `loadout: Shield Heart Bomb Key Sword Freeze`. `start` fixes faces in named slots (the default is top=Shield, bottom=Heart, north=Bomb, south=Key, east=Sword, west=Coin). `enemies` adjusts enemies by position, separated by `;`: `hp=N` starts one wounded, other words set its data, e.g. `enemies: 2,6 hp=1; 4,1 ready` (a wounded skeleton, and a slime that acts on turn 1). `teaches:` names what the par route must use (required for campaign levels). `run-par:` (first floor of a gauntlet) is ★★★ for the whole run.
 
 ## Versions and releases
 
@@ -180,7 +186,7 @@ Use **Copy data (JSON)** to export the raw log. The maths lives in `src/meta/kpi
 
 ### Watching a solution (developer mode)
 
-In developer mode (`#debug` or `?debug`), every level shows a dashed **▶ Par** button at the bottom left of the board (or press **P**). The solver works out, in the worker, the best route for each star: **Par** (fewest moves), **No damage** (or full HP on healing levels) and **All treasure**. Pick one and it plays from the level's start with the usual animations. The bar at the top has pause/play, **Step**, speed (×1, ×2, ×4) and **Stop** (back to the start, ready to play for real). It works on campaign levels, gauntlet floors, and Daily Roll and Depths floors.
+In developer mode (`#debug` or `?debug`), every level shows a dashed **▶ Par** button at the bottom left of the board (or press **P**). The solver works out the par route (fewest moves) in the worker, and it plays from the level's start with the usual animations. The bar at the top has pause/play, **Step**, speed (×1, ×2, ×4) and **Stop** (back to the start, ready to play for real). It works on campaign levels, gauntlet floors, and Daily Roll and Depths floors.
 
 A watched run never counts: no stars, crowns, stats or analytics, and reaching the stairs doesn't open the results. The code is in `src/game/scenes/watch.ts`; the solver request is `LevelService.solve` (`src/gen/service.ts`).
 

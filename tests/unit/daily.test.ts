@@ -139,6 +139,7 @@ describe('depths', () => {
 describe('golden daily', () => {
   // If this fails, a code change altered an existing date's dungeon for
   // everyone. That should only happen deliberately (with a changelog note).
+  // Regenerated for 0.9.0: 3 HP, no healing between floors, no gems.
   it('2026-09-22 generates the same three floors as when it was released', () => {
     const grids = [1, 2, 3].map(
       (f) => generateLevel(rules, dailyFloorParams('2026-09-22', f)).level.grid,
@@ -146,35 +147,35 @@ describe('golden daily', () => {
     expect(grids).toEqual([
       [
         '########',
-        '#....>.#',
-        '#....k.#',
+        '#k...>.#',
+        '#.....^#',
         '#......#',
-        '#.#~.*.#',
+        '#.#..$.#',
         '#......#',
         '#.#...@#',
-        '#.#^...#',
-        '########',
-      ],
-      [
-        '########',
-        '#...>..#',
-        '#k.#..##',
-        '#......#',
-        '#...*..#',
-        '#......#',
-        '#....#.#',
-        '#.*@...#',
-        '########',
-      ],
-      [
-        '########',
         '#.#....#',
-        '#..#s>##',
-        '#..#..##',
+        '########',
+      ],
+      [
+        '########',
+        '#.#..>.#',
+        '#......#',
+        '#..##..#',
+        '#......#',
+        '####...#',
+        '#..@.#k#',
+        '#.....^#',
+        '########',
+      ],
+      [
+        '########',
+        '#.#..^.#',
+        '#..#.>##',
+        '#s.#..##',
         '#..#|#.#',
         '#....#.#',
-        '#..@..*#',
-        '#.*....#',
+        '#..@...#',
+        '#.^.^..#',
         '########',
       ],
     ]);

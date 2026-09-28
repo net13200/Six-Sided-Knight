@@ -19,18 +19,18 @@ export const HOW_TO_PLAY: readonly HowToSection[] = [
       'Sword: 3 damage.',
       'Shield: 1 damage. On top it blocks hits; underneath it keeps you safe on spikes.',
       'Bomb: 2 damage, plus 1 to every enemy next to the target. The only face that hurts a Golem.',
-      'Heart: underneath on a pool, heals 2.',
+      'Heart: underneath on a pool, heals 1.',
       'Key: opens doors. Coin: opens chests.',
-      'Freeze: the enemy skips its next 2 turns. Hook: pulls an enemy or gem from 2-3 tiles away.',
+      'Freeze: the enemy skips its next 2 turns. Hook: pulls an enemy from 2-3 tiles away next to you.',
     ],
   },
   {
     heading: 'Tiles',
     lines: [
       'Spikes: 1 damage unless the Shield is underneath.',
-      'Pool: heals 2 with the Heart underneath, once.',
+      'Pool: heals 1 with the Heart underneath, once.',
       'Ice: you slide, faces unchanged, until floor or something stops you.',
-      'Gems: +10 gold, just roll onto them.',
+      'Chests and doors block the way until the Coin or the Key opens them.',
     ],
   },
   {
@@ -46,14 +46,14 @@ export const HOW_TO_PLAY: readonly HowToSection[] = [
   {
     heading: 'Stars and crowns',
     lines: [
-      'Each level has three stars: par moves or fewer, no damage, and every treasure. They add up over your attempts.',
+      'You have 3 HP, and nothing heals between floors. Stars are about moves: ★★★ at par or fewer, ★★ a few moves over, ★ for finishing. Your best result is kept.',
       'Each new star pays 10 crowns. Spend them in the Forge on new faces for your own die (Daily Roll and Depths).',
     ],
   },
   {
     heading: 'Modes',
     lines: [
-      'Gauntlets: three floors in a row, HP carried over (+1 between floors).',
+      'Gauntlets: three floors in a row, HP carried over with no healing.',
       'Daily Roll: three floors, the same for everyone each day.',
       'Depths: endless floors that get harder.',
     ],

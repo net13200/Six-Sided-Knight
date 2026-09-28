@@ -109,6 +109,6 @@ export class DepthsScene implements Scene {
     ctx.fillText(`deepest floor cleared · ${depths.runs} runs`, 170, 258);
     ctx.fillStyle = C.text;
     ctx.font = '13px system-ui, sans-serif';
-    ctx.fillText('HP carries over · +1 HP per floor', 170, 290);
+    ctx.fillText('HP carries over · no healing', 170, 290);
   }
 }

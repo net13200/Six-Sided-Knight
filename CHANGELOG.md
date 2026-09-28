@@ -2,10 +2,17 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
-## Unreleased
+## 0.9.0 — Every move counts
 
+- **Stars are about moves.** ★★★ at par (the fewest moves possible), ★★ within a few moves of it (par + a quarter, at least 2), ★ for finishing. Damage and treasure no longer cost stars. Your best result is kept; old saves keep their stars.
+- **3 HP, and it's tight.** Every hit, arrow and spike costs 1 of your 3 HP. Pools heal 1.
+- **No healing between floors.** Gauntlets, the Daily Roll and Depths carry your HP over as it is, so a run can be lost. Every later floor is still winnable from 1 HP. A gauntlet's ★★★ is the fewest moves for the whole run with HP carried over.
+- **Every level redesigned or checked so its fastest route uses its idea.** If a level is about Freeze, the par route freezes; about the Hook, it hooks; about archers, their lanes shape the route. 51 of the 70 maps were rebuilt; the rest were checked. A test now proves this for every level and gauntlet floor, so it stays true.
+- **Hook levels are about pulling enemies** (pulling a gem never saves a move). **Gems are gone**; chests appear only where they block the way.
+- The Daily Roll's dungeons change from this version (the rules changed); it's still the same for everyone each day.
 - **Fix: music died after switching apps.** Coming back now resumes it, including iPhone's "interrupted" state, a paused context the browser won't restart until you touch (any touch now does it, not just the first one), a context the browser closed, or one that claims to play but whose clock is stuck (rebuilt from scratch). Interruptions while you're playing (a call, another app's sound) are recovered too.
-- **Developer tool: watch a solution.** In developer mode (`#debug`), a **▶ Par** button (or P) solves the level in the background and plays the par, no-damage or all-treasure route with pause, step, speed and stop. Watched runs never count. Players don't see it.
+- **Developer tool: watch the par solution.** In developer mode (`#debug`), a **▶ Par** button (or P) solves the level in the background and plays its par route with pause, step, speed and stop. Watched runs never count. Players don't see it.
+- Level authoring: `teaches:` and `run-par:` in level files; `tools/teach-audit.ts`, `tools/teach-search.ts` (with hand-drawn templates) and `tools/run-par.ts`.
 
 ## 0.8.0 — Once upon a roll
 

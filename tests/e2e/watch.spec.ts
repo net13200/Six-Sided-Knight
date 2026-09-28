@@ -36,7 +36,7 @@ test.describe('watching the par solution (developer mode)', () => {
     await page.getByTestId('watch-stop').click();
     await expect(page.getByTestId('watch-bar')).toHaveCount(0);
     expect((await gameState(page)).stats.moves).toBe(0);
-    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowUp');
     await expect.poll(async () => (await gameState(page)).stats.moves).toBe(1);
   });
 
@@ -44,7 +44,7 @@ test.describe('watching the par solution (developer mode)', () => {
     await page.goto('/?level=5&debug');
     await page.getByTestId('debug-close').click();
     await page.keyboard.press('p');
-    await page.getByTestId('watch-noDamage').click();
+    await page.getByTestId('watch-any').click();
     await page.getByTestId('watch-pause').click();
     const at = (await gameState(page)).stats.moves;
     await page.waitForTimeout(1200);

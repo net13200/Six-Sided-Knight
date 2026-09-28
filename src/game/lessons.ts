@@ -13,13 +13,13 @@ export interface Lesson {
 
 const GAUNTLET: Lesson = {
   title: 'Gauntlet',
-  text: 'Three floors in a row. Your HP carries over, with 1 healed between floors. Leave between floors and the gauntlet starts over.',
+  text: 'Three floors in a row, and your HP carries over: nothing heals between floors. Leave between floors and the gauntlet starts over.',
 };
 
 export const LESSONS: Readonly<Record<string, Lesson>> = {
   'c1-01': {
     title: 'Rolling',
-    text: 'You are the die. Swipe, or use the arrow keys, to roll one tile. Each roll tips the die onto a new face. Roll onto the stairs to win.',
+    text: "You are the die. Swipe, or use the arrow keys, to roll one tile. Each roll tips the die onto a new face. Reach the stairs in as few moves as you can: that's what the stars are for.",
   },
   'c1-02': {
     title: 'The leading side',
@@ -31,7 +31,7 @@ export const LESSONS: Readonly<Record<string, Lesson>> = {
   },
   'c1-04': {
     title: 'Shield up',
-    text: "Enemies strike when they're next to you. With the Shield on top, their hits bounce off. Turn the Shield up before you get close.",
+    text: "Enemies strike when they're next to you, and you only have 3 HP. With the Shield on top, their hits bounce off. Turn it up before you get close.",
   },
   'c1-05': {
     title: 'Keys',
@@ -39,15 +39,15 @@ export const LESSONS: Readonly<Record<string, Lesson>> = {
   },
   'c1-06': {
     title: 'Treasure',
-    text: 'Roll the Coin into a chest to open it. Gems are picked up just by rolling onto them. Collect every treasure for a star.',
+    text: 'A chest blocks the way. Only the Coin opens it: roll the Coin into the chest.',
   },
   'c1-07': {
     title: 'Spikes',
-    text: 'Spikes hurt when you land on them, unless the Shield is on the bottom. Plan your rolls so the Shield faces down as you land.',
+    text: 'Spikes hurt when you land on them, unless the Shield is on the bottom. Three rows of spikes would cost all 3 HP: land Shield-down.',
   },
   'c1-08': {
     title: 'Healing',
-    text: "These spikes can't all be dodged. When you're hurt, land Heart-down on a pool to heal 2. Here, the second star is for finishing at full HP.",
+    text: "These spikes can't all be dodged, and three hits would end you. Land Heart-down on the pool to heal 1 on the way.",
   },
   'c1-09': {
     title: 'Slimes',
@@ -75,7 +75,19 @@ export const LESSONS: Readonly<Record<string, Lesson>> = {
   },
   'c6-01': {
     title: 'Hook',
-    text: 'The Hook reaches 2 or 3 tiles. Roll it toward a gem to pull the gem in, or toward an enemy to drag it next to you.',
+    text: 'The Hook reaches 2 or 3 tiles: roll it toward an enemy and the enemy is dragged next to you. The die stays put.',
+  },
+  'c3-03': {
+    title: 'Splash',
+    text: 'These golems are asleep, one behind the other. Every Bomb on the front one splashes the one behind: fewer Bombs in all.',
+  },
+  'c5-03': {
+    title: 'Ice statue',
+    text: 'A frozen enemy stays exactly where it is. Freeze it, then slide into it: it stops you right where you need to be.',
+  },
+  'c6-02': {
+    title: 'Come here',
+    text: 'Walking up to an archer means walking through its arrows. Hook it in instead, then strike.',
   },
   'c2-10': GAUNTLET,
   'c3-10': GAUNTLET,

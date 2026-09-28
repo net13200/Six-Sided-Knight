@@ -7,7 +7,7 @@ const INFO: Readonly<Record<string, string>> = {
   Key: 'Opens locked doors.',
   Coin: 'Opens chests: +30 gold.',
   Freeze: 'Freezes an enemy for 2 turns. No damage.',
-  Hook: 'Pulls an enemy or a gem 2-3 tiles away to you.',
+  Hook: 'Pulls an enemy 2-3 tiles away next to you.',
 };
 
 export function faceInfo(face: string): string {

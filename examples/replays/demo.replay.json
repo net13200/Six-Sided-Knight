@@ -5,8 +5,8 @@
   "expect": {
     "status": "won",
     "moves": 11,
-    "hp": 3,
+    "hp": 1,
     "gold": 0,
-    "hash": "f1bd0a66"
+    "hash": "eb2c0606"
   }
 }

@@ -86,7 +86,7 @@ export function generateLevel(rules: Rules, params: GenParams): Generated {
   const level: LevelData = { ...base.level, loadout: [...custom] };
   if (params.shared) {
     // Same floor and par for everyone; just report whether this die can win it.
-    const r = solve(rules, createState(rules, level, { hp: params.hp ?? 5 }), {
+    const r = solve(rules, createState(rules, level, { hp: params.hp ?? rules.config.maxHp }), {
       algorithm: 'idastar',
       maxNodes: 200_000,
     });
@@ -94,7 +94,7 @@ export function generateLevel(rules: Rules, params: GenParams): Generated {
     return { ...base, level, winnable: r.status !== 'unsolvable' };
   }
   // The shared dungeon, if the player's die can win it.
-  const rating = rate(rules, createState(rules, level, { hp: params.hp ?? 5 }));
+  const rating = rate(rules, createState(rules, level, { hp: params.hp ?? rules.config.maxHp }));
   if (rating.solvable) return { ...base, level: { ...level, par: rating.minMoves }, rating };
   // Otherwise a variant made for this die.
   const v = generateFor(rules, { ...params, seed: (params.seed ^ 0x5bd1e995) >>> 0 });
@@ -120,7 +120,7 @@ function generateFor(rules: Rules, params: GenParams): Generated {
       ...(params.loadout ? { loadout: [...params.loadout] } : {}),
     };
     if (validateLevel(rules, level).length) continue;
-    const start = createState(rules, level, { hp: params.hp ?? 5 });
+    const start = createState(rules, level, { hp: params.hp ?? rules.config.maxHp });
     const rating = rate(rules, start);
     if (!rating.solvable) continue;
     const withPar = { ...level, par: rating.minMoves };
@@ -137,7 +137,7 @@ function generateFor(rules: Rules, params: GenParams): Generated {
   };
   return {
     level,
-    rating: rate(rules, createState(rules, level, { hp: params.hp ?? 5 })),
+    rating: rate(rules, createState(rules, level, { hp: params.hp ?? rules.config.maxHp })),
     attempts: maxAttempts,
     inBand: false,
   };
@@ -192,7 +192,7 @@ function buildGrid(rng: Rng, d: number, features: 1 | 2): string[] {
   };
 
   // Features scale with difficulty.
-  put(G.gem, 1 + rng.int(2));
+  // No gems: treasure only matters where it's part of the route (a chest in the way).
   if (rng.next() < 0.35 + d * 0.3) put(G.chest, 1);
   put(G.spikes, Math.round(rng.next() * (1 + d * 4)));
   if (rng.next() < 0.4) put(G.pool, 1);

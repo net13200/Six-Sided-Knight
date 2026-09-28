@@ -53,7 +53,7 @@ Moving into an enemy attacks it with the leading face instead of moving.
 ## 4a. Hook
 
 - When Hook leads into a tile with no enemy, it looks along that line up to 3 tiles from the die. The tile next to the die must be passable and not the exit; the line stops at the first impassable tile (wall, door, chest).
-- The first enemy found 2–3 tiles away is pulled onto the tile next to the die (only if enemies may stand there; not onto spikes). The first treasure found (a gem) is collected from range.
+- The first enemy found 2–3 tiles away is pulled onto the tile next to the die (only if enemies may stand there; not onto spikes). The first treasure found (a gem) is collected from range. (The campaign and generated floors no longer place gems, so in practice the Hook pulls enemies.)
 - Either way the die stays put, its faces unchanged, and the turn is used. With nothing in reach the die simply rolls.
 
 - If the target dies, the die rolls onto its tile (orientation changes, landing effects apply).
@@ -67,7 +67,7 @@ Moving into an enemy attacks it with the leading face instead of moving.
 | Floor        | Nothing.                                                                                                                                                                                                                                                                                 |
 | Wall         | Impassable. Bump = invalid (no turn).                                                                                                                                                                                                                                                    |
 | Spikes       | On landing: player takes 1 damage unless the **bottom** face is Shield. Enemies cannot enter.                                                                                                                                                                                            |
-| Healing pool | On landing with **bottom** = Heart and HP below max: heal 2 (cap at max), pool dries → floor. Otherwise nothing, pool stays.                                                                                                                                                             |
+| Healing pool | On landing with **bottom** = Heart and HP below max: heal 1 (cap at max), pool dries → floor. Otherwise nothing, pool stays.                                                                                                                                                             |
 | Locked door  | Key leading into it: door opens → floor and the die rolls onto it in the same turn. Any other face: invalid bump. Enemies cannot enter.                                                                                                                                                  |
 | Chest        | Coin leading into it: +30 gold, chest → floor and the die rolls onto it in the same turn. Any other face: invalid bump. Enemies cannot enter.                                                                                                                                            |
 | Gem          | On landing: +10 gold, gem → floor.                                                                                                                                                                                                                                                       |
@@ -101,25 +101,29 @@ Enemy intent (next move or attack) is deterministic and shown on the board.
 
 ## 8. Player stats and modes
 
-- Max HP 5.
-- **Campaign**: every level starts at 5 HP. Undo is unlimited within a level, and there is a Retry button.
-- **Runs** (Daily Roll, Depths, chapter Gauntlets): HP carries between floors with +1 heal per floor (cap 5).
+- Max HP 3 (`maxHp` in the rules config): enemy hits, arrows and spikes cost 1 each, so three mistakes end a level.
+- **Campaign**: every level starts at 3 HP. Undo is unlimited within a level, and there is a Retry button.
+- **Runs** (Daily Roll, Depths, chapter Gauntlets): HP carries between floors with no healing. Every floor after the first must be winnable when entered with 1 HP (a route that takes no damage exists), so losing a run is possible but never forced.
 - Losing (HP 0) shows a fail screen with Undo and Retry. Undo can step back out of death.
 
 ## 9. Stars (campaign)
 
-1. Moves ≤ par. Par = the solver's minimum moves to the exit (a level may loosen it).
-2. No damage taken. A healing lesson (`star: full-hp` in the level file) asks instead to finish at full HP, since its spikes can't be avoided.
-3. All gold: every gem and chest collected (kills are optional).
+Stars are about moves only (fewest moves is the goal):
 
-Stars add up over attempts: each one is kept once earned, so they needn't come in the same run. The results screen shows stars from earlier runs, faded and marked "earlier".
+1. ★★★: moves ≤ par. Par = the solver's minimum from the starting HP.
+2. ★★: moves ≤ par + max(2, ⌈par / 4⌉).
+3. ★: finished.
+
+Damage and treasure don't affect stars (3 HP is pressure enough). The best result per level is kept; a slower replay never takes stars away. Saves from before 0.9.0 keep the star counts they had.
+
+Every level names what it teaches (`teaches:` in its file), and its par route must use that idea; tools are needed for par (without them par is longer or the level can't be won) and hazards shape it (without them par is shorter). The campaign test checks this for every level and gauntlet floor (`src/levels/teaches.ts`).
 
 ## 9a. Progression
 
 - Chapters of 10 levels (six chapters, 60 levels). Level 1 is open; each level unlocks when the previous one is beaten.
-- **Gauntlets:** from chapter 2 on, each chapter's last level is a Gauntlet of 3 floors played in a row. HP carries over with +1 between floors (like runs). Stars count over the whole gauntlet: total moves within the summed par, no damage on any floor, every treasure on every floor. Leaving between floors starts the gauntlet over. Every floor after the first is winnable when entered with 2 HP.
+- **Gauntlets:** from chapter 2 on, each chapter's last level is a Gauntlet of 3 floors played in a row. HP carries over with no healing between floors (like runs). Stars count over the whole gauntlet by total moves; ★★★ is `run-par` (on the first floor's file), the fewest moves for the whole run with HP carried over (`src/levels/run-par.ts`), which can be more than the summed floor pars. Leaving between floors starts the gauntlet over. Every floor after the first is winnable when entered with 1 HP.
 - "Play" from the title screen opens, in one tap, the level the player was last in if it isn't beaten yet, otherwise the first unbeaten level.
-- Per level the save keeps: the stars earned (which ones, over all attempts), fewest moves, completions, and fastest time.
+- Per level the save keeps: the best star count, fewest moves, completions, and fastest time.
 
 ## 9a-2. Story
 
@@ -150,7 +154,7 @@ Stars add up over attempts: each one is kept once earned, so they needn't come i
 
 - Seeded by the UTC date; the same dungeon and par for everyone, whatever their die (see 9c). A 3-floor run with rising difficulty (rater bands 15-30, 25-42, 35-55).
 - From 2026-09-24 the daily may contain ice, archers and golems; earlier dates keep the original feature set so past dailies never change. Depths always may.
-- HP carries between floors, +1 per floor (cap 5). Floors 2 and 3 are generated to be winnable when entered with 2 HP, the lowest possible arrival HP (a floor is left with at least 1 HP, then heals 1).
+- HP carries between floors with no healing (start 3). Floors 2 and 3 are generated to be winnable when entered with 1 HP, the lowest possible arrival HP. Generated floors have no gems; chests appear only as obstacles.
 - Unlimited undo and retries. The first completion of the day is recorded for the streak and the share text; later plays are practice.
 - Leaving mid-run saves progress; coming back resumes the same floor.
 - Streak = consecutive UTC days with a completed daily. It shows through the day after the last completion and drops to 0 once a day is missed. No streak freezes or other pressure mechanics.
@@ -195,4 +199,4 @@ The engine is built so these can be added without touching the turn logic:
 - **More dice: d4, d8, d10.** A die shape is data (`DieShapeDef` in `src/engine/dice.ts`): its slots, which slot is top/bottom, which slot leads in each direction, and a permutation per roll. Each shape is compiled into an orientation table. Only the d6 exists today. How non-cube dice "roll" on a square grid is a design decision still to be made.
 - **Face upgrades and swaps.** The die's faces are a `loadout` (faces by home slot) separate from its orientation, so swapping or upgrading a face means changing the loadout. Upgraded faces are simply new face definitions (e.g. "Sword+", 4 damage).
 - **Face upgrades** (e.g. Sword+) as store items, using the same loadout mechanism as Freeze and Hook.
-- **Deferred fun ideas**, to revisit once the core loop is fun on its own: enemy intent arrows, hold-to-preview a move, hints from the solver, combos, die personality, Wordle-style share, more mechanics (pressure plates, teleporters), chapter bosses, daily rule twists, watching the par solution, a 3-star celebration.
+- **Deferred fun ideas**, to revisit once the core loop is fun on its own: enemy intent arrows, hold-to-preview a move, hints from the solver, combos, die personality, Wordle-style share, more mechanics (pressure plates, teleporters), chapter bosses, daily rule twists, a 3-star celebration. (Watching the par solution exists as a developer tool.)

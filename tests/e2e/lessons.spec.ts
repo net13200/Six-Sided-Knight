@@ -24,7 +24,7 @@ test.describe('lessons and how to play', () => {
     // The first tap shows the rest of the text; the second closes the card.
     await page.getByTestId('lesson-ok').click();
     await expect(card).toBeVisible();
-    await expect(card).toContainText('Roll onto the stairs to win.');
+    await expect(card).toContainText("that's what the stars are for.");
     await page.getByTestId('lesson-ok').click();
     await expect(card).toBeHidden();
     await page.keyboard.press('ArrowRight');

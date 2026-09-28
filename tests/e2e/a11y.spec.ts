@@ -15,7 +15,7 @@ test.describe('accessibility', () => {
     const announcer = page.getByTestId('announcer');
     await expect(announcer).toHaveAttribute('aria-live', 'polite');
     await page.keyboard.press('h');
-    await expect(announcer).toContainText('HP 5 of 5');
+    await expect(announcer).toContainText('HP 3 of 3');
     await expect(announcer).toContainText('Right: Sword leads');
     await page.keyboard.press('ArrowRight'); // Sword into the skeleton
     await expect(announcer).toContainText('Knocks out the Skeleton');

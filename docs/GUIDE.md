@@ -16,6 +16,8 @@ You are a die. Every move rolls you one tile, and **the face on the side you rol
 
 The first time you play a level with something new, a lesson card explains it; play starts when you tap "Got it". Once you've finished the tutorial, **Help** on the title screen has all the rules in one place.
 
+You have **3 HP**. Enemy hits, arrows and spikes cost 1 each.
+
 A bump into a wall (or a door without the Key) costs no turn. Labels next to the die show what each move would do before you make it.
 
 ## Faces
@@ -25,15 +27,15 @@ A bump into a wall (or a door without the Key) costs no turn. Labels next to the
 | Sword  | 3 damage                                                                        |                                                 |
 | Shield | 1 damage                                                                        | On top: blocks hits. Underneath: safe on spikes |
 | Bomb   | 2 damage plus 1 to enemies next to the target; the only face that hurts a Golem |                                                 |
-| Heart  | nothing                                                                         | Underneath on a pool: heals 2                   |
+| Heart  | nothing                                                                         | Underneath on a pool: heals 1                   |
 | Key    | Opens locked doors                                                              |                                                 |
 | Coin   | Opens chests (+30 gold)                                                         |                                                 |
 | Freeze | The enemy skips its next 2 turns                                                | Bought in the Forge (200)                       |
-| Hook   | Pulls an enemy or gem 2-3 tiles away to you                                     | Bought in the Forge (300)                       |
+| Hook   | Pulls an enemy 2-3 tiles away next to you                                       | Bought in the Forge (300)                       |
 
 ## Tiles
 
-Floor · **Wall** · **Spikes** (1 damage unless Shield is underneath) · **Healing pool** (Heart underneath heals 2, once) · **Locked door** (Key) · **Chest** (Coin) · **Gem** (+10 gold) · **Ice** (you slide on, same faces up, until normal floor or something stops you) · **Stairs** (win).
+Floor · **Wall** · **Spikes** (1 damage unless Shield is underneath) · **Healing pool** (Heart underneath heals 1, once) · **Locked door** (Key) · **Chest** (Coin) · **Ice** (you slide on, same faces up, until normal floor or something stops you) · **Stairs** (win).
 
 ## Enemies
 
@@ -46,12 +48,12 @@ Knocking out an enemy gives 10 gold (Golem 20) and your die rolls onto its tile.
 
 ## Stars
 
-Each level has three stars: finish in **par** moves or fewer, take **no damage**, and collect **every treasure**. You don't need them all at once: stars add up over your attempts, and the results screen shows the ones you earned earlier. On a healing level the second star is for finishing at **full HP** instead. Every star you earn for the first time pays **10 crowns**.
+Stars are about moves. Finish at **par** (the fewest moves possible) or better for ★★★, within a few moves of par for ★★, and anywhere for ★. Damage doesn't cost stars, but you only have 3 HP. Your best result on each level is kept, and every star you earn for the first time pays **10 crowns**.
 
 ## Modes
 
-- **Campaign:** 60 levels in six chapters. Each chapter from 2 on ends in a **Gauntlet**: three floors in a row, HP carried over (+1 between floors).
-- **Daily Roll:** three floors, the same for everyone each day (UTC). HP carries over. Keep a streak and share your result. Your own die is used; if it can't win a floor you're told, and you can change it between floors.
+- **Campaign:** 60 levels in six chapters. Each chapter from 2 on ends in a **Gauntlet**: three floors in a row, HP carried over with no healing between floors. Its ★★★ is the fewest moves for the whole run.
+- **Daily Roll:** three floors, the same for everyone each day (UTC). HP carries over, with no healing between floors: one mistake too many ends the run. Keep a streak and share your result. Your own die is used; if it can't win a floor you're told, and you can change it between floors.
 - **Depths:** endless floors that get harder. Record: your deepest floor.
 
 ## The Forge
