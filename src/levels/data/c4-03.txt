@@ -1,15 +1,15 @@
 id: c4-03
 name: Splash Shot
-par: 6
+par: 11
 hint: A Bomb's splash reaches around corners
 teaches: splash, archer
 ---
 ########
+#.k....#
+#...>..#
 #......#
-#.@....#
+##.a...#
+#.#..#.#
 #......#
-##.k####
-##.a.>##
-########
-########
+#.@..#k#
 ########
