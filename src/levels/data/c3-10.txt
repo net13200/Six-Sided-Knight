@@ -2,6 +2,7 @@ id: c3-10
 name: Vault Gauntlet
 par: 14
 hint: 3 floors in a row. HP carries over
+teaches: golem
 ---
 ########
 #...#*@#

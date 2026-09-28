@@ -1,6 +1,7 @@
 id: c4-09
 name: Arrow Storm
 par: 16
+teaches: archer
 ---
 ########
 #*.....#

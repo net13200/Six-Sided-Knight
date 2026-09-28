@@ -20,6 +20,7 @@
  *   name: First Roll
  *   par: 6
  *   enemies: 2,3 hp=1; 4,3 ready    (optional overrides: hp, or data flags/values)
+ *   teaches: splash                  (optional: what the par solution must use)
  *   ---
  *   ########
  *   #@...>.#
@@ -56,9 +57,10 @@ export interface LevelData {
   /** Die faces by home slot, for levels that swap faces. Default: rules.config.defaultLoadout. */
   readonly loadout?: readonly FaceId[];
   /**
-   * The second star is "finish at full HP" instead of "take no damage" (for
-   * levels where getting hurt is the point, e.g. teaching healing).
+   * What the level is about (e.g. "splash", "freeze-stopper"). Content-level
+   * names, checked by the campaign tests: the par solution must use the idea.
    */
+  readonly teaches?: readonly string[];
 }
 
 export class LevelError extends Error {
@@ -92,6 +94,7 @@ export function parseTextLevel(text: string): LevelData {
     start?: Record<string, string>;
     loadout?: string[];
     enemies?: LevelEnemyOverride[];
+    teaches?: string[];
   } = {
     schema: LEVEL_SCHEMA_VERSION,
     id: meta.id ?? '',
@@ -111,6 +114,7 @@ export function parseTextLevel(text: string): LevelData {
   }
   if (meta.loadout !== undefined) data.loadout = meta.loadout.split(/\s+/).filter(Boolean);
   if (meta.enemies !== undefined) data.enemies = parseEnemyOverrides(meta.enemies);
+  if (meta.teaches !== undefined) data.teaches = meta.teaches.split(/[\s,]+/).filter(Boolean);
   return data;
 }
 

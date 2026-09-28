@@ -3,6 +3,7 @@ name: Crypt Gauntlet
 par: 11
 hint: 3 floors in a row. HP carries over
 loadout: Shield Heart Bomb Key Sword Freeze
+teaches: freeze
 ---
 ########
 #k@..a.#

@@ -3,6 +3,7 @@ name: The Throne
 par: 10
 hint: 3 floors in a row. HP carries over
 loadout: Shield Hook Bomb Key Sword Freeze
+teaches: hook-enemy
 ---
 ########
 #====#>#

@@ -2,6 +2,7 @@ id: c1-01
 name: First Roll
 par: 5
 hint: Swipe to roll to the stairs
+teaches: move
 ---
 ########
 ########

@@ -1,6 +1,7 @@
 id: c2-10-2
 name: Hall Gauntlet II
 par: 10
+teaches: slide
 ---
 ########
 #==#===#

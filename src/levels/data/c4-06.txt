@@ -1,6 +1,7 @@
 id: c4-06
 name: Frozen Sentry
 par: 13
+teaches: archer, slide
 ---
 ########
 #.=====#

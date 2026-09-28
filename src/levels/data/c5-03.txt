@@ -3,6 +3,7 @@ name: Ice Statue
 par: 8
 hint: A frozen enemy makes a fine stopper
 loadout: Shield Heart Bomb Key Sword Freeze
+teaches: freeze-stopper
 ---
 ########
 #==*k=.#

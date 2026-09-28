@@ -1,6 +1,7 @@
 id: c4-10-3
 name: Keep Gauntlet III
 par: 10
+teaches: archer, slide
 ---
 ########
 #a@#===#

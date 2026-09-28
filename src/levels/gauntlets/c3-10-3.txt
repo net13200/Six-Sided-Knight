@@ -1,6 +1,7 @@
 id: c3-10-3
 name: Vault Gauntlet III
 par: 15
+teaches: golem
 ---
 ########
 ##.....#

@@ -2,6 +2,7 @@ id: c6-04
 name: Snatch
 par: 10
 loadout: Shield Hook Bomb Key Sword Coin
+teaches: hook-gem
 ---
 ########
 #.....*#

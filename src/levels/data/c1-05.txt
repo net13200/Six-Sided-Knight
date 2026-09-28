@@ -2,6 +2,7 @@ id: c1-05
 name: Locked
 par: 14
 hint: Roll the Key into the door
+teaches: key
 ---
 ########
 #......#

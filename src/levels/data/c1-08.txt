@@ -3,6 +3,7 @@ name: Spring
 par: 21
 hint: Hurt? Roll Heart-down into pools
 star: full-hp
+teaches: heal
 ---
 ########
 #@.^^..#

@@ -1,6 +1,7 @@
 id: c4-07
 name: Ambush
 par: 17
+teaches: archer
 ---
 ########
 #..#>.##

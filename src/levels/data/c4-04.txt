@@ -2,6 +2,7 @@ id: c4-04
 name: Skate Past
 par: 6
 hint: Arrows fly only after you stop
+teaches: archer, slide
 ---
 ########
 #......#

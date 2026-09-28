@@ -3,6 +3,7 @@ name: Last Stand
 par: 12
 hint: Freeze and Hook, together
 loadout: Shield Hook Bomb Key Sword Freeze
+teaches: freeze, hook-enemy
 ---
 ########
 #====#=#

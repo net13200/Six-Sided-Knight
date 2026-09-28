@@ -2,6 +2,7 @@ id: c1-04
 name: Shield Up
 par: 12
 hint: Shield on top blocks hits
+teaches: block
 ---
 ########
 #......#

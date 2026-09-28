@@ -2,6 +2,7 @@ id: c3-01
 name: Stone Guard
 par: 11
 hint: Only Bombs crack a Golem
+teaches: golem
 ---
 ########
 #......#

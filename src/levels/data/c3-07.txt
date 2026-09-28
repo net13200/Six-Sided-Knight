@@ -1,6 +1,7 @@
 id: c3-07
 name: Rockfall
 par: 15
+teaches: golem, splash
 ---
 ########
 #......#

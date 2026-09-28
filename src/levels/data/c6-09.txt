@@ -2,6 +2,7 @@ id: c6-09
 name: Steps of the Throne
 par: 16
 loadout: Shield Hook Bomb Key Sword Freeze
+teaches: hook-enemy
 ---
 ########
 #=#==#=#

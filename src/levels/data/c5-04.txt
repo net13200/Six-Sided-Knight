@@ -2,6 +2,7 @@ id: c5-04
 name: Frostbite
 par: 7
 loadout: Shield Heart Bomb Key Sword Freeze
+teaches: freeze, slide
 ---
 ########
 #=#*##.#

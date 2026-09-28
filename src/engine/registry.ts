@@ -117,6 +117,14 @@ export class Registry<T> {
     return this;
   }
 
+  /** Swaps a registered item for a variant (tools and tests: "what if this mechanic were off?"). */
+  replace(item: T): this {
+    const key = this.keyOf(item);
+    if (!this.items.has(key)) throw new Error(`${this.label} '${key}' is not registered`);
+    this.items.set(key, item);
+    return this;
+  }
+
   get(key: string): T {
     const item = this.items.get(key);
     if (!item) throw new Error(`Unknown ${this.label}: '${key}'`);

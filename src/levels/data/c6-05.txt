@@ -3,6 +3,7 @@ name: Fishing Hole
 par: 9
 hint: Hook works across ice too
 loadout: Shield Hook Bomb Key Sword Coin
+teaches: hook-gem, slide
 ---
 ########
 #=.@===#

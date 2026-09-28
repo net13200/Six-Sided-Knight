@@ -1,6 +1,7 @@
 id: c4-05
 name: Watchtower
 par: 11
+teaches: archer, block
 ---
 ########
 #@.....#

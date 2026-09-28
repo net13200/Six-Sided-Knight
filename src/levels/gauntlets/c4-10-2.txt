@@ -1,6 +1,7 @@
 id: c4-10-2
 name: Keep Gauntlet II
 par: 16
+teaches: archer
 ---
 ########
 #...@..#

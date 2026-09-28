@@ -1,6 +1,7 @@
 id: c2-09
 name: Glacier
 par: 13
+teaches: slide-enemy
 ---
 ########
 #==@===#

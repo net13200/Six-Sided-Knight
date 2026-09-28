@@ -1,6 +1,7 @@
 id: c4-08
 name: Guarded Gold
 par: 15
+teaches: archer, coin
 ---
 ########
 #.....>#

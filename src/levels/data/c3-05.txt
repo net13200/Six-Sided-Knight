@@ -1,6 +1,7 @@
 id: c3-05
 name: Gilded Cage
 par: 6
+teaches: golem, coin
 ---
 ########
 #*....*#

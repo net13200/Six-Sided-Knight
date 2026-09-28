@@ -1,6 +1,7 @@
 id: c3-06
 name: Strongroom
 par: 15
+teaches: golem
 ---
 ########
 #......#

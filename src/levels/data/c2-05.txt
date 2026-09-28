@@ -2,6 +2,7 @@ id: c2-05
 name: Skid Row
 par: 12
 hint: A slide stops next to an enemy
+teaches: slide-enemy
 ---
 ########
 #@.....#
