@@ -97,6 +97,8 @@ export class MenuScene implements Scene {
       ),
       place(muteButton(this.game), 272, 415, 64, 62),
     );
+    // Once, after an update that rebuilt the campaign.
+    if (this.game.save.data.campaignResetNotice) this.openCampaignNotice();
     // A text reference for players who have finished the tutorial.
     if (this.game.tutorialDone) {
       ui.append(
@@ -210,6 +212,40 @@ export class MenuScene implements Scene {
       456,
     );
     this.ui.append(this.sheet);
+  }
+
+  /** Explains, once, that the campaign was rebuilt and progress starts fresh. */
+  private openCampaignNotice(): void {
+    if (this.sheet || !this.ui) return;
+    // Shown once, however it's closed.
+    this.game.save.update((d) => (d.campaignResetNotice = false));
+    const ok = () => this.closeSettings();
+    this.sheet = place(
+      el('div', { className: 'sheet', testId: 'campaign-notice' }, [
+        el('h2', { text: 'A new campaign' }),
+        el('p', {
+          text: 'Every level has been rebuilt: 3 HP, stars for moves, and each level about its own idea. So the campaign starts fresh.',
+        }),
+        el('p', {
+          text: 'Your crowns, faces, custom die, skins, Daily streak and Depths record are all kept.',
+        }),
+        el('button', {
+          className: 'btn primary',
+          testId: 'campaign-notice-ok',
+          text: "Let's roll",
+          onClick: ok,
+        }),
+      ]),
+      24,
+      120,
+      292,
+      0,
+    );
+    this.sheet.style.height = 'auto';
+    this.sheet.setAttribute('role', 'dialog');
+    this.sheet.setAttribute('aria-modal', 'true');
+    this.ui.append(this.sheet);
+    this.sheet.querySelector('button')?.focus();
   }
 
   /** "How to play": the rules as plain text. */

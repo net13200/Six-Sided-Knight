@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CAMPAIGN_EDITION,
   LEGACY_SETTINGS_KEY,
   SAVE_KEY,
   SAVE_VERSION,
@@ -7,8 +8,11 @@ import {
   freshSave,
   loadSave,
   migrate,
+  normalize,
 } from '../../src/meta/save';
 import { MemoryStorage } from '../../src/platform/memory';
+import { SKINS, isSkinUnlocked, skinById } from '../../src/meta/skins';
+import { totalStars } from '../../src/meta/progress';
 
 const NOW = 1_700_000_000_000;
 
@@ -52,6 +56,7 @@ describe('save loading', () => {
     const storage = new MemoryStorage();
     const future = JSON.stringify({
       version: SAVE_VERSION + 1,
+      campaign: CAMPAIGN_EDITION,
       levels: { x: { stars: 3 } },
       fancy: true,
     });
@@ -69,6 +74,7 @@ describe('save loading', () => {
       SAVE_KEY,
       JSON.stringify({
         version: 1,
+        campaign: CAMPAIGN_EDITION,
         levels: { a: { stars: 9, bestMoves: -4 }, b: null },
         settings: {},
       }),
@@ -94,7 +100,7 @@ describe('save loading', () => {
     }
   });
 
-  it('migrates a 0.3.0 (v1) save to the current version without losing progress', () => {
+  it('migrates a 0.3.0 (v1) save to the current version (the old campaign resets)', () => {
     const storage = new MemoryStorage();
     const v1 = {
       version: 1,
@@ -108,10 +114,12 @@ describe('save loading', () => {
     const store = new SaveStore(storage, NOW);
     expect(store.outcome).toBe('migrated');
     expect(store.data.version).toBe(SAVE_VERSION);
-    expect(store.data.levels).toEqual(v1.levels);
+    // Every level is new since 0.9.0: old level progress starts fresh, its stars still count for skins.
+    expect(store.data.levels).toEqual({});
+    expect(store.data.starsBeforeReset).toBe(3);
     expect(store.data.settings).toMatchObject(v1.settings);
     expect(store.data.settings.reduceMotion).toBeNull(); // new settings get defaults
-    expect(store.data.lastLevelId).toBe('c1-02');
+    expect(store.data.lastLevelId).toBeNull();
     expect(store.data.createdAt).toBe(123);
     expect(store.data.daily).toEqual({
       lastDate: null,
@@ -185,3 +193,68 @@ describe('save loading', () => {
     expect(store.data.settings.muted).toBe(true); // kept in memory
   });
 });
+
+describe('campaign reset (0.9.0: every level rebuilt)', () => {
+  const old = () => ({
+    version: 3,
+    createdAt: 1,
+    wallet: { crowns: 250, earned: 400, spent: 150 },
+    owned: ['Freeze'],
+    die: ['Shield', 'Heart', 'Bomb', 'Key', 'Sword', 'Freeze'],
+    skin: 'moss',
+    levels: {
+      'c1-01': { stars: 3, bestMoves: 5, completions: 2, bestTimeMs: 900 },
+      'c1-02': { stars: 2, bestMoves: 6, completions: 1, bestTimeMs: 900 },
+    },
+    lastLevelId: 'c1-02',
+    hints: { inspect: true, 'lesson:c1-01': true, 'story:intro': true },
+    daily: { lastDate: '2026-09-20', streak: 4, bestStreak: 9, results: {}, inProgress: null },
+    depths: { bestFloor: 7, runs: 3, inProgress: null },
+  });
+
+  it('clears level progress and read lessons, keeps everything else', () => {
+    const s = normalize(old(), 0);
+    expect(s.levels).toEqual({});
+    expect(s.lastLevelId).toBeNull();
+    expect(s.hints).toEqual({ inspect: true, 'story:intro': true });
+    expect(s.wallet.crowns).toBe(250);
+    expect(s.owned).toEqual(['Freeze']);
+    expect(s.die).toEqual(['Shield', 'Heart', 'Bomb', 'Key', 'Sword', 'Freeze']);
+    expect(s.daily.bestStreak).toBe(9);
+    expect(s.depths.bestFloor).toBe(7);
+    expect(s.campaign).toBe(CAMPAIGN_EDITION);
+    expect(s.starsBeforeReset).toBe(5);
+    expect(s.campaignResetNotice).toBe(true);
+  });
+
+  it('happens once: new progress is kept on the next load', () => {
+    const s = normalize(old(), 0);
+    s.levels['c1-01'] = { stars: 1, bestMoves: 9, completions: 1, bestTimeMs: 1 };
+    const again = normalize(JSON.parse(JSON.stringify(s)), 0);
+    expect(again.levels['c1-01']!.stars).toBe(1);
+  });
+
+  it('new players see no notice', () => {
+    expect(freshSave(0).campaignResetNotice).toBe(false);
+    expect(normalize({ version: 3, createdAt: 1 }, 0).campaignResetNotice).toBe(false);
+  });
+
+  it('skins unlocked by the old stars stay unlocked', () => {
+    const s = normalize({ ...old(), levels: bigLevels(12) }, 0); // 36 stars: Moss (30) was unlocked
+    expect(totalStars(s)).toBe(0);
+    expect(isSkinUnlocked(s, skinById('moss'))).toBe(true);
+    expect(
+      isSkinUnlocked(
+        s,
+        SKINS.find((k) => k.unlock.stars === 60)!,
+      ),
+    ).toBe(false);
+  });
+});
+
+function bigLevels(n: number) {
+  const out: Record<string, unknown> = {};
+  for (let i = 0; i < n; i++)
+    out[`x-${i}`] = { stars: 3, bestMoves: 1, completions: 1, bestTimeMs: 1 };
+  return out;
+}

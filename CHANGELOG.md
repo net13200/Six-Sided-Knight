@@ -4,6 +4,7 @@ Versions follow [semantic versioning](https://semver.org). The version shown in 
 
 ## 0.9.0 — Every move counts
 
+- **The campaign starts fresh.** Every level is new, so level progress resets once on updating (a note on the title screen says so). Crowns, bought faces, your custom die, skins (star skins stay unlocked), Daily streaks and the Depths record are kept.
 - **Stars are about moves.** ★★★ at par (the fewest moves possible), ★★ within a few moves of it (par + a quarter, at least 2), ★ for finishing. Damage and treasure no longer cost stars. Your best result is kept; old saves keep their stars.
 - **3 HP, and it's tight.** Every hit, arrow and spike costs 1 of your 3 HP. Pools heal 1.
 - **No healing between floors.** Gauntlets, the Daily Roll and Depths carry your HP over as it is, so a run can be lost. Every later floor is still winnable from 1 HP. A gauntlet's ★★★ is the fewest moves for the whole run with HP carried over.

@@ -61,3 +61,41 @@ test.describe('lessons and how to play', () => {
     await expect(sheet).toHaveCount(0);
   });
 });
+
+test.describe('the rebuilt campaign', () => {
+  test('an older save starts the campaign fresh, keeps crowns, and says so once', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem('seeded')) return;
+      sessionStorage.setItem('seeded', '1');
+      localStorage.setItem(
+        'ssk.save',
+        JSON.stringify({
+          version: 3,
+          createdAt: 1,
+          wallet: { crowns: 120, earned: 120, spent: 0 },
+          levels: { 'c1-01': { stars: 3, bestMoves: 5, completions: 1, bestTimeMs: 1 } },
+          lastLevelId: 'c1-02',
+        }),
+      );
+    });
+    await page.goto('/');
+    await expect(page.getByTestId('campaign-notice')).toContainText('A new campaign');
+    await page.getByTestId('campaign-notice-ok').click();
+    await expect(page.getByTestId('campaign-notice')).toHaveCount(0);
+    await expect(page.getByTestId('play')).toContainText('Play');
+    const save = await page.evaluate(() => JSON.parse(localStorage.getItem('ssk.save')!));
+    expect(save.levels).toEqual({});
+    expect(save.wallet.crowns).toBe(120);
+    await page.reload();
+    await expect.poll(() => scene(page)).toBe('menu');
+    await expect(page.getByTestId('campaign-notice')).toHaveCount(0);
+  });
+
+  test('a new player never sees the notice', async ({ page }) => {
+    await page.goto('/');
+    await expect.poll(() => scene(page)).toBe('menu');
+    await expect(page.getByTestId('campaign-notice')).toHaveCount(0);
+  });
+});

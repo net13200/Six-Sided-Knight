@@ -48,7 +48,10 @@ test.describe('story', () => {
           completions: 1,
           bestTimeMs: 9000,
         };
-      localStorage.setItem('ssk.save', JSON.stringify({ version: 3, createdAt: 1, levels }));
+      localStorage.setItem(
+        'ssk.save',
+        JSON.stringify({ version: 3, campaign: 2, createdAt: 1, levels }),
+      );
     });
     await page.goto('/');
     await expect(page.getByTestId('play')).toContainText('level 11');

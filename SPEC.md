@@ -123,6 +123,7 @@ Every level names what it teaches (`teaches:` in its file), and its par route mu
 - Chapters of 10 levels (six chapters, 60 levels). Level 1 is open; each level unlocks when the previous one is beaten.
 - **Gauntlets:** from chapter 2 on, each chapter's last level is a Gauntlet of 3 floors played in a row. HP carries over with no healing between floors (like runs). Stars count over the whole gauntlet by total moves; ★★★ is `run-par` (on the first floor's file), the fewest moves for the whole run with HP carried over (`src/levels/run-par.ts`), which can be more than the summed floor pars. Leaving between floors starts the gauntlet over. Every floor after the first is winnable when entered with 1 HP.
 - "Play" from the title screen opens, in one tap, the level the player was last in if it isn't beaten yet, otherwise the first unbeaten level.
+- The save records the campaign edition (`campaign`, now 2). A save from an older edition resets its level progress once (levels, where Play continues, read lessons), keeps everything else, remembers its old star total so star skins stay unlocked (`starsBeforeReset`), and the title screen explains it once.
 - Per level the save keeps: the best star count, fewest moves, completions, and fastest time.
 
 ## 9a-2. Story

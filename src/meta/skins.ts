@@ -112,7 +112,9 @@ export function skinById(id: string): SkinDef {
 
 export function isSkinUnlocked(save: SaveData, skin: SkinDef): boolean {
   const { stars, streak } = skin.unlock;
-  if (stars !== undefined && totalStars(save) < stars) return false;
+  // Stars held before a campaign reset still count, so no skin is lost.
+  if (stars !== undefined && Math.max(totalStars(save), save.starsBeforeReset) < stars)
+    return false;
   if (streak !== undefined && save.daily.bestStreak < streak) return false;
   return true;
 }

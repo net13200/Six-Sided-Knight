@@ -116,11 +116,22 @@ export interface SaveV3 extends Omit<SaveV2, 'version'> {
   die: string[] | null;
   /** Equipped cosmetic die skin. */
   skin: string;
+  /**
+   * Which edition of the campaign the level progress belongs to. When the
+   * campaign is rebuilt (0.9.0: every level new), older progress is cleared.
+   */
+  campaign: number;
+  /** Stars held before a campaign reset: skins they unlocked stay unlocked. */
+  starsBeforeReset: number;
+  /** The campaign was just reset: the title screen explains it once. */
+  campaignResetNotice: boolean;
 }
 
 export type SaveData = SaveV3;
 
 export const CROWNS_PER_STAR = 10;
+/** The current campaign edition (bump when every level changes). */
+export const CAMPAIGN_EDITION = 2;
 
 function freshDaily(): DailyState {
   return { lastDate: null, streak: 0, bestStreak: 0, results: {}, inProgress: null };
@@ -137,6 +148,9 @@ export function freshSave(now: number): SaveData {
     owned: [],
     die: null,
     skin: 'classic',
+    campaign: CAMPAIGN_EDITION,
+    starsBeforeReset: 0,
+    campaignResetNotice: false,
     daily: freshDaily(),
     depths: freshDepths(),
     hints: {},
@@ -163,6 +177,29 @@ export function freshSave(now: number): SaveData {
       playTimeMs: 0,
       faceMoves: {},
     },
+  };
+}
+
+/**
+ * Progress from an older campaign edition doesn't fit the new levels: clear
+ * it (level records, where Play continues, which lessons were read). Crowns,
+ * faces, the custom die, skins (star skins stay unlocked), Daily streaks,
+ * Depths records and lifetime stats are kept.
+ */
+export function resetOldCampaign(save: SaveData): SaveData {
+  if (save.campaign >= CAMPAIGN_EDITION) return save;
+  const stars = Object.values(save.levels).reduce((n, r) => n + r.stars, 0);
+  const hadProgress = Object.keys(save.levels).length > 0;
+  const hints: Record<string, boolean> = {};
+  for (const [k, v] of Object.entries(save.hints)) if (!k.startsWith('lesson:')) hints[k] = v;
+  return {
+    ...save,
+    levels: {},
+    lastLevelId: null,
+    hints,
+    campaign: CAMPAIGN_EDITION,
+    starsBeforeReset: Math.max(save.starsBeforeReset, stars),
+    campaignResetNotice: hadProgress,
   };
 }
 
@@ -258,7 +295,7 @@ export function normalize(data: Json, now: number): SaveData {
   const stats = { ...base.stats, ...(d.stats ?? {}) };
   const faceMoves: Record<string, number> = {};
   for (const [k, v] of Object.entries(stats.faceMoves ?? {})) faceMoves[k] = clampInt(v, 0, 1e9);
-  return {
+  return resetOldCampaign({
     version: 3,
     wallet: {
       crowns: clampInt(wallet.crowns, 0, 1e9),
@@ -268,6 +305,10 @@ export function normalize(data: Json, now: number): SaveData {
     owned,
     die,
     skin: typeof d.skin === 'string' ? d.skin : 'classic',
+    // Saves from before campaign editions belong to the first campaign.
+    campaign: clampInt(d.campaign ?? 1, 1, 1e6),
+    starsBeforeReset: clampInt(d.starsBeforeReset, 0, 1e6),
+    campaignResetNotice: d.campaignResetNotice === true,
     hints,
     daily: {
       ...daily,
@@ -287,7 +328,7 @@ export function normalize(data: Json, now: number): SaveData {
     levels,
     lastLevelId: typeof d.lastLevelId === 'string' ? d.lastLevelId : null,
     stats: { ...stats, faceMoves },
-  };
+  });
 }
 
 function normalizeSettings(s: Settings): Settings {
