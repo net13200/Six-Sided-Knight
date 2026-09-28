@@ -128,7 +128,7 @@ describe('save loading', () => {
       results: {},
       inProgress: null,
     });
-    expect(store.data.depths).toEqual({ bestFloor: 0, runs: 0, inProgress: null });
+    expect(store.data.depths).toEqual({ bestFloor: 0, runs: 0, lastFloor: null, inProgress: null });
     expect(JSON.parse(storage.get(SAVE_KEY)!).version).toBe(SAVE_VERSION);
     // The 3 stars already earned pay out once.
     expect(store.data.wallet).toEqual({ crowns: 30, earned: 30, spent: 0 });
@@ -171,7 +171,36 @@ describe('save loading', () => {
       }),
     );
     const { save } = loadSave(storage, NOW);
-    expect(save.depths).toEqual({ bestFloor: 4, runs: 2, inProgress: null });
+    expect(save.depths).toEqual({ bestFloor: 4, runs: 2, lastFloor: null, inProgress: null });
+  });
+
+  it('keeps a Depths floor in progress (its moves) and drops a malformed one', () => {
+    const storage = new MemoryStorage();
+    const run = { key: '7', floor: 3, hp: 2, moves: 20, stars: 5, path: 'NNES' };
+    storage.set(
+      SAVE_KEY,
+      JSON.stringify({
+        ...freshSave(0),
+        depths: { bestFloor: 4, runs: 2, lastFloor: 3, inProgress: run },
+      }),
+    );
+    expect(loadSave(storage, NOW).save.depths).toEqual({
+      bestFloor: 4,
+      runs: 2,
+      lastFloor: 3,
+      inProgress: run,
+    });
+    storage.set(
+      SAVE_KEY,
+      JSON.stringify({ ...freshSave(0), depths: { inProgress: { ...run, path: 'NXQ' } } }),
+    );
+    expect(loadSave(storage, NOW).save.depths.inProgress).toEqual({
+      key: '7',
+      floor: 3,
+      hp: 2,
+      moves: 20,
+      stars: 5,
+    });
   });
 
   it('keeps one-time hint flags and drops junk', () => {

@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test';
-import { gameState, playCurrentLevel, scene, trackErrors } from './helpers';
+import {
+  KEY,
+  gameState,
+  losingPathFrom,
+  playCurrentLevel,
+  scene,
+  solveCurrent,
+  trackErrors,
+  waitForMoves,
+} from './helpers';
 
 test.describe('Daily Roll and Depths', () => {
   let errors: string[];
@@ -69,10 +78,25 @@ test.describe('Daily Roll and Depths', () => {
     await page.getByTestId('floor-next').click();
     await expect.poll(() => scene(page), { timeout: 15_000 }).toBe('play');
     expect((await gameState(page)).levelId).toBe('depths-2');
-    // Leave mid-floor: the run waits in the hub.
+    // One life: no Undo or Retry, and the keys do nothing.
+    await expect(page.getByTestId('undo')).toHaveCount(0);
+    await expect(page.getByTestId('retry')).toHaveCount(0);
+    const [first] = await solveCurrent(page);
+    await page.keyboard.press(KEY[first!]);
+    await waitForMoves(page, 1);
+    await page.keyboard.press('z');
+    await page.keyboard.press('r');
+    await waitForMoves(page, 1);
+    // Leave mid-floor: the run waits in the hub, and the floor resumes where it was.
     await page.getByTestId('menu').click();
     await expect.poll(() => scene(page)).toBe('depths');
     await expect(page.getByTestId('depths-start')).toContainText('Continue floor 2');
+    await page.reload();
+    await page.getByTestId('depths').click();
+    await page.getByTestId('depths-start').click();
+    await expect.poll(() => scene(page), { timeout: 15_000 }).toBe('play');
+    await waitForMoves(page, 1);
+    await page.getByTestId('menu').click();
     await page.getByTestId('back').click();
     await expect(page.getByTestId('depths')).toContainText('on floor 2');
     await page.getByTestId('depths').click();
@@ -80,6 +104,26 @@ test.describe('Daily Roll and Depths', () => {
     await page.getByTestId('depths-surface').click();
     await expect(page.getByTestId('depths-start')).toContainText('Descend');
     await page.getByTestId('back').click();
-    await expect(page.getByTestId('depths')).toContainText('best floor 1');
+    await expect(page.getByTestId('depths')).toContainText('best 1 floors');
+  });
+
+  test('depths: knocked out ends the run and keeps the record', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('depths').click();
+    await page.getByTestId('depths-start').click();
+    await playCurrentLevel(page);
+    await expect.poll(() => scene(page), { timeout: 5000 }).toBe('floor');
+    await page.getByTestId('floor-next').click();
+    await expect.poll(() => scene(page), { timeout: 15_000 }).toBe('play');
+    // Walk into trouble until the die falls.
+    for (const dir of losingPathFrom(await gameState(page), 20))
+      await page.keyboard.press(KEY[dir]);
+    await expect.poll(() => scene(page), { timeout: 5000 }).toBe('floor');
+    await expect(page.getByTestId('floor-over')).toBeVisible();
+    const depths = await page.evaluate(() => JSON.parse(localStorage.getItem('ssk.save')!).depths);
+    expect(depths).toMatchObject({ bestFloor: 1, lastFloor: 1, inProgress: null });
+    await page.getByTestId('floor-over').click();
+    await expect.poll(() => scene(page)).toBe('depths');
+    await expect(page.getByTestId('depths-start')).toContainText('Descend');
   });
 });

@@ -186,7 +186,7 @@ Use **Copy data (JSON)** to export the raw log. The maths lives in `src/meta/kpi
 
 ### Watching a solution (developer mode)
 
-In developer mode (`#debug` or `?debug`), every level shows a dashed **▶ Par** button at the bottom left of the board (or press **P**). The solver works out the par route (fewest moves) in the worker, and it plays from the level's start with the usual animations. The bar at the top has pause/play, **Step**, speed (×1, ×2, ×4) and **Stop** (back to the start, ready to play for real). It works on campaign levels, gauntlet floors, and Daily Roll and Depths floors.
+In developer mode (`#debug` or `?debug`), every level shows a dashed **▶ Par** button at the bottom left of the board (or press **P**). The solver works out the par route (fewest moves) in the worker, and it plays from the level's start with the usual animations. The bar at the top has pause/play, **Step**, speed (×1, ×2, ×4) and **Stop** (back to the start, ready to play for real). It works on campaign levels, gauntlet floors and Daily Roll floors (not in the Depths, which has no second chances).
 
 **Secret combo (regular game, no debug mode needed):** tap the level title 5 times within 2 seconds, or press **Shift+P**. It opens the same player. A watched run never counts: no stars, crowns, stats or analytics, and reaching the stairs doesn't open the results. The code is in `src/game/scenes/watch.ts`; the solver request is `LevelService.solve` (`src/gen/service.ts`).
 

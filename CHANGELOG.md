@@ -2,6 +2,12 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## Unreleased
+
+- **The Depths: one life.** No Undo, no Retry, and no peeking at the solution. Being knocked out ends the run on the spot and shows how deep you got; your high score (most floors cleared in one run) and your last run are saved. Leaving mid-floor keeps every move you made, so coming back picks up exactly where you were.
+- **The Depths start hard.** Floor 1 is now medium (like a Daily Roll's second floor) and difficulty climbs every floor to the hardest band by floor 10 (was floor 13). Every floor is still winnable from 1 HP.
+- **Stage 34 (Skate Past):** the archer and the stairs sit lower, with the rink rebuilt around them.
+
 ## 0.9.0 — Every move counts
 
 - **The campaign starts fresh.** Every level is new, so level progress resets once on updating (a note on the title screen says so). Crowns, bought faces, your custom die, skins (star skins stay unlocked), Daily streaks and the Depths record are kept.

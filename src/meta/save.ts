@@ -72,6 +72,11 @@ export interface RunProgress {
   stars: number;
   /** The die this run is played with (fixed for the whole run). Missing = default. */
   die?: string[];
+  /**
+   * Depths: moves already played on the current floor (N/E/S/W letters), so
+   * leaving and coming back resumes the floor where it was, not from scratch.
+   */
+  path?: string;
 }
 
 export interface DailyState {
@@ -85,9 +90,11 @@ export interface DailyState {
 }
 
 export interface DepthsState {
-  /** Deepest floor cleared. */
+  /** Deepest floor cleared (the high score). */
   bestFloor: number;
   runs: number;
+  /** Floors cleared in the last run that ended (null before the first one ends). */
+  lastFloor: number | null;
   inProgress: RunProgress | null;
 }
 
@@ -138,7 +145,7 @@ function freshDaily(): DailyState {
 }
 
 function freshDepths(): DepthsState {
-  return { bestFloor: 0, runs: 0, inProgress: null };
+  return { bestFloor: 0, runs: 0, lastFloor: null, inProgress: null };
 }
 
 export function freshSave(now: number): SaveData {
@@ -321,6 +328,7 @@ export function normalize(data: Json, now: number): SaveData {
       ...depths,
       bestFloor: clampInt(depths.bestFloor, 0, 1e6),
       runs: clampInt(depths.runs, 0, 1e9),
+      lastFloor: depths.lastFloor == null ? null : clampInt(depths.lastFloor, 0, 1e6),
       inProgress: normalizeRun(depths.inProgress),
     },
     createdAt: typeof d.createdAt === 'number' ? d.createdAt : base.createdAt,
@@ -358,6 +366,7 @@ function normalizeRun(r: unknown): RunProgress | null {
     ...(Array.isArray(x.die) && x.die.every((f) => typeof f === 'string')
       ? { die: [...x.die] }
       : {}),
+    ...(typeof x.path === 'string' && /^[NESW]*$/.test(x.path) ? { path: x.path } : {}),
   };
 }
 

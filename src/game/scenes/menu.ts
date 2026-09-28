@@ -136,7 +136,7 @@ export class MenuScene implements Scene {
     const best = this.game.save.data.depths.bestFloor;
     const run = this.game.save.data.depths.inProgress;
     if (run) return `on floor ${run.floor}`;
-    return best > 0 ? `best floor ${best}` : 'endless';
+    return best > 0 ? `best ${best} floors` : 'one life, endless';
   }
 
   private openSettings(): void {

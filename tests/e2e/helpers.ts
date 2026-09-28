@@ -22,7 +22,12 @@ export function solutionFor(index: number): Dir[] {
 
 /** Breadth-first search for any input sequence that loses the level. */
 export function losingPathFor(index: number, maxDepth = 14): Dir[] {
-  let frontier: Array<[GameState, Dir[]]> = [[createState(rules, campaign[index]!), []]];
+  return losingPathFrom(createState(rules, campaign[index]!), maxDepth);
+}
+
+/** Breadth-first search for any input sequence that loses from this state. */
+export function losingPathFrom(start: GameState, maxDepth = 14): Dir[] {
+  let frontier: Array<[GameState, Dir[]]> = [[start, []]];
   for (let d = 0; d < maxDepth; d++) {
     const next: Array<[GameState, Dir[]]> = [];
     for (const [s, path] of frontier) {

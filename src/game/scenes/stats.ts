@@ -93,7 +93,7 @@ export class StatsScene implements Scene {
     const runs: Array<[string, string]> = [
       ['Daily streak', `${currentStreak(save, today)} (best ${save.daily.bestStreak})`],
       ['Dailies done', String(Object.keys(save.daily.results).length)],
-      ['Depths best', save.depths.bestFloor > 0 ? `floor ${save.depths.bestFloor}` : '-'],
+      ['Depths best', save.depths.bestFloor > 0 ? `${save.depths.bestFloor} floors` : '-'],
       ['Depths runs', String(save.depths.runs)],
       ['Crowns earned', String(save.wallet.earned)],
       ['Crowns spent', String(save.wallet.spent)],

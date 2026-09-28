@@ -3,8 +3,12 @@
  * Depths (endless). A run generates each floor, carries HP between floors
  * (no healing), saves progress so leaving and coming back resumes it, and
  * prefetches the next floor while the current one is played.
+ *
+ * Depths has no second chances: no Undo or Retry, every move is saved as it
+ * is made (leaving resumes the floor exactly where it was), and being knocked
+ * out ends the run.
  */
-import type { LevelData } from '../engine';
+import type { Dir, LevelData } from '../engine';
 import type { GenParams } from '../gen/generate';
 import {
   DAILY_FLOORS,
@@ -13,7 +17,7 @@ import {
   dailyFloorParams,
   recordDaily,
 } from '../meta/daily';
-import { depthsFloorParams } from '../meta/depths';
+import { depthsFloorParams, endDepthsRun } from '../meta/depths';
 import type { RunProgress } from '../meta/save';
 import { newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/skins';
 import { STARTING_FACES, crownsForStars, earnCrowns, playerLoadout } from '../meta/store';
@@ -30,8 +34,10 @@ export interface FloorRun {
 
 export interface FloorSummary {
   readonly mode: 'daily' | 'depths' | 'gauntlet';
-  /** Floor just cleared. */
+  /** Floor just cleared (a Depths run that ended: the floor it ended on). */
   readonly floor: number;
+  /** Depths: knocked out, the run is over. */
+  readonly over?: boolean;
   /** Total floors (daily), or null (endless). */
   readonly floors: number | null;
   readonly hp: number;
@@ -130,6 +136,20 @@ export class Run implements FloorRun {
       title,
       ...(winnable ? {} : { notice: "Your die can't win this floor. Change it in the Forge" }),
       campaignIndex: null,
+      ...(this.mode === 'depths'
+        ? {
+            permadeath: true,
+            resume: [...(p.path ?? '')] as Dir[],
+            onMove: (moves: readonly Dir[]) => {
+              p.path = moves.join('');
+              this.persist();
+            },
+            onLose: () => {
+              const summary = this.knockedOut();
+              return () => this.game.goFloor(summary, this);
+            },
+          }
+        : {}),
       onStart: () => {
         const more = this.mode === 'depths' || p.floor < DAILY_FLOORS;
         if (more) this.game.levelService.prefetch(this.params(p.floor + 1));
@@ -147,6 +167,7 @@ export class Run implements FloorRun {
     p.moves += moves;
     p.stars += stars;
     p.hp = hp;
+    delete p.path;
     const cleared = p.floor;
     const final = this.mode === 'daily' && cleared >= DAILY_FLOORS;
     const game = this.game;
@@ -211,9 +232,40 @@ export class Run implements FloorRun {
     });
   }
 
-  /** Ends a Depths run (the player surfaces). */
+  /** Depths: knocked out. The run ends here and its result is saved at once. */
+  private knockedOut(): FloorSummary {
+    const p = this.progress;
+    let cleared = 0;
+    this.game.save.update((d) => {
+      d.depths.inProgress = { ...p };
+      cleared = endDepthsRun(d);
+    });
+    this.game.analytics.track('depths_ended', { floors: cleared, reason: 'knocked_out' });
+    return {
+      mode: 'depths',
+      floor: p.floor,
+      floors: null,
+      over: true,
+      hp: 0,
+      moves: p.moves,
+      stars: p.stars,
+      final: false,
+      counted: false,
+      streak: 0,
+      bestFloor: this.game.save.data.depths.bestFloor,
+      newBest: false,
+      crowns: 0,
+    };
+  }
+
+  /** Ends a Depths run (the player surfaces): the floors cleared so far count. */
   abandon(): void {
     if (this.mode !== 'depths') return;
-    this.game.save.update((d) => (d.depths.inProgress = null));
+    let cleared = 0;
+    this.game.save.update((d) => {
+      d.depths.inProgress = { ...this.progress };
+      cleared = endDepthsRun(d);
+    });
+    this.game.analytics.track('depths_ended', { floors: cleared, reason: 'surfaced' });
   }
 }

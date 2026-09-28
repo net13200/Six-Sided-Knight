@@ -45,6 +45,7 @@ describe('event schema', () => {
         'face_bought',
         'die_changed',
         'crowns_earned',
+        'depths_ended',
       ].sort(),
     );
   });

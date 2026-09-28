@@ -1,4 +1,4 @@
-/** Between floors of a run (and the end of a Daily Roll). */
+/** Between floors of a run, the end of a Daily Roll, and the end of a Depths run. */
 import { START_HP, currentStreak, shareText } from '../../meta/daily';
 import type { Game } from '../game';
 import type { Command } from '../input';
@@ -28,6 +28,30 @@ export class FloorScene implements Scene {
 
   enter(ui: HTMLElement): void {
     const s = this.summary;
+    if (s.over) {
+      ui.append(
+        place(
+          el('button', {
+            className: 'btn primary',
+            testId: 'floor-over',
+            text: 'Back to the Depths',
+            onClick: () => this.game.goDepths(),
+          }),
+          50,
+          330,
+          240,
+          58,
+        ),
+        place(
+          iconButton('menu', 'Menu', () => this.game.goMenu(), 'floor-done'),
+          138,
+          404,
+          64,
+          62,
+        ),
+      );
+      return;
+    }
     if (s.final) {
       const share = el('button', { className: 'btn primary', testId: 'floor-share' }, [
         icon('next'),
@@ -115,6 +139,10 @@ export class FloorScene implements Scene {
     const s = this.summary;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    if (s.over) {
+      renderRunOver(ctx, s);
+      return;
+    }
     ctx.fillStyle = C.gold;
     ctx.font = '800 26px system-ui, sans-serif';
     const title = s.final ? 'Daily Roll complete!' : `Floor ${s.floor} cleared`;
@@ -189,4 +217,36 @@ export class FloorScene implements Scene {
       }
     }
   }
+}
+
+/** A Depths run that ended: how deep it got, and the record. */
+function renderRunOver(ctx: CanvasRenderingContext2D, s: FloorSummary): void {
+  const cleared = s.floor - 1;
+  ctx.fillStyle = C.hurt;
+  ctx.font = '800 26px system-ui, sans-serif';
+  ctx.fillText('Knocked out', 170, 56);
+  ctx.fillStyle = C.textDim;
+  ctx.font = '13px system-ui, sans-serif';
+  ctx.fillText(`The Depths · the run ends on floor ${s.floor}`, 170, 84);
+
+  for (let i = 0; i < START_HP; i++) {
+    ctx.globalAlpha = 0.2;
+    drawFace(ctx, 'Heart', 170 + (i - (START_HP - 1) / 2) * 30, 132, 22);
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.fillStyle = C.text;
+  ctx.font = '800 44px system-ui, sans-serif';
+  ctx.fillText(String(cleared), 170, 196);
+  ctx.fillStyle = C.textDim;
+  ctx.font = '13px system-ui, sans-serif';
+  ctx.fillText(cleared === 1 ? 'floor cleared' : 'floors cleared', 170, 228);
+
+  const record = cleared > 0 && cleared >= s.bestFloor;
+  ctx.fillStyle = record ? C.heal : C.textDim;
+  ctx.font = 'bold 14px system-ui, sans-serif';
+  ctx.fillText(record ? 'Your best run!' : `Best: ${s.bestFloor} floors`, 170, 262);
+  ctx.fillStyle = C.textDim;
+  ctx.font = '12px system-ui, sans-serif';
+  ctx.fillText(`${s.moves} moves · ${s.stars} stars`, 170, 290);
 }

@@ -12,7 +12,7 @@ import {
   shareText,
   utcDate,
 } from '../../src/meta/daily';
-import { depthsBand, depthsFloorParams } from '../../src/meta/depths';
+import { depthsBand, depthsFloorParams, endDepthsRun } from '../../src/meta/depths';
 import { freshSave } from '../../src/meta/save';
 import { solve } from '../../src/solver/solve';
 import { rules } from './helpers';
@@ -127,6 +127,21 @@ describe('depths', () => {
   it('bands climb with depth, then plateau', () => {
     expect(depthsBand(1)[0]).toBeLessThan(depthsBand(5)[0]);
     expect(depthsBand(30)).toEqual(depthsBand(40));
+  });
+
+  it('starts at medium and reaches the hardest band by floor 10', () => {
+    expect(depthsBand(1)[0]).toBeGreaterThan(DAILY_BANDS[0]![0]);
+    expect(depthsBand(10)).toEqual(depthsBand(30));
+  });
+
+  it('a run ends once: floors cleared are recorded and the run is gone', () => {
+    const d = freshSave(0);
+    d.depths.bestFloor = 2;
+    d.depths.inProgress = { key: '1', floor: 5, hp: 1, moves: 40, stars: 9 };
+    expect(endDepthsRun(d)).toBe(4);
+    expect(d.depths).toMatchObject({ bestFloor: 4, lastFloor: 4, inProgress: null });
+    expect(endDepthsRun(d)).toBe(0);
+    expect(d.depths.lastFloor).toBe(4);
   });
 
   it('floors are seeded per run', () => {

@@ -42,6 +42,8 @@ export const EVENTS = {
   face_bought: { v: 1, props: { face: 'string', price: 'number' } },
   die_changed: { v: 1, props: { faces: 'string' } },
   crowns_earned: { v: 1, props: { amount: 'number', source: 'string' } },
+  // 0.10.0: Depths runs end (knocked out, or ended from the hub).
+  depths_ended: { v: 1, props: { floors: 'number', reason: 'string' } },
 } as const satisfies Record<string, { v: number; props: Record<string, PropType> }>;
 
 export type EventName = keyof typeof EVENTS;

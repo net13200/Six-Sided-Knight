@@ -163,9 +163,11 @@ Every level names what it teaches (`teaches:` in its file), and its par route mu
 
 ## 11. Depths
 
-- An endless run of generated floors. Difficulty band climbs 4 points per floor from 6-22, plateauing at 56-72 (from floor 13; the highest band the generator reliably reaches).
-- Same HP rules as the Daily Roll; every floor is winnable when entered with 2 HP. Undo works as everywhere else.
-- A run lasts until the player ends it. Record: deepest floor cleared. A run in progress survives leaving the game.
+- An endless run of generated floors. Difficulty band climbs 4 points per floor from 22-38 (medium), plateauing at 56-72 (from floor 10; the highest band the generator reliably reaches).
+- One life. HP carries over with no healing between floors; every floor after the first is winnable when entered with 1 HP, so a run is lost by mistakes, never forced.
+- No second chances: no Undo, no Retry, no watching the solution. Being knocked out ends the run at once.
+- Every move is saved as it is made: leaving mid-floor and coming back resumes the floor exactly where it was (not from its start).
+- A run lasts until the die is knocked out or the player ends it from the hub. Score: floors cleared. The high score (best run) and the last run's result are saved.
 
 ## 11a. Generated levels
 

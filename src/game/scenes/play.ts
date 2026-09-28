@@ -58,6 +58,8 @@ export class PlayScene implements Scene {
   private watch: SolutionWatch | null = null;
   /** The level's first state (for watching a solution from the start). */
   private readonly initial: GameState;
+  /** Moves that counted, in order (reported to the session after each one). */
+  private readonly moves: Dir[] = [];
   /** Move outcomes for the current state (recomputed when the state changes). */
   private outcomes: { state: GameState; list: Array<readonly [Dir, Outcome]> } | null = null;
 
@@ -68,6 +70,14 @@ export class PlayScene implements Scene {
     this.level = session.level;
     this.history = newHistory(createState(game.rules, this.level, { hp: session.startHp }));
     this.initial = this.history.state;
+    // A resumed floor: replay the moves already made on it.
+    for (const dir of session.resume ?? []) {
+      if (this.history.state.status !== 'playing') break;
+      const { history, result } = play(game.rules, this.history, { type: 'move', dir });
+      if (!result.consumed) break;
+      this.history = history;
+      this.moves.push(dir);
+    }
     this.recorder = new ReplayRecorder(this.level.id);
     this.fx.reducedMotion = game.reducedMotion;
   }
@@ -94,21 +104,26 @@ export class PlayScene implements Scene {
     this.session.onStart?.();
     // 62x62 logical keeps buttons >= 44 CSS px even when letterboxed in landscape.
     const y = BAR_Y + 3;
+    // Permadeath (Depths): no Undo or Retry buttons at all.
+    if (!this.session.permadeath) {
+      ui.append(
+        place(
+          iconButton('undo', 'Undo', () => this.command({ type: 'undo' })),
+          4,
+          y,
+          64,
+          62,
+        ),
+        place(
+          iconButton('retry', 'Retry', () => this.command({ type: 'retry' })),
+          70,
+          y,
+          64,
+          62,
+        ),
+      );
+    }
     ui.append(
-      place(
-        iconButton('undo', 'Undo', () => this.command({ type: 'undo' })),
-        4,
-        y,
-        64,
-        62,
-      ),
-      place(
-        iconButton('retry', 'Retry', () => this.command({ type: 'retry' })),
-        70,
-        y,
-        64,
-        62,
-      ),
       place(
         iconButton('menu', 'Menu', () => this.command({ type: 'back' })),
         206,
@@ -131,7 +146,7 @@ export class PlayScene implements Scene {
         62,
       ),
     );
-    if (this.game.debug) {
+    if (this.game.debug && !this.session.permadeath) {
       ui.append(
         place(
           el('button', {
@@ -181,6 +196,8 @@ export class PlayScene implements Scene {
   private openWatch(secret = false): void {
     if (!(this.game.debug || secret) || this.watch || this.lesson || this.inspect || !this.ui)
       return;
+    // No peeking where there are no second chances.
+    if (this.session.permadeath) return;
     if (this.finishing) return;
     this.hideOverlay();
     const fx = this.fx;
@@ -266,7 +283,7 @@ export class PlayScene implements Scene {
         break;
       }
       case 'undo':
-        if (this.finishing || this.history.depth === 0) return;
+        if (this.session.permadeath || this.finishing || this.history.depth === 0) return;
         this.game.analytics.track('undo_used', { level: this.level.id, turn: this.state.turn });
         this.game.save.update((d) => d.stats.undos++);
         this.fx.finishAll();
@@ -278,7 +295,7 @@ export class PlayScene implements Scene {
         this.hideOverlay();
         break;
       case 'retry':
-        if (this.finishing || this.history.depth === 0) return;
+        if (this.session.permadeath || this.finishing || this.history.depth === 0) return;
         this.game.analytics.track('retry_used', { level: this.level.id, turn: this.state.turn });
         this.game.save.update((d) => d.stats.retries++);
         this.fx.finishAll();
@@ -318,6 +335,8 @@ export class PlayScene implements Scene {
     if (watching) return;
     const face = leadingFace(before.player.die, dir);
     this.faceMoves.set(face, (this.faceMoves.get(face) ?? 0) + 1);
+    this.moves.push(dir);
+    if (result.state.status === 'playing') this.session.onMove?.(this.moves);
     if (result.state.status === 'won') {
       this.finishing = true;
       this.won = true;
@@ -334,7 +353,11 @@ export class PlayScene implements Scene {
         time_ms: Math.round(this.activeMs),
       });
       this.game.save.update((d) => d.stats.deaths++);
-      this.fx.at(0.5, () => this.showOverlay());
+      if (this.session.onLose) {
+        // No second chances: the run ends now (saved at once), the screen follows the fall.
+        this.finishing = true;
+        this.fx.at(1.1, this.session.onLose(result.state));
+      } else this.fx.at(0.5, () => this.showOverlay());
     }
   }
 

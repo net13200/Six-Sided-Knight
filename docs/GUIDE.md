@@ -54,7 +54,7 @@ Stars are about moves. Finish at **par** (the fewest moves possible) or better f
 
 - **Campaign:** 60 levels in six chapters. Each chapter from 2 on ends in a **Gauntlet**: three floors in a row, HP carried over with no healing between floors. Its ★★★ is the fewest moves for the whole run.
 - **Daily Roll:** three floors, the same for everyone each day (UTC). HP carries over, with no healing between floors: one mistake too many ends the run. Keep a streak and share your result. Your own die is used; if it can't win a floor you're told, and you can change it between floors.
-- **Depths:** endless floors that get harder. Record: your deepest floor.
+- **Depths:** endless floors that start hard and get harder. One life: no Undo, no Retry, and being knocked out ends the run. Leaving mid-floor keeps every move you made. Your high score is the most floors cleared in one run.
 
 ## The Forge
 

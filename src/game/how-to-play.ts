@@ -55,7 +55,7 @@ export const HOW_TO_PLAY: readonly HowToSection[] = [
     lines: [
       'Gauntlets: three floors in a row, HP carried over with no healing.',
       'Daily Roll: three floors, the same for everyone each day.',
-      'Depths: endless floors that get harder.',
+      'Depths: endless floors that get harder. One life: no Undo, no Retry, and a knockout ends the run.',
     ],
   },
   {

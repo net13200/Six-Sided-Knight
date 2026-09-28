@@ -47,7 +47,7 @@ export class DepthsScene implements Scene {
       surface.addEventListener('click', () => {
         if (!armed) {
           armed = true;
-          surface.textContent = `Tap again to end at floor ${progress.floor}`;
+          surface.textContent = `Tap again to end with ${progress.floor - 1} cleared`;
           return;
         }
         new Run(this.game, 'depths', progress).abandon();
@@ -91,7 +91,7 @@ export class DepthsScene implements Scene {
     ctx.fillText('The Depths', 170, 52);
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
-    ctx.fillText('Endless floors. Each one a little harder.', 170, 80);
+    ctx.fillText('Endless floors, each one harder. One life.', 170, 80);
 
     // Stairs descending into the dark.
     for (let i = 0; i < 5; i++) {
@@ -106,9 +106,17 @@ export class DepthsScene implements Scene {
     ctx.fillText(String(depths.bestFloor), 170, 232);
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
-    ctx.fillText(`deepest floor cleared · ${depths.runs} runs`, 170, 258);
+    const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+    ctx.fillText(`best run (floors cleared) · ${plural(depths.runs, 'run', 'runs')}`, 170, 258);
+    const rules = 'No Undo · no Retry · HP carries over';
     ctx.fillStyle = C.text;
     ctx.font = '13px system-ui, sans-serif';
-    ctx.fillText('HP carries over · no healing', 170, 290);
+    if (depths.lastFloor === null) ctx.fillText(rules, 170, 288);
+    else {
+      ctx.fillText(`Last run: ${plural(depths.lastFloor, 'floor', 'floors')}`, 170, 280);
+      ctx.fillStyle = C.textDim;
+      ctx.font = '12px system-ui, sans-serif';
+      ctx.fillText(rules, 170, 298);
+    }
   }
 }
