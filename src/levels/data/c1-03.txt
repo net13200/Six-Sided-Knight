@@ -1,15 +1,15 @@
 id: c1-03
 name: Turn the Blade
-par: 8
+par: 10
 hint: Turn the Sword to face them
 teaches: sword
 ---
 ########
-########
+#...k.>#
+#k.....#
 #......#
-#@.#k..#
-#..#...#
-#..k..>#
 #......#
-########
+#......#
+#......#
+#....@##
 ########

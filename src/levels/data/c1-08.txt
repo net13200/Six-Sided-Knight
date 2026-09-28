@@ -1,16 +1,15 @@
 id: c1-08
 name: Spring
-par: 21
+par: 22
 hint: Hurt? Roll Heart-down into pools
-star: full-hp
 teaches: heal
 ---
 ########
-#@.^^..#
+#@..^^.#
 ######.#
-#.^^^..#
-#.######
 #......#
-#.~..~.#
-#.....>#
+#..~...#
+#.######
+#..^^.>#
+########
 ########

@@ -13,6 +13,7 @@
  *   --loadout a,b,...  die faces by home slot (e.g. Shield,Heart,Bomb,Key,Sword,Freeze)
  *   --floor            a later gauntlet floor: must be winnable from 1 HP
  *   --tidy             every enemy, treasure and hazard must matter (removing it changes par)
+ *   --clean            drop inner walls the solution doesn't need (cleaner rooms)
  *   --tries 400 --seed 1 --top 5
  */
 import { defaultRules } from '../src/content/register';
@@ -42,6 +43,7 @@ const [pMin, pMax] = range(opt('par', '6-16'));
 const loadout = opt('loadout', '') ? opt('loadout', '').split(',') : undefined;
 const floorMode = flag('floor');
 const tidy = flag('tidy');
+const clean = flag('clean');
 const tries = Number(opt('tries', '400'));
 const rng = new Rng(Number(opt('seed', '1')) >>> 0);
 const top = Number(opt('top', '5'));
@@ -117,7 +119,22 @@ for (let t = 0; t < tries; t++) {
     ...(loadout ? { loadout } : {}),
   };
   const f = fits(level);
-  if (f) found.push({ grid, ...f });
+  if (!f) continue;
+  let best = { grid, ...f };
+  if (clean) {
+    // Greedily remove inner walls while the level still fits with the same par.
+    for (let y = 1; y < 8; y++) {
+      for (let x = 1; x < 7; x++) {
+        if (best.grid[y]![x] !== '#') continue;
+        const g2 = best.grid.map((row, yy) =>
+          yy === y ? row.slice(0, x) + (base === '=' ? '=' : '.') + row.slice(x + 1) : row,
+        );
+        const f2 = fits({ ...level, grid: g2 });
+        if (f2 && f2.par === best.par) best = { grid: g2, ...f2 };
+      }
+    }
+  }
+  found.push(best);
 }
 found.sort((a, b) => b.score - a.score || b.par - a.par);
 console.log(`${found.length} of ${tries} fit`);

@@ -1,15 +1,15 @@
 id: c1-07
 name: Spike Hall
-par: 8
+par: 10
 hint: Land Shield-down on spikes
 teaches: guard
 ---
 ########
-#......#
 #@.....#
+#^^^^^^#
 #......#
 #^^^^^^#
 #......#
+#^^^^^^#
 #....>.#
-#......#
 ########

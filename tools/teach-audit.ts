@@ -5,6 +5,7 @@
  * teaches (`teaches:`).
  *
  *   npx tsx tools/teach-audit.ts [id prefix]      e.g. c3 or c3-04
+ *   npx tsx tools/teach-audit.ts some/level.txt    (check level files; ids ending -N count as floors)
  */
 import { defaultRules } from '../src/content/register';
 import { createState } from '../src/engine';
@@ -14,11 +15,15 @@ import { solve } from '../src/solver/solve';
 import { levelFiles, loadLevelFile } from './lib/files';
 
 const rules = defaultRules();
-const only = process.argv[2] ?? '';
+const args = process.argv.slice(2);
+const files = args.filter((a) => a.endsWith('.txt'));
+const only = files.length ? '' : (args[0] ?? '');
 const floors = levelFiles(['src/levels/gauntlets']).map(loadLevelFile);
-const levels = levelFiles(['src/levels/data'])
-  .map(loadLevelFile)
-  .flatMap((l) => [l, ...floors.filter((f) => f.id.startsWith(`${l.id}-`))]);
+const levels = files.length
+  ? files.map(loadLevelFile)
+  : levelFiles(['src/levels/data'])
+      .map(loadLevelFile)
+      .flatMap((l) => [l, ...floors.filter((f) => f.id.startsWith(`${l.id}-`))]);
 
 let bad = 0;
 for (const level of levels) {
@@ -27,7 +32,7 @@ for (const level of levels) {
   const r = solve(rules, createState(rules, level), { maxNodes: 400_000 });
   if (r.status !== 'solved') problems.push(`not winnable from full HP (${r.status})`);
   else if (level.par !== r.moves) problems.push(`par ${level.par ?? '-'} should be ${r.moves}`);
-  if (/-\d+$/.test(level.id)) {
+  if (/-\d+-\d+$/.test(level.id)) {
     const low = solve(rules, createState(rules, level, { hp: MIN_ARRIVAL_HP }), {
       maxNodes: 400_000,
     });
