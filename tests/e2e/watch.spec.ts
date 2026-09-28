@@ -64,4 +64,30 @@ test.describe('watching the par solution (developer mode)', () => {
     await page.keyboard.press('p');
     await expect(page.getByTestId('watch-chooser')).toHaveCount(0);
   });
+
+  test('the secret combo works in the regular game: 5 taps on the title, or Shift+P', async ({
+    page,
+  }) => {
+    await page.goto('/?level=3');
+    await expect.poll(() => scene(page)).toBe('play');
+    const secret = page.getByTestId('secret');
+    // Four taps: nothing.
+    for (let i = 0; i < 4; i++) await secret.click();
+    await expect(page.getByTestId('watch-chooser')).toHaveCount(0);
+    // The fifth opens the solution.
+    await secret.click();
+    await expect(page.getByTestId('watch-any')).toContainText(`${campaign[2]!.par} moves`);
+    await page.getByTestId('watch-cancel').click();
+    await expect(page.getByTestId('watch-chooser')).toHaveCount(0);
+    // Shift+P too (plain P stays developer-only).
+    await page.keyboard.press('Shift+P');
+    await expect(page.getByTestId('watch-any')).toBeVisible();
+    await page.getByTestId('watch-any').click();
+    await page.getByTestId('watch-speed').click();
+    await page.getByTestId('watch-speed').click();
+    await expect(page.getByTestId('watch-label')).toContainText('✓', { timeout: 15_000 });
+    // Still never counts.
+    const save = await page.evaluate(() => JSON.parse(localStorage.getItem('ssk.save') ?? '{}'));
+    expect(save.levels?.['c1-03']).toBeUndefined();
+  });
 });

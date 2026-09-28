@@ -12,6 +12,7 @@ Versions follow [semantic versioning](https://semver.org). The version shown in 
 - The Daily Roll's dungeons change from this version (the rules changed); it's still the same for everyone each day.
 - **Fix: music died after switching apps.** Coming back now resumes it, including iPhone's "interrupted" state, a paused context the browser won't restart until you touch (any touch now does it, not just the first one), a context the browser closed, or one that claims to play but whose clock is stuck (rebuilt from scratch). Interruptions while you're playing (a call, another app's sound) are recovered too.
 - **Developer tool: watch the par solution.** In developer mode (`#debug`), a **▶ Par** button (or P) solves the level in the background and plays its par route with pause, step, speed and stop. Watched runs never count. Players don't see it.
+- **Secret:** tap a level's title 5 times quickly (or Shift+P) to watch its best solution. It never counts toward stars, crowns or stats.
 - Level authoring: `teaches:` and `run-par:` in level files; `tools/teach-audit.ts`, `tools/teach-search.ts` (with hand-drawn templates) and `tools/run-par.ts`.
 
 ## 0.8.0 — Once upon a roll

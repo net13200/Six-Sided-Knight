@@ -148,12 +148,39 @@ export class PlayScene implements Scene {
         ),
       );
     }
+    // The secret combo for everyone: 5 quick taps on the level title (see
+    // secretTap). Invisible, and kept out of the tab order.
+    const secret = el('button', {
+      className: 'compass-btn',
+      testId: 'secret',
+      onClick: () => this.secretTap(),
+    });
+    secret.tabIndex = -1;
+    secret.setAttribute('aria-hidden', 'true');
+    ui.append(place(secret, 0, 0, 200, BOARD_Y - 2));
     this.openLesson(ui);
   }
 
-  /** Dev tool: solve the level (in the worker) and watch a solution play out. */
-  private openWatch(): void {
-    if (!this.game.debug || this.watch || this.lesson || this.inspect || !this.ui) return;
+  private secretTaps: number[] = [];
+
+  /** 5 taps within 2 seconds on the title shows the best solution. */
+  private secretTap(): void {
+    const now = performance.now();
+    this.secretTaps = [...this.secretTaps.filter((t) => now - t < 2000), now];
+    if (this.secretTaps.length >= 5) {
+      this.secretTaps = [];
+      this.openWatch(true);
+    }
+  }
+
+  /**
+   * Solve the level (in the worker) and watch the best solution play out. The
+   * developer button and P need debug mode; the secret combo (`secret`) works
+   * in the regular game.
+   */
+  private openWatch(secret = false): void {
+    if (!(this.game.debug || secret) || this.watch || this.lesson || this.inspect || !this.ui)
+      return;
     if (this.finishing) return;
     this.hideOverlay();
     const fx = this.fx;
@@ -206,8 +233,8 @@ export class PlayScene implements Scene {
       if (cmd.type === 'back') this.watch.stop();
       return;
     }
-    if (cmd.type === 'watch') {
-      this.openWatch();
+    if (cmd.type === 'watch' || cmd.type === 'solution') {
+      this.openWatch(cmd.type === 'solution');
       return;
     }
     if (this.lesson) {

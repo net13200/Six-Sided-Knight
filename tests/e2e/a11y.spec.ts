@@ -70,7 +70,8 @@ test.describe('accessibility', () => {
       await page.waitForTimeout(200);
       const small = await page.evaluate(() =>
         [...document.querySelectorAll('button')]
-          .filter((b) => b.offsetParent !== null)
+          // Hidden extras (the secret title tap) aren't controls players are meant to find.
+          .filter((b) => b.offsetParent !== null && b.getAttribute('aria-hidden') !== 'true')
           .map((b) => {
             const r = b.getBoundingClientRect();
             return { id: b.dataset.testid, w: r.width, h: r.height };

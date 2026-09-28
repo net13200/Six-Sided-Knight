@@ -14,7 +14,9 @@ export type Command =
   | { type: 'confirm' }
   | { type: 'inspect' }
   | { type: 'describe' }
-  | { type: 'watch' };
+  | { type: 'watch' }
+  /** The secret combo (Shift+P, or 5 quick taps on the title): watch the best solution. */
+  | { type: 'solution' };
 
 /** Minimum travel (in CSS pixels) for a pointer gesture to count as a swipe. */
 export const SWIPE_THRESHOLD = 24;
@@ -56,6 +58,7 @@ const KEYS: Record<string, Command> = {
   h: { type: 'describe' },
   '?': { type: 'describe' },
   p: { type: 'watch' },
+  P: { type: 'solution' }, // Shift+P: the secret combo
   Escape: { type: 'back' },
   Enter: { type: 'confirm' },
 };
