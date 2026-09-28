@@ -1,6 +1,6 @@
 import type { FaceDef } from '../../engine/registry';
 
-/** No damage. Leading into an enemy freezes it: it skips its next 2 turns. */
+/** No damage. Leading into an enemy freezes it: it skips its next 3 turns. */
 export const Freeze: FaceDef = {
   id: 'Freeze',
   name: 'Freeze',
@@ -9,7 +9,7 @@ export const Freeze: FaceDef = {
   attack: 0,
   onAttack(ctx, target) {
     ctx.damageEnemy(target.id, 0, 'Freeze');
-    ctx.applyEffect(target.id, 'frozen', 2);
+    ctx.applyEffect(target.id, 'frozen', 3);
     return false;
   },
 };

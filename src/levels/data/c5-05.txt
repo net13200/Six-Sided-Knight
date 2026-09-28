@@ -1,15 +1,15 @@
 id: c5-05
 name: Winter Watch
-par: 10
+par: 8
 loadout: Shield Heart Bomb Key Sword Freeze
 teaches: freeze
 ---
 ########
-#....#.#
-#>a...@#
-#...#..#
-#.k.#..#
 #......#
-#......#
+#.a....#
+#k.....#
+#...a..#
+#...>..#
 #...k..#
+#@.....#
 ########

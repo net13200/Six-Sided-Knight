@@ -3,7 +3,7 @@
  * it's about (`teaches:` in its file). The par solution (fewest moves) must
  * actually use that idea, and where the idea is a tool (a face, a tile), the
  * level must need it: with the tool switched off, par gets longer or the level
- * can't be won. For hazards (archers, spikes) it's the reverse: without the
+ * can't be won. Freeze is stricter: a Freeze level can't be won without it. For hazards (archers, spikes) it's the reverse: without the
  * hazard par gets shorter, so the hazard really shapes the route.
  *
  * Used by the campaign test and the level tools; not part of the game bundle.
@@ -253,6 +253,16 @@ function needs(level: LevelData, par: number, off: Switch): string | null {
   return p === null || p > par ? null : `still ${p} moves without ${off}`;
 }
 
+/** The tool is essential: without it the level is proven unwinnable. */
+function essential(level: LevelData, off: Switch): string | null {
+  const r = rulesWithout(off);
+  const res = solve(r, createState(r, level), { maxNodes: 2_000_000 });
+  if (res.status === 'unsolvable') return null;
+  return res.status === 'solved'
+    ? `winnable without ${off} (${res.moves} moves)`
+    : `couldn't prove it needs ${off} (${res.status})`;
+}
+
 /** The hazard shapes the route: without it par would be shorter. */
 function shapes(level: LevelData, par: number, off: Switch): string | null {
   const p = parWithout(level, off);
@@ -346,15 +356,15 @@ export function checkTeach(
       break;
     case 'freeze':
       want(f.freezes.length > 0, 'freeze anything');
-      if (f.freezes.length > 0) also(needs(level, par, 'freeze'));
+      if (f.freezes.length > 0) also(essential(level, 'freeze'));
       break;
     case 'freeze-archer':
       want(f.freezes.includes('archer'), 'freeze an archer');
-      if (f.freezes.includes('archer')) also(needs(level, par, 'freeze'));
+      if (f.freezes.includes('archer')) also(essential(level, 'freeze'));
       break;
     case 'freeze-stopper':
       want(f.slideStops.includes('frozen-enemy'), 'stop a slide against a frozen enemy');
-      if (f.slideStops.includes('frozen-enemy')) also(needs(level, par, 'freeze'));
+      if (f.slideStops.includes('frozen-enemy')) also(essential(level, 'freeze'));
       break;
     case 'hook-gem':
       want(f.hookGems > 0, 'hook a gem');

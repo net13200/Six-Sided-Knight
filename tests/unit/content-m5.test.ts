@@ -43,13 +43,16 @@ describe('ice', () => {
 });
 
 describe('Freeze face', () => {
-  it('deals no damage and the enemy skips its next 2 turns', () => {
+  it('deals no damage and the enemy skips its next 3 turns', () => {
     const s = start(['.......>', 'k@......'], { loadout: withWest('Freeze') });
-    const [r1, r2, r3] = run(s, 'WEW');
-    expect(r1!.state.enemies[0]).toMatchObject({ hp: 2, effects: [{ id: 'frozen', turns: 1 }] });
+    const [r1, r2, r3, r4] = run(s, 'WEWE');
+    expect(r1!.state.enemies[0]).toMatchObject({ hp: 2, effects: [{ id: 'frozen', turns: 2 }] });
     expect(r1!.events.some((e) => e.type === 'effectApplied')).toBe(true);
     expect(r2!.state.enemies[0]).toMatchObject({ x: 0, y: 1 }); // didn't chase
-    expect(r3!.events.some((e) => e.type === 'enemyAttacked')).toBe(true); // thawed
+    // Back next to it: still frozen, so no attack.
+    expect(r3!.events.some((e) => e.type === 'enemyAttacked')).toBe(false);
+    expect(r3!.state.enemies[0]).toMatchObject({ x: 0, y: 1 });
+    expect(r4!.state.enemies[0]).not.toMatchObject({ x: 0, y: 1 }); // thawed: it chases
   });
 });
 

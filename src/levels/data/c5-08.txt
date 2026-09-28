@@ -1,15 +1,15 @@
 id: c5-08
 name: Cold Storage
-par: 11
+par: 14
 loadout: Shield Heart Bomb Key Sword Freeze
 teaches: freeze
 ---
 ########
-#k.....#
 #.....>#
-#....k.#
-#a.....#
-#...#..#
-#.@....#
+#.....k#
+#......#
 #..#...#
+#k#..#.#
+#a#k#k.#
+#...@kk#
 ########

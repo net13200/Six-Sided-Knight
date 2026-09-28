@@ -17,6 +17,9 @@
  *   --template t.txt   a hand-drawn 9x8 grid: '?' cells get random contents from
  *                      --palette (default ".#"), extras go on '?' cells, other
  *                      cells stay as drawn (so @ and > can be fixed too)
+ *   --mutate 1-3       with --template: change 1-3 random plain cells ('.' or
+ *                      '=', not '?') to glyphs from --palette, keeping the rest
+ *                      of the drawn level (rework an existing level gently)
  *   --tries 400 --seed 1 --top 5
  */
 import { defaultRules } from '../src/content/register';
@@ -56,6 +59,7 @@ const templatePath = opt('template', '');
 const templateLevel = templatePath ? parseTextLevel(readFileSync(templatePath, 'utf8')) : null;
 const template = templateLevel ? [...templateLevel.grid] : null;
 const palette = opt('palette', '.#');
+const mutate = opt('mutate', '') ? range(opt('mutate', '')) : null;
 
 /** Glyphs that are "content" (tidy mode checks each one matters). */
 const CONTENT = new Set(['k', 's', 'a', 'g', '$', '*', '^', '~', '|']);
@@ -101,6 +105,16 @@ for (let t = 0; t < tries; t++) {
     const free: Array<[number, number]> = [];
     for (let y = 0; y < 9; y++) for (let x = 0; x < 8; x++) if (g[y]![x] === '?') free.push([x, y]);
     const pickFree = () => free.splice(rng.int(free.length), 1)[0]!;
+    if (mutate) {
+      const plain: Array<[number, number]> = [];
+      for (let y = 1; y < 8; y++)
+        for (let x = 1; x < 7; x++) if ('.='.includes(g[y]![x]!)) plain.push([x, y]);
+      const n = mutate[0] + rng.int(mutate[1] - mutate[0] + 1);
+      for (let i = 0; i < n && plain.length; i++) {
+        const [x, y] = plain.splice(rng.int(plain.length), 1)[0]!;
+        g[y]![x] = palette[rng.int(palette.length)]!;
+      }
+    }
     for (const ch of extras) {
       const [x, y] = pickFree();
       g[y]![x] = ch;

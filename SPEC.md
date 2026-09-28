@@ -46,7 +46,7 @@ Moving into an enemy attacks it with the leading face instead of moving.
 | Shield             | 1                                                                                                  |
 | Key / Coin / Heart | 0 ("clunk") — still a valid action; consumes the turn                                              |
 | Hook               | 0 ("clunk") when the enemy is adjacent (see 4a for pulling from range)                             |
-| Freeze             | 0 damage; the enemy is **frozen** and skips its next 2 enemy phases                                |
+| Freeze             | 0 damage; the enemy is **frozen** and skips its next 3 enemy phases                                |
 
 - Enemy armour: some enemies ignore damage from certain faces (Golem: only Bomb hurts it, splash included).
 
@@ -116,7 +116,7 @@ Stars are about moves only (fewest moves is the goal):
 
 Damage and treasure don't affect stars (3 HP is pressure enough). The best result per level is kept; a slower replay never takes stars away. Saves from before 0.9.0 keep the star counts they had.
 
-Every level names what it teaches (`teaches:` in its file), and its par route must use that idea; tools are needed for par (without them par is longer or the level can't be won) and hazards shape it (without them par is shorter). The campaign test checks this for every level and gauntlet floor (`src/levels/teaches.ts`).
+Every level names what it teaches (`teaches:` in its file), and its par route must use that idea; tools are needed for par (without them par is longer or the level can't be won; Freeze levels must be impossible to win without Freeze) and hazards shape it (without them par is shorter). The campaign test checks this for every level and gauntlet floor (`src/levels/teaches.ts`).
 
 ## 9a. Progression
 

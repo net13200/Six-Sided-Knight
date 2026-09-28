@@ -21,7 +21,7 @@ export const HOW_TO_PLAY: readonly HowToSection[] = [
       'Bomb: 2 damage, plus 1 to every enemy next to the target. The only face that hurts a Golem.',
       'Heart: underneath on a pool, heals 1.',
       'Key: opens doors. Coin: opens chests.',
-      'Freeze: the enemy skips its next 2 turns. Hook: pulls an enemy from 2-3 tiles away next to you.',
+      'Freeze: the enemy skips its next 3 turns. Hook: pulls an enemy from 2-3 tiles away next to you.',
     ],
   },
   {

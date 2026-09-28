@@ -1,15 +1,15 @@
 id: c5-10-3
 name: Crypt Gauntlet III
-par: 10
+par: 9
 loadout: Shield Heart Bomb Key Sword Freeze
 teaches: freeze
 ---
 ########
-#...#a##
+#.kk...#
 #......#
-#.@...k#
-####...#
-#..>#..#
-#k#....#
+#..>#k.#
 #......#
+##^..k.#
+#k@..#.#
+#k.k...#
 ########

@@ -6,7 +6,7 @@ const INFO: Readonly<Record<string, string>> = {
   Heart: 'Underneath, it drinks from healing pools: +2 HP.',
   Key: 'Opens locked doors.',
   Coin: 'Opens chests: +30 gold.',
-  Freeze: 'Freezes an enemy for 2 turns. No damage.',
+  Freeze: 'Freezes an enemy for 3 turns. No damage.',
   Hook: 'Pulls an enemy 2-3 tiles away next to you.',
 };
 

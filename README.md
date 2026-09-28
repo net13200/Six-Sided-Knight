@@ -194,7 +194,7 @@ In developer mode (`#debug` or `?debug`), every level shows a dashed **▶ Par**
 
 The turn logic (`src/engine/step.ts`) never names specific content; it only calls hooks. To add content, write one definition module and register it in `src/content/register.ts`. A test (`tests/unit/extensibility.test.ts`) enforces that the engine contains no content names.
 
-Worked example: a **Freeze** face that stops an enemy for 2 turns.
+Worked example: a **Freeze** face that stops an enemy for 3 turns.
 
 ```ts
 // src/content/effects/frozen.ts
@@ -213,7 +213,7 @@ export const Freeze: FaceDef = {
   attack: 0,
   onAttack(ctx, target) {
     ctx.damageEnemy(target.id, 0, 'Freeze');
-    ctx.applyEffect(target.id, 'frozen', 2);
+    ctx.applyEffect(target.id, 'frozen', 3);
     return false; // target survived: the die stays put
   },
 };

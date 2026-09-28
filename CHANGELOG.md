@@ -6,6 +6,8 @@ Versions follow [semantic versioning](https://semver.org). The version shown in 
 
 - **The Depths: one life.** No Undo, no Retry, and no peeking at the solution. Being knocked out ends the run on the spot and shows how deep you got; your high score (most floors cleared in one run) and your last run are saved. Leaving mid-floor keeps every move you made, so coming back picks up exactly where you were.
 - **The Depths start hard.** Floor 1 is now medium (like a Daily Roll's second floor) and difficulty climbs every floor to the hardest band by floor 10 (was floor 13). Every floor is still winnable from 1 HP.
+- **Freeze lasts 3 turns** (was 2): a frozen enemy stays put for your next two moves, so you can walk past it, stand in a frozen archer's lane, or use it as a wall for longer.
+- **Every Freeze level needs Freeze.** The 11 Freeze stages (stage 42 included) and 3 gauntlet floors were rebuilt so they can't be won without freezing something; before, freezing only saved a move. A test proves this for each one.
 - **Stage 34 (Skate Past):** the archer and the stairs sit lower, with the rink rebuilt around them.
 
 ## 0.9.0 — Every move counts

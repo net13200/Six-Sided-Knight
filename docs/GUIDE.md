@@ -30,7 +30,7 @@ A bump into a wall (or a door without the Key) costs no turn. Labels next to the
 | Heart  | nothing                                                                         | Underneath on a pool: heals 1                   |
 | Key    | Opens locked doors                                                              |                                                 |
 | Coin   | Opens chests (+30 gold)                                                         |                                                 |
-| Freeze | The enemy skips its next 2 turns                                                | Bought in the Forge (200)                       |
+| Freeze | The enemy skips its next 3 turns                                                | Bought in the Forge (200)                       |
 | Hook   | Pulls an enemy 2-3 tiles away next to you                                       | Bought in the Forge (300)                       |
 
 ## Tiles

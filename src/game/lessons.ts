@@ -71,7 +71,7 @@ export const LESSONS: Readonly<Record<string, Lesson>> = {
   },
   'c5-01': {
     title: 'Freeze',
-    text: "Your die has a new face: Freeze. Roll it into an enemy and it can't move or attack for 2 turns.",
+    text: "Your die has a new face: Freeze. Roll it into an enemy and it can't move or attack for 3 turns.",
   },
   'c6-01': {
     title: 'Hook',
