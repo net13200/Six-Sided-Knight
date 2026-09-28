@@ -1,15 +1,16 @@
 id: c3-03
 name: Rubble
-par: 6
-hint: Bomb splash chips a Golem too
+par: 18
+hint: Bombs splash the golem behind, too
+enemies: 3,4 wait=99; 3,5 wait=99
 teaches: golem-splash
 ---
 ########
+#@.....#
 #......#
-#.@....#
 #......#
-#.#kgk##
-#.##.###
-#...>..#
-########
+###g####
+###g####
+#......#
+#.....>#
 ########

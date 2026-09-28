@@ -14,10 +14,14 @@
  *   --floor            a later gauntlet floor: must be winnable from 1 HP
  *   --tidy             every enemy, treasure and hazard must matter (removing it changes par)
  *   --clean            drop inner walls the solution doesn't need (cleaner rooms)
+ *   --template t.txt   a hand-drawn 9x8 grid: '?' cells get random contents from
+ *                      --palette (default ".#"), extras go on '?' cells, other
+ *                      cells stay as drawn (so @ and > can be fixed too)
  *   --tries 400 --seed 1 --top 5
  */
 import { defaultRules } from '../src/content/register';
-import { Rng, createState, validateLevel, type LevelData } from '../src/engine';
+import { readFileSync } from 'node:fs';
+import { Rng, createState, parseTextLevel, validateLevel, type LevelData } from '../src/engine';
 import { MIN_ARRIVAL_HP } from '../src/meta/daily';
 import { checkTeach, type Teach } from '../src/levels/teaches';
 import { rate } from '../src/solver/rate';
@@ -47,6 +51,11 @@ const clean = flag('clean');
 const tries = Number(opt('tries', '400'));
 const rng = new Rng(Number(opt('seed', '1')) >>> 0);
 const top = Number(opt('top', '5'));
+const templatePath = opt('template', '');
+/** A template is a level file whose grid may contain '?' (random) cells. */
+const templateLevel = templatePath ? parseTextLevel(readFileSync(templatePath, 'utf8')) : null;
+const template = templateLevel ? [...templateLevel.grid] : null;
+const palette = opt('palette', '.#');
 
 /** Glyphs that are "content" (tidy mode checks each one matters). */
 const CONTENT = new Set(['k', 's', 'a', 'g', '$', '*', '^', '~', '|']);
@@ -87,6 +96,31 @@ function fits(level: LevelData): { par: number; path: string; score: number } | 
 const found: Array<{ grid: string[]; par: number; path: string; score: number }> = [];
 const seen = new Set<string>();
 for (let t = 0; t < tries; t++) {
+  if (template) {
+    const g = template.map((row) => row.split(''));
+    const free: Array<[number, number]> = [];
+    for (let y = 0; y < 9; y++)
+      for (let x = 0; x < 8; x++) if (g[y]![x] === '?') free.push([x, y]);
+    const pickFree = () => free.splice(rng.int(free.length), 1)[0]!;
+    for (const ch of extras) {
+      const [x, y] = pickFree();
+      g[y]![x] = ch;
+    }
+    for (const [x, y] of free) g[y]![x] = palette[rng.int(palette.length)]!;
+    const grid = g.map((r) => r.join(''));
+    const key = grid.join('');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const level: LevelData = {
+      ...templateLevel!,
+      id: 'search',
+      grid,
+      ...(loadout ? { loadout } : {}),
+    };
+    const f = fits(level);
+    if (f) found.push({ grid, ...f });
+    continue;
+  }
   const g = Array.from({ length: 9 }, (_, y) =>
     Array.from({ length: 8 }, (_, x) => {
       if (x === 0 || x === 7 || y === 0 || y === 8) return '#';
