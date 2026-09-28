@@ -267,18 +267,11 @@ export interface LevelAnalysis {
   readonly allGold: SolveResult;
 }
 
-export function analyze(
-  rules: Rules,
-  start: GameState,
-  maxNodes = 200_000,
-  opts: { healStar?: boolean } = {},
-): LevelAnalysis {
+export function analyze(rules: Rules, start: GameState, maxNodes = 200_000): LevelAnalysis {
   return {
     any: solve(rules, start, { maxNodes }),
-    // The second star: no damage, or (healing levels) finishing at full HP.
-    noDamage: opts.healStar
-      ? solve(rules, start, { maxNodes, accept: (s) => s.player.hp >= s.player.maxHp })
-      : solve(rules, start, { maxNodes, allow: (s) => s.stats.damageTaken === 0 }),
+    // A route that takes no damage (every later floor of a run must have one).
+    noDamage: solve(rules, start, { maxNodes, allow: (s) => s.stats.damageTaken === 0 }),
     allGold: solve(rules, start, {
       maxNodes,
       accept: (s) => s.stats.treasuresCollected === s.stats.treasuresTotal,

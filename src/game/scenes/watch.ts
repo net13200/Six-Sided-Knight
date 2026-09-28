@@ -4,22 +4,8 @@
  * usual animations. A watched run never counts: no stars, crowns or stats.
  */
 import type { Dir } from '../../engine';
-import type { LevelAnalysis, SolveResult } from '../../solver/solve';
+import type { SolveResult } from '../../solver/solve';
 import { el, place } from '../ui';
-
-export type SolutionKind = 'any' | 'noDamage' | 'allGold';
-
-const KINDS: ReadonlyArray<[SolutionKind, string]> = [
-  ['any', 'Par (fewest moves)'],
-  ['noDamage', 'No damage'],
-  ['allGold', 'All treasure'],
-];
-
-const LABEL: Record<SolutionKind, string> = {
-  any: 'Par',
-  noDamage: 'No damage',
-  allGold: 'All treasure',
-};
 
 /** Seconds between moves at ×1 (after the previous move's animation). */
 const STEP_SECONDS = 0.35;
@@ -43,7 +29,6 @@ export class SolutionWatch {
   private speedBtn: HTMLButtonElement | null = null;
   private chooser: HTMLElement | null = null;
   private path: readonly Dir[] = [];
-  private kind: SolutionKind = 'any';
   private i = 0;
   private wait = 0;
   private speed = 0;
@@ -60,8 +45,8 @@ export class SolutionWatch {
     return this.playing;
   }
 
-  /** Solves, then offers the three solutions. */
-  open(solutions: Promise<LevelAnalysis>): void {
+  /** Solves, then offers the par solution. */
+  open(solutions: Promise<SolveResult>): void {
     this.showChooser(null);
     solutions.then(
       (a) => this.showChooser(a),
@@ -69,23 +54,20 @@ export class SolutionWatch {
     );
   }
 
-  private showChooser(a: LevelAnalysis | null | undefined): void {
+  private showChooser(r: SolveResult | null | undefined): void {
     this.chooser?.remove();
     const body: HTMLElement[] = [el('h2', { text: 'Watch a solution' })];
-    if (a === null) body.push(el('p', { testId: 'watch-solving', text: 'Solving…' }));
-    else if (a === undefined) body.push(el('p', { text: "The solver couldn't finish." }));
+    if (r === null) body.push(el('p', { testId: 'watch-solving', text: 'Solving…' }));
+    else if (r === undefined) body.push(el('p', { text: "The solver couldn't finish." }));
     else {
-      for (const [kind, name] of KINDS) {
-        const r: SolveResult = a[kind];
-        const b = el('button', {
-          className: 'btn',
-          testId: `watch-${kind}`,
-          text: r.status === 'solved' ? `${name} · ${r.moves} moves` : `${name} · none`,
-          onClick: () => this.start(kind, r.path),
-        });
-        b.disabled = r.status !== 'solved';
-        body.push(b);
-      }
+      const b = el('button', {
+        className: 'btn',
+        testId: 'watch-any',
+        text: r.status === 'solved' ? `Par · ${r.moves} moves` : 'Par · no solution',
+        onClick: () => this.start(r.path),
+      });
+      b.disabled = r.status !== 'solved';
+      body.push(b);
     }
     body.push(
       el('button', {
@@ -106,10 +88,9 @@ export class SolutionWatch {
     this.ui.append(this.chooser);
   }
 
-  private start(kind: SolutionKind, path: readonly Dir[]): void {
+  private start(path: readonly Dir[]): void {
     this.chooser?.remove();
     this.chooser = null;
-    this.kind = kind;
     this.path = path;
     this.i = 0;
     this.wait = STEP_SECONDS;
@@ -178,8 +159,8 @@ export class SolutionWatch {
     if (!this.label) return;
     const done = this.i >= this.path.length;
     this.label.textContent = done
-      ? `${LABEL[this.kind]} ✓ ${this.path.length}`
-      : `${LABEL[this.kind]} ${this.i}/${this.path.length}`;
+      ? `Par ✓ ${this.path.length}`
+      : `Par ${this.i}/${this.path.length}`;
     this.pauseBtn!.textContent = this.paused ? '▶' : '❚❚';
     this.pauseBtn!.setAttribute('aria-label', this.paused ? 'Play' : 'Pause');
     this.pauseBtn!.disabled = done;

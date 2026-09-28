@@ -31,10 +31,9 @@ start: top=Shield east=Sword
     expect(validateLevel(rules, lvl)).toEqual([]);
   });
 
-  it('parses wounded enemies and the full-HP star', () => {
+  it('parses wounded enemies', () => {
     const lvl = parseTextLevel(`id: t
 name: T
-star: full-hp
 enemies: 2,1 hp=1; 4,1 ready
 ---
 ########
@@ -47,7 +46,6 @@ enemies: 2,1 hp=1; 4,1 ready
 #......#
 ########
 `);
-    expect(lvl.healStar).toBe(true);
     expect(lvl.enemies).toEqual([
       { x: 2, y: 1, hp: 1 },
       { x: 4, y: 1, data: { ready: true } },
@@ -96,8 +94,8 @@ describe('validation', () => {
 
 describe('createState', () => {
   it('places the player, enemies and counts treasures', () => {
-    const s = createState(rules, level(['#@k*$s>#']), { hp: 3, seed: 42 });
-    expect(s.player).toMatchObject({ x: 1, y: 0, hp: 3, maxHp: 5 });
+    const s = createState(rules, level(['#@k*$s>#']), { hp: 2, seed: 42 });
+    expect(s.player).toMatchObject({ x: 1, y: 0, hp: 2, maxHp: 3 });
     expect(s.enemies.map((e) => [e.kind, e.x, e.hp])).toEqual([
       ['skeleton', 2, 2],
       ['slime', 5, 3],

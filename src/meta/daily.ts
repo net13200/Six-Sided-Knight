@@ -2,6 +2,7 @@
  * Daily Roll: one 3-floor dungeon per UTC day, the same for everyone.
  * Pure functions; the date comes from the caller.
  */
+import { CORE_CONFIG } from '../content/register';
 import { seedFrom } from '../engine';
 import type { GenParams } from '../gen/generate';
 import type { SaveData } from './save';
@@ -13,11 +14,15 @@ export const DAILY_BANDS: ReadonlyArray<readonly [number, number]> = [
   [25, 42],
   [35, 55],
 ];
+/** HP a run (Daily Roll, Depths, gauntlet) starts with. */
+export const START_HP = CORE_CONFIG.maxHp;
 /**
- * Floors are generated to be solvable when entered with this much HP. A run
- * can't arrive lower: a floor is left with at least 1 HP, then heals 1.
+ * Floors after the first are generated to be solvable when entered with this
+ * much HP. HP carries over with no healing between floors, and a floor is
+ * left with at least 1 HP, so every later floor must be winnable from 1 HP.
+ * Losing is possible (mistakes cost the run) but never forced.
  */
-export const MIN_ARRIVAL_HP = 2;
+export const MIN_ARRIVAL_HP = 1;
 
 /** UTC calendar date, e.g. "2026-09-22". */
 export function utcDate(now: number): string {
@@ -48,13 +53,8 @@ export function dailyFloorParams(
     band: DAILY_BANDS[floor - 1] ?? DAILY_BANDS[DAILY_BANDS.length - 1]!,
     id: `daily-${date}-${floor}`,
     name: `Daily Roll · floor ${floor}`,
-    hp: floor === 1 ? 5 : MIN_ARRIVAL_HP,
+    hp: floor === 1 ? START_HP : MIN_ARRIVAL_HP,
   };
-}
-
-/** HP after clearing a floor: +1, capped. */
-export function healBetweenFloors(hp: number, maxHp = 5): number {
-  return Math.min(maxHp, hp + 1);
 }
 
 export interface DailyResult {
@@ -97,7 +97,7 @@ export function shareText(date: string, r: DailyResult, streak: number, url: str
   return [
     `Six Sided Knight · Daily Roll ${date}`,
     `${stars} ${r.stars}/${max}`,
-    `${r.moves} moves · ${r.hp}/5 HP left`,
+    `${r.moves} moves · ${r.hp}/${START_HP} HP left`,
     ...(streak > 1 ? [`${streak}-day streak`] : []),
     url,
   ].join('\n');

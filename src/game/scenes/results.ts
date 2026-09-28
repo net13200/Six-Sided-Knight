@@ -75,65 +75,65 @@ export class ResultsScene implements Scene {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = C.gold;
     ctx.font = '800 26px system-ui, sans-serif';
-    ctx.fillText(stars.count === 3 ? 'Flawless!' : 'Level complete!', 170, 52);
+    ctx.fillText(stars.count === 3 ? 'Par!' : 'Level complete!', 170, 52);
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
     ctx.fillText(`${this.index + 1}. ${level.name}`, 170, 80);
 
-    // Stars pop in one after another. Stars kept from earlier attempts show
-    // too (slightly faded, marked "earlier"): stars add up over attempts.
-    const got = [stars.par, stars.noDamage, stars.allGold];
-    const earlier = [1, 2, 4].map((bit) => (this.summary.earlierMask & bit) !== 0);
-    got.forEach((filled, i) => {
+    // Stars pop in one after another. A better result from an earlier attempt
+    // shows too (faded, marked "best"): the best result is what's kept.
+    const earlier = this.summary.earlierStars;
+    for (let i = 0; i < 3; i++) {
       const appear = this.game.reducedMotion
         ? 1
         : Math.min(1, Math.max(0, (this.t - 0.15 - i * 0.2) * 5));
       const pop = appear < 1 ? appear * (1.3 - 0.3 * appear) : 1;
       const x = 110 + i * 60;
-      if (filled) {
+      if (i < stars.count) {
         drawStar(ctx, x, 130, 22 * pop, true);
-      } else if (earlier[i]) {
+      } else if (i < earlier) {
         ctx.save();
         ctx.globalAlpha = 0.5;
         drawStar(ctx, x, 130, 20, true);
         ctx.restore();
         ctx.fillStyle = C.textDim;
         ctx.font = '600 9px system-ui, sans-serif';
-        ctx.fillText('earlier', x, 157);
+        ctx.fillText('best', x, 157);
       } else {
         drawStar(ctx, x, 130, 22 * pop, false);
       }
-    });
+    }
     if (this.summary.improved && !this.summary.firstClear) {
       ctx.fillStyle = C.heal;
       ctx.font = 'bold 12px system-ui, sans-serif';
-      ctx.fillText(`New star! ${this.summary.totalStars} of 3 on this level`, 170, 172);
+      ctx.fillText(`New best! ${this.summary.totalStars} of 3 on this level`, 170, 172);
     } else if (this.summary.totalStars > stars.count) {
       ctx.fillStyle = C.textDim;
       ctx.font = '12px system-ui, sans-serif';
-      ctx.fillText(`${this.summary.totalStars} of 3 stars on this level`, 170, 172);
+      ctx.fillText(`Your best: ${this.summary.totalStars} of 3`, 170, 172);
     }
 
-    const s = this.state.stats;
-    const par = this.summary.par ?? level.par;
-    const rows: Array<[string, string, boolean]> = [
-      ['Moves', `${s.moves}${par !== undefined ? ` / par ${par}` : ''}`, stars.par],
-      level.healStar
-        ? ['HP at the end', `${this.state.player.hp} / ${this.state.player.maxHp}`, stars.noDamage]
-        : ['Damage taken', String(s.damageTaken), stars.noDamage],
-      ['Treasure', `${s.treasuresCollected} / ${s.treasuresTotal}`, stars.allGold],
+    // Stars are about moves: the ladder shows how many each star allows.
+    const par = stars.par ?? this.summary.par ?? level.par;
+    const rows: Array<[string, string, boolean | null]> = [
+      ['Your moves', String(stars.moves), null],
+      ...(par !== undefined
+        ? ([
+            ['★★★', `par: ${par} moves`, stars.count >= 3],
+            ['★★', `${stars.twoStar ?? par} moves or fewer`, stars.count >= 2],
+          ] as Array<[string, string, boolean]>)
+        : []),
     ];
     rows.forEach(([label, value, ok], i) => {
       const y = 196 + i * 28;
       ctx.textAlign = 'left';
-      ctx.fillStyle = C.text;
+      ctx.fillStyle = label.startsWith('★') ? C.gold : C.text;
       ctx.font = '14px system-ui, sans-serif';
       ctx.fillText(label, 50, y);
       ctx.textAlign = 'right';
       ctx.font = 'bold 14px system-ui, sans-serif';
-      ctx.fillStyle = ok ? C.heal : C.textDim;
-      const mark = ok ? '✓' : earlier[i] ? '★' : '·';
-      ctx.fillText(`${value} ${mark}`, 290, y);
+      ctx.fillStyle = ok === null ? C.text : ok ? C.heal : C.textDim;
+      ctx.fillText(ok === null ? value : `${value} ${ok ? '✓' : '·'}`, 290, y);
     });
     ctx.textAlign = 'center';
     ctx.fillStyle = C.gold;

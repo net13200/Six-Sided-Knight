@@ -1,11 +1,10 @@
 /**
  * A campaign Gauntlet: a chapter finale of several floors played in a row.
- * HP carries over (+1 between floors, like runs), and the stars are earned
- * over the whole gauntlet: total moves within the summed par, no damage on
- * any floor, and every treasure on every floor.
+ * HP carries over with no healing between floors (like runs), and the stars
+ * are earned over the whole gauntlet from the total moves against the summed par.
  */
 import type { GameState, LevelData } from '../engine';
-import { healBetweenFloors } from '../meta/daily';
+import { START_HP } from '../meta/daily';
 import type { Game } from './game';
 import type { FloorRun, FloorSummary } from './runs';
 import type { Lesson } from './lessons';
@@ -14,7 +13,7 @@ import { computeStars } from './stars';
 
 export class Gauntlet implements FloorRun {
   private floor = 0;
-  private hp = 5;
+  private hp = START_HP;
   private moves = 0;
   private damage = 0;
   private kills = 0;
@@ -76,7 +75,7 @@ export class Gauntlet implements FloorRun {
     const cleared = this.floor + 1;
     if (cleared < this.floors.length) {
       this.floor = cleared;
-      this.hp = healBetweenFloors(state.player.hp);
+      this.hp = state.player.hp; // carried over, no healing between floors
       const summary: FloorSummary = {
         mode: 'gauntlet',
         floor: cleared,

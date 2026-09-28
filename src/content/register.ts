@@ -30,6 +30,8 @@ export const CORE_CONFIG: RulesConfig = {
   dieShape: 'd6',
   // Home slots (top, bottom, north, south, east, west) = the start orientation.
   defaultLoadout: ['Shield', 'Heart', 'Bomb', 'Key', 'Sword', 'Coin'],
+  // Tight on purpose: three hits and you're out.
+  maxHp: 3,
 };
 
 export const FACES = [Sword, Shield, Bomb, Heart, Key, Coin, Freeze, Hook];

@@ -4,10 +4,10 @@ import { generateLevel } from '../../src/gen/generate';
 import {
   DAILY_BANDS,
   MIN_ARRIVAL_HP,
+  START_HP,
   addDays,
   currentStreak,
   dailyFloorParams,
-  healBetweenFloors,
   recordDaily,
   shareText,
   utcDate,
@@ -17,7 +17,7 @@ import { freshSave } from '../../src/meta/save';
 import { solve } from '../../src/solver/solve';
 import { rules } from './helpers';
 
-const R = { moves: 30, hp: 4, stars: 7 };
+const R = { moves: 30, hp: 2, stars: 7 };
 
 describe('dates', () => {
   it('uses the UTC calendar date', () => {
@@ -60,9 +60,10 @@ describe('daily dungeon', () => {
     }
   }, 60_000);
 
-  it('heals 1 HP between floors, up to the cap', () => {
-    expect(healBetweenFloors(2)).toBe(3);
-    expect(healBetweenFloors(5)).toBe(5);
+  it('runs start at 3 HP and later floors must be winnable from 1 HP (no healing)', () => {
+    expect(START_HP).toBe(3);
+    expect(dailyFloorParams('2026-09-22', 1).hp).toBe(START_HP);
+    expect(MIN_ARRIVAL_HP).toBe(1);
   });
 });
 
@@ -80,7 +81,7 @@ describe('streaks', () => {
   it('only the first completion of a day counts', () => {
     const save = freshSave(0);
     recordDaily(save, '2026-09-20', R);
-    expect(recordDaily(save, '2026-09-20', { moves: 1, hp: 5, stars: 9 })).toBe(false);
+    expect(recordDaily(save, '2026-09-20', { moves: 1, hp: 3, stars: 9 })).toBe(false);
     expect(save.daily.results['2026-09-20']).toEqual(R);
     expect(save.daily.streak).toBe(1);
   });
@@ -113,7 +114,7 @@ describe('share text', () => {
       [
         'Six Sided Knight · Daily Roll 2026-09-22',
         '★★★★★★★☆☆ 7/9',
-        '30 moves · 4/5 HP left',
+        '30 moves · 2/3 HP left',
         '3-day streak',
         'https://example.test/game/',
       ].join('\n'),

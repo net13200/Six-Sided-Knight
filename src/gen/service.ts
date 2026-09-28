@@ -4,7 +4,7 @@
  * cached by level id, and `prefetch` warms the cache for the next floor.
  */
 import type { GameState, Rules } from '../engine';
-import { analyze, type LevelAnalysis } from '../solver/solve';
+import { solve, type SolveResult } from '../solver/solve';
 import { generateLevel, type GenParams, type Generated } from './generate';
 import type { WorkerRequest } from './worker';
 
@@ -68,12 +68,12 @@ export class LevelService {
   }
 
   /**
-   * Solutions for all three stars from `state` (dev tools: watching the par
-   * solution). Off the main thread, so hard levels never freeze the screen.
+   * The par solution (fewest moves) from `state`, for the dev tool that
+   * watches it. Off the main thread, so hard levels never freeze the screen.
    */
-  solve(state: GameState, healStar = false): Promise<LevelAnalysis> {
-    return this.post({ id: 0, kind: 'solve', state, healStar }, () =>
-      analyze(this.rules, state, 400_000, { healStar }),
+  solve(state: GameState): Promise<SolveResult> {
+    return this.post({ id: 0, kind: 'solve', state }, () =>
+      solve(this.rules, state, { maxNodes: 400_000 }),
     );
   }
 

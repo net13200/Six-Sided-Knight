@@ -28,7 +28,7 @@ describe('move outcomes (real rules)', () => {
     expect(o.W!.kind).toBe('open');
     expect(o.W!.chip?.label).toBe('+30');
     expect(o.S!.kind).toBe('hurt');
-    expect(o.S!.after.player.hp).toBe(4);
+    expect(o.S!.after.player.hp).toBe(2);
   });
 
   it('counts every knockout from a Bomb splash', () => {

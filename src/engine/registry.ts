@@ -140,6 +140,8 @@ export interface RulesConfig {
   readonly dieShape: string;
   /** Faces by home slot for the default die (slot order from the shape). */
   readonly defaultLoadout: readonly FaceId[];
+  /** Hit points the die starts a level with (and can't heal above). */
+  readonly maxHp: number;
 }
 
 /** Everything the simulation needs to know about content. Passed explicitly; no globals. */

@@ -1,16 +1,16 @@
 /**
  * Multi-floor runs: Daily Roll (3 floors, same for everyone each UTC day) and
  * Depths (endless). A run generates each floor, carries HP between floors
- * (+1 heal), saves progress so leaving and coming back resumes it, and
+ * (no healing), saves progress so leaving and coming back resumes it, and
  * prefetches the next floor while the current one is played.
  */
 import type { LevelData } from '../engine';
 import type { GenParams } from '../gen/generate';
 import {
   DAILY_FLOORS,
+  START_HP,
   currentStreak,
   dailyFloorParams,
-  healBetweenFloors,
   recordDaily,
 } from '../meta/daily';
 import { depthsFloorParams } from '../meta/depths';
@@ -77,7 +77,12 @@ export class Run implements FloorRun {
    * player can change it between floors (the floors themselves never change).
    */
   static newDaily(game: Game, date: string, practice = false): Run {
-    return new Run(game, 'daily', { key: date, floor: 1, hp: 5, moves: 0, stars: 0 }, practice);
+    return new Run(
+      game,
+      'daily',
+      { key: date, floor: 1, hp: START_HP, moves: 0, stars: 0 },
+      practice,
+    );
   }
 
   static newDepths(game: Game, seed: number): Run {
@@ -85,7 +90,7 @@ export class Run implements FloorRun {
     return new Run(game, 'depths', {
       key: String(seed),
       floor: 1,
-      hp: 5,
+      hp: START_HP,
       moves: 0,
       stars: 0,
       die,
@@ -164,9 +169,8 @@ export class Run implements FloorRun {
         game.analytics.track('streak_length', { days: game.save.data.daily.streak });
       }
     } else {
-      // More floors to go: heal and move on.
+      // More floors to go: HP carries over as it is (no healing between floors).
       p.floor += 1;
-      p.hp = healBetweenFloors(p.hp);
       if (this.mode === 'depths') {
         game.save.update((d) => {
           newBest = cleared > d.depths.bestFloor;

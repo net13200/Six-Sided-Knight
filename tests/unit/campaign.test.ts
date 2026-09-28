@@ -1,16 +1,16 @@
 /**
- * Every campaign level must load, be proven solvable by the solver, have a
- * par equal to the solver's minimum, and have all three stars achievable.
- * Gauntlets (chapter finales, several floors with HP carried over) must be
- * winnable floor by floor at the lowest arrival HP, and each of their stars
- * must be achievable across the whole run.
+ * Every campaign level must load, be proven winnable from the starting HP, and
+ * have a par equal to the solver's minimum (stars are about moves only).
+ * Gauntlets (chapter finales, several floors with HP carried over and no
+ * healing between floors) must be winnable floor by floor from 1 HP, and
+ * ★★★ (the summed par) must be reachable over the whole run.
  */
 import { describe, expect, it } from 'vitest';
 import { createState, step, type GameState, type LevelData } from '../../src/engine';
-import { healBetweenFloors, MIN_ARRIVAL_HP } from '../../src/meta/daily';
+import { MIN_ARRIVAL_HP, START_HP } from '../../src/meta/daily';
 import { CHAPTER_SIZE } from '../../src/meta/progress';
 import { loadCampaign, loadGauntletFloors } from '../../src/levels/campaign';
-import { analyze, solve, type SolveOptions } from '../../src/solver/solve';
+import { solve, type SolveOptions } from '../../src/solver/solve';
 import { rules } from './helpers';
 
 const levels = loadCampaign(rules);
@@ -41,26 +41,24 @@ describe('campaign', () => {
   });
 
   for (const level of levels) {
-    it(`${level.id} is solvable, par is the minimum, and every star is achievable`, () => {
-      const a = analyze(rules, createState(rules, level), undefined, { healStar: level.healStar });
-      expect(a.any.status).toBe('solved');
-      expect(level.par).toBe(a.any.moves);
-      expect(a.noDamage.status, 'no-damage star').toBe('solved');
-      expect(a.allGold.status, 'all-gold star').toBe('solved');
+    it(`${level.id} is winnable from ${START_HP} HP and par is the minimum`, () => {
+      const r = solve(rules, createState(rules, level), { maxNodes: 400_000 });
+      expect(r.status).toBe('solved');
+      expect(level.par).toBe(r.moves);
     }, 30_000);
   }
 });
 
 /** Plays each floor with `opts`, carrying HP like the game does. Returns false if a floor can't be won. */
 function chain(floors: readonly LevelData[], opts: SolveOptions, checkPar = false): boolean {
-  let hp = 5;
+  let hp = START_HP;
   for (const floor of floors) {
     let s: GameState = createState(rules, floor, { hp });
     const r = solve(rules, s, { maxNodes: 400_000, ...opts });
     if (r.status !== 'solved') return false;
     if (checkPar && r.moves !== floor.par) return false;
     for (const dir of r.path) s = step(rules, s, { type: 'move', dir }).state;
-    hp = healBetweenFloors(s.player.hp);
+    hp = s.player.hp; // no healing between floors
   }
   return true;
 }
@@ -70,11 +68,9 @@ describe('gauntlets', () => {
     const floors = [levels.find((l) => l.id === id)!, ...extra];
     it(`${id}: ${floors.length} floors, each winnable at ${MIN_ARRIVAL_HP} HP, par is the minimum`, () => {
       floors.forEach((floor, i) => {
-        const a = analyze(rules, createState(rules, floor), undefined, {
-          healStar: floor.healStar,
-        });
-        expect(a.any.status, floor.id).toBe('solved');
-        expect(floor.par, floor.id).toBe(a.any.moves);
+        const r = solve(rules, createState(rules, floor), { maxNodes: 400_000 });
+        expect(r.status, floor.id).toBe('solved');
+        expect(floor.par, floor.id).toBe(r.moves);
         if (i > 0) {
           const low = solve(rules, createState(rules, floor, { hp: MIN_ARRIVAL_HP }), {
             maxNodes: 400_000,
@@ -84,18 +80,8 @@ describe('gauntlets', () => {
       });
     }, 30_000);
 
-    it(`${id}: every star is achievable over the whole gauntlet`, () => {
-      expect(chain(floors, {}, true), 'par star').toBe(true);
-      expect(chain(floors, { allow: (s) => s.stats.damageTaken === 0 }), 'no-damage star').toBe(
-        true,
-      );
-      expect(
-        chain(floors, {
-          accept: (s) => s.stats.treasuresCollected === s.stats.treasuresTotal,
-          keyExtra: (s) => s.stats.treasuresCollected,
-        }),
-        'all-gold star',
-      ).toBe(true);
+    it(`${id}: ★★★ (the summed par) is reachable over the whole run`, () => {
+      expect(chain(floors, {}, true)).toBe(true);
     }, 30_000);
   }
 });

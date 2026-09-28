@@ -15,13 +15,8 @@ export const SAVE_VERSION = 3;
 export const LEGACY_SETTINGS_KEY = 'ssk.settings.v1';
 
 export interface LevelRecord {
-  /** Stars earned (0-3), counted over all attempts: each star is kept once earned. */
+  /** Best star count (0-3) over all attempts. */
   stars: number;
-  /**
-   * Which stars were earned (bit 1 par, 2 no damage, 4 all gold), over all
-   * attempts. Missing on records from before 0.7.1 (only the count was kept).
-   */
-  starMask?: number;
   /** Fewest moves in a win. */
   bestMoves: number;
   completions: number;
@@ -244,7 +239,6 @@ export function normalize(data: Json, now: number): SaveData {
     if (!rec || typeof rec !== 'object') continue;
     levels[id] = {
       stars: clampInt(rec.stars, 0, 3),
-      ...(rec.starMask !== undefined ? { starMask: clampInt(rec.starMask, 0, 7) } : {}),
       bestMoves: clampInt(rec.bestMoves, 0, 1e6),
       completions: clampInt(rec.completions, 0, 1e9),
       bestTimeMs: clampInt(rec.bestTimeMs, 0, 1e12),

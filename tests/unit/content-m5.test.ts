@@ -33,7 +33,7 @@ describe('ice', () => {
   it('sliding onto the exit wins; onto spikes hurts (bottom face unchanged)', () => {
     expect(run(start(['#@==>###']), 'E')[0]!.state.status).toBe('won');
     const hurt = run(start(['#@=^###>']), 'E')[0]!.state;
-    expect(hurt.player).toMatchObject({ x: 3, hp: 4 });
+    expect(hurt.player).toMatchObject({ x: 3, hp: 2 });
   });
 
   it('enemies walk on ice normally (one step, no slide)', () => {
@@ -93,15 +93,15 @@ describe('Archer', () => {
     // Rolling east puts Coin on top, so the arrow is not blocked.
     const r = run(start(['#@...a.>']), 'E')[0]!;
     expect(r.state.enemies[0]).toMatchObject({ x: 5 });
-    expect(r.state.player.hp).toBe(4);
+    expect(r.state.player.hp).toBe(2);
   });
 
   it('walls and other enemies block arrows; Shield on top blocks the hit', () => {
-    expect(run(start(['#@..#a.>', '#......#']), 'E')[0]!.state.player.hp).toBe(5);
-    expect(run(start(['#@...ka>']), 'E')[0]!.state.player.hp).toBeGreaterThanOrEqual(4);
+    expect(run(start(['#@..#a.>', '#......#']), 'E')[0]!.state.player.hp).toBe(3);
+    expect(run(start(['#@...ka>']), 'E')[0]!.state.player.hp).toBeGreaterThanOrEqual(2);
     // Shield on top after rolling east = Shield was on the west.
     const shielded = start(['#@...a.>'], { start: { west: 'Shield' } });
-    expect(run(shielded, 'E')[0]!.state.player.hp).toBe(5);
+    expect(run(shielded, 'E')[0]!.state.player.hp).toBe(3);
   });
 
   it('reports its danger lanes for the UI, stopping at walls and the die', () => {

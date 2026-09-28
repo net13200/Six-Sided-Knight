@@ -13,7 +13,6 @@
  *   "start": { "top": "<face>", "east": "<face>" }, // optional orientation constraints
  *   "enemies": [{ "x": 3, "y": 2, "data": { "wait": 0 } }], // optional per-enemy overrides
  *   "loadout": [<face id>, ...],  // optional: die faces by home slot (to swap faces)
- *   "healStar": true              // optional: 2nd star = finish at full HP (not "no damage")
  * }
  *
  * Plain-text form (.txt), converted by parseTextLevel():
@@ -21,7 +20,6 @@
  *   name: First Roll
  *   par: 6
  *   enemies: 2,3 hp=1; 4,3 ready    (optional overrides: hp, or data flags/values)
- *   star: full-hp                    (optional, see healStar)
  *   ---
  *   ########
  *   #@...>.#
@@ -61,7 +59,6 @@ export interface LevelData {
    * The second star is "finish at full HP" instead of "take no damage" (for
    * levels where getting hurt is the point, e.g. teaching healing).
    */
-  readonly healStar?: boolean;
 }
 
 export class LevelError extends Error {
@@ -95,7 +92,6 @@ export function parseTextLevel(text: string): LevelData {
     start?: Record<string, string>;
     loadout?: string[];
     enemies?: LevelEnemyOverride[];
-    healStar?: boolean;
   } = {
     schema: LEVEL_SCHEMA_VERSION,
     id: meta.id ?? '',
@@ -114,7 +110,6 @@ export function parseTextLevel(text: string): LevelData {
     );
   }
   if (meta.loadout !== undefined) data.loadout = meta.loadout.split(/\s+/).filter(Boolean);
-  if (meta.star === 'full-hp') data.healStar = true;
   if (meta.enemies !== undefined) data.enemies = parseEnemyOverrides(meta.enemies);
   return data;
 }
@@ -291,7 +286,7 @@ export function createState(rules: Rules, level: LevelData, opts: CreateOptions 
   const orient = level.start ? findOrientation(shape, loadout, level.start) : 0;
   if (orient < 0)
     throw new LevelError(level.id, ['start orientation is impossible for this loadout']);
-  const maxHp = opts.maxHp ?? 5;
+  const maxHp = opts.maxHp ?? rules.config.maxHp;
   return {
     levelId: level.id,
     width: GRID_WIDTH,

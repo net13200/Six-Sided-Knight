@@ -11,7 +11,7 @@ describe('screen-reader descriptions', () => {
   it('describes HP, faces, every move, the exit and enemies', () => {
     const s = start(['#......#', '#@k...>#']);
     const text = describeBoard(rules, s, outcomes(s));
-    expect(text).toContain('HP 5 of 5');
+    expect(text).toContain('HP 3 of 3');
     expect(text).toContain('Top face Shield, bottom Heart');
     expect(text).toContain('Right: Sword leads. Knocks out the Skeleton');
     expect(text).toContain('Exit: 5 right');
@@ -24,6 +24,6 @@ describe('screen-reader descriptions', () => {
     const after = step(rules, s, { type: 'move', dir: 'E' }).state;
     const line = describeTurn(s, after, o);
     expect(line).toMatch(/^Rolls to the next tile\./);
-    if (after.player.hp < 5) expect(line).toContain(`HP ${after.player.hp} of 5`);
+    if (after.player.hp < 3) expect(line).toContain(`HP ${after.player.hp} of 3`);
   });
 });

@@ -47,31 +47,22 @@ export function totalStars(save: SaveData): number {
 }
 
 export interface WinRecord {
-  /** Which stars this attempt earned (bit 1 par, 2 no damage, 4 all gold). */
-  readonly starMask: number;
+  /** Stars this attempt earned (0-3, from moves). */
+  readonly stars: number;
   readonly moves: number;
   readonly timeMs: number;
 }
 
-export const STAR_BITS = { par: 1, noDamage: 2, allGold: 4 } as const;
-
-export function countStars(mask: number): number {
-  return (mask & 1) + ((mask >> 1) & 1) + ((mask >> 2) & 1);
-}
-
 /**
- * Stores a win. Stars are kept once earned, so they can be collected over
- * several attempts (a fast run, a careful run, a greedy run). Returns true if
- * the level's star count went up.
+ * Stores a win. The best star count is kept (a later, slower run never takes
+ * stars away). Returns true if the level's star count went up.
  */
 export function recordWin(save: SaveData, levelId: string, win: WinRecord): boolean {
   const prev = save.levels[levelId];
-  const mask = (prev?.starMask ?? 0) | win.starMask;
-  const stars = Math.max(prev?.stars ?? 0, countStars(mask));
+  const stars = Math.max(prev?.stars ?? 0, Math.max(0, Math.min(3, win.stars)));
   const improved = !prev || stars > prev.stars;
   save.levels[levelId] = {
     stars,
-    starMask: mask,
     bestMoves: prev && prev.bestMoves > 0 ? Math.min(prev.bestMoves, win.moves) : win.moves,
     completions: (prev?.completions ?? 0) + 1,
     bestTimeMs: prev && prev.bestTimeMs > 0 ? Math.min(prev.bestTimeMs, win.timeMs) : win.timeMs,

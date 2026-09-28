@@ -171,7 +171,7 @@ export class PlayScene implements Scene {
         this.watch = null;
       },
     });
-    this.watch.open(this.game.levelService.solve(this.initial, this.level.healStar === true));
+    this.watch.open(this.game.levelService.solve(this.initial));
   }
 
   /** The level's lesson, the first time: it types itself out and play waits for "Got it". */

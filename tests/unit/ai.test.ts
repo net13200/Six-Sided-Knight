@@ -78,9 +78,9 @@ describe('enemy phase', () => {
     expect(acted).toEqual([true, false, true]);
   });
 
-  it('skeletons act every turn and hit for 1', () => {
+  it('skeletons act every turn and hit for 1 (3 hits and you are out)', () => {
     const s = start(['.......>', '.@k.....'], { start: { east: 'Key', top: 'Sword' } });
     const hp = run(s, 'EEE').map((r) => r.state.player.hp);
-    expect(hp).toEqual([4, 3, 2]);
+    expect(hp).toEqual([2, 1, 0]);
   });
 });

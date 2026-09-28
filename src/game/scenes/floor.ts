@@ -1,5 +1,5 @@
 /** Between floors of a run (and the end of a Daily Roll). */
-import { currentStreak, shareText } from '../../meta/daily';
+import { START_HP, currentStreak, shareText } from '../../meta/daily';
 import type { Game } from '../game';
 import type { Command } from '../input';
 import type { FloorRun, FloorSummary } from '../runs';
@@ -129,17 +129,16 @@ export class FloorScene implements Scene {
       84,
     );
 
-    // HP after the +1 heal (what the next floor starts with).
-    const hpNext = s.final ? s.hp : Math.min(5, s.hp + 1);
-    for (let i = 0; i < 5; i++) {
-      ctx.globalAlpha = i < hpNext ? 1 : 0.2;
-      drawFace(ctx, 'Heart', 110 + i * 30, 132, 22);
+    // HP carries over as it is: what's left now is what the next floor starts with.
+    for (let i = 0; i < START_HP; i++) {
+      ctx.globalAlpha = i < s.hp ? 1 : 0.2;
+      drawFace(ctx, 'Heart', 170 + (i - (START_HP - 1) / 2) * 30, 132, 22);
     }
     ctx.globalAlpha = 1;
     ctx.fillStyle = C.text;
     ctx.font = '13px system-ui, sans-serif';
     ctx.fillText(
-      s.final ? `${s.hp}/5 HP left` : `+1 HP · next floor starts at ${hpNext}/5`,
+      s.final ? `${s.hp}/${START_HP} HP left` : `Next floor starts at ${s.hp}/${START_HP} HP`,
       170,
       162,
     );

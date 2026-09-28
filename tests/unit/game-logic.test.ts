@@ -3,42 +3,30 @@ import { describe, expect, it } from 'vitest';
 import { keyCommand, swipeDirection, tapDirection, SWIPE_THRESHOLD } from '../../src/game/input';
 import { MAX_FRAME, STEP, accumulate } from '../../src/game/loop';
 import { TRANSITIONS, canTransition } from '../../src/game/scenes/scene';
-import { computeStars } from '../../src/game/stars';
+import { computeStars, twoStarLimit } from '../../src/game/stars';
 import { tileAt, tileCenter } from '../../src/game/view/layout';
 import { level, run, start } from './helpers';
 
 describe('stars', () => {
   const lvl = level(['#@*..>##'], { par: 4 });
 
-  it('awards all three for a clean, fast, complete run', () => {
-    const s = run(start(['#@*..>##'], { par: 4 }), 'EEEE');
-    const final = s[s.length - 1]!.state;
-    expect(final.status).toBe('won');
-    expect(computeStars(lvl, final)).toEqual({
-      par: true,
-      noDamage: true,
-      allGold: true,
-      count: 3,
-    });
+  it('stars are about moves: ★★★ at par, ★★ a few moves over, ★ for finishing', () => {
+    const won = run(start(['#@*..>##'], { par: 4 }), 'EEEE').at(-1)!.state;
+    expect(won.status).toBe('won');
+    const at = (moves: number) => computeStars(lvl, { ...won, stats: { ...won.stats, moves } });
+    expect(at(4)).toEqual({ count: 3, moves: 4, par: 4, twoStar: 6 });
+    expect(at(6).count).toBe(2);
+    expect(at(7).count).toBe(1);
+    // Damage and treasure don't matter.
+    const hurt = { ...won, stats: { ...won.stats, damageTaken: 2, treasuresCollected: 0 } };
+    expect(computeStars(lvl, hurt).count).toBe(3);
   });
 
-  it('withholds each star independently', () => {
-    const won = run(start(['#@*..>##'], { par: 4 }), 'EEEE').at(-1)!.state;
-    const slow = { ...won, stats: { ...won.stats, moves: 5 } };
-    const hurt = { ...won, stats: { ...won.stats, damageTaken: 1 } };
-    const poor = { ...won, stats: { ...won.stats, treasuresCollected: 0 } };
-    expect(computeStars(lvl, slow)).toMatchObject({ par: false, count: 2 });
-    expect(computeStars(lvl, hurt)).toMatchObject({ noDamage: false, count: 2 });
-    expect(computeStars(lvl, poor)).toMatchObject({ allGold: false, count: 2 });
-  });
-
-  it('on a healing lesson the second star is for finishing at full HP', () => {
-    const won = run(start(['#@*..>##'], { par: 4 }), 'EEEE').at(-1)!.state;
-    const heal = { ...lvl, healStar: true };
-    const healed = { ...won, stats: { ...won.stats, damageTaken: 3 } };
-    const hurt = { ...healed, player: { ...won.player, hp: 4 } };
-    expect(computeStars(heal, healed)).toMatchObject({ noDamage: true, count: 3 });
-    expect(computeStars(heal, hurt)).toMatchObject({ noDamage: false, count: 2 });
+  it('★★ allows a quarter of par extra (at least 2 moves)', () => {
+    expect(twoStarLimit(4)).toBe(6);
+    expect(twoStarLimit(8)).toBe(10);
+    expect(twoStarLimit(20)).toBe(25);
+    expect(twoStarLimit(21)).toBe(27);
   });
 
   it('gives nothing for an unfinished level', () => {

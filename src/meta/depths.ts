@@ -1,7 +1,7 @@
 /** Depths: endless generated floors with rising difficulty. Pure functions. */
 import { seedFrom } from '../engine';
 import type { GenParams } from '../gen/generate';
-import { MIN_ARRIVAL_HP } from './daily';
+import { MIN_ARRIVAL_HP, START_HP } from './daily';
 
 /** Difficulty band for a floor: starts easy, climbs, then plateaus near the top. */
 export function depthsBand(floor: number): [number, number] {
@@ -22,6 +22,6 @@ export function depthsFloorParams(
     band: depthsBand(floor),
     id: `depths-${floor}`,
     name: `Depths · floor ${floor}`,
-    hp: floor === 1 ? 5 : MIN_ARRIVAL_HP,
+    hp: floor === 1 ? START_HP : MIN_ARRIVAL_HP,
   };
 }

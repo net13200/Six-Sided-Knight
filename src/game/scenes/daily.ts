@@ -1,5 +1,5 @@
 /** Daily Roll hub: today's date, streak, and start / continue / share. */
-import { DAILY_FLOORS, currentStreak, shareText, utcDate } from '../../meta/daily';
+import { DAILY_FLOORS, START_HP, currentStreak, shareText, utcDate } from '../../meta/daily';
 import type { Game } from '../game';
 import type { Command } from '../input';
 import { Run } from '../runs';
@@ -136,10 +136,10 @@ export class DailyScene implements Scene {
       for (let i = 0; i < DAILY_FLOORS * 3; i++)
         drawStar(ctx, 114 + i * 14, 262, 6, i < result.stars);
       ctx.fillStyle = C.heal;
-      ctx.fillText(`Done today: ${result.moves} moves · ${result.hp}/5 HP`, 170, 288);
+      ctx.fillText(`Done today: ${result.moves} moves · ${result.hp}/${START_HP} HP`, 170, 288);
     } else {
       ctx.fillStyle = C.text;
-      ctx.fillText('3 floors · HP carries over · +1 HP per floor', 170, 270);
+      ctx.fillText('3 floors · HP carries over · no healing', 170, 270);
     }
   }
 }

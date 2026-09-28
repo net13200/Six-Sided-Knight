@@ -63,7 +63,7 @@ describe('attacking with the leading face', () => {
     expect(r.state.enemies[0]!.hp).toBe(2);
     expect(r.state.stats.moves).toBe(1);
     // The skeleton hits back (Sword on top does not block).
-    expect(r.state.player.hp).toBe(4);
+    expect(r.state.player.hp).toBe(2);
   });
 });
 
@@ -71,7 +71,7 @@ describe('Shield on top', () => {
   it('blocks enemy hits', () => {
     const s = start(['#@k...>#'], { start: { top: 'Shield', east: 'Key' } });
     const r = run(s, 'E')[0]!;
-    expect(r.state.player.hp).toBe(5);
+    expect(r.state.player.hp).toBe(3);
     const hit = r.events.find((e) => e.type === 'enemyAttacked');
     expect(hit).toMatchObject({ damage: 0, blocked: true });
     expect(r.state.stats.damageTaken).toBe(0);
@@ -114,15 +114,15 @@ describe('tiles', () => {
   it('spikes hurt 1 unless Shield lands on the bottom', () => {
     // Rolling east puts the old east face on the bottom.
     const hurt = run(start(['#@^...>#']), 'E')[0]!; // Sword to bottom
-    expect(hurt.state.player.hp).toBe(4);
+    expect(hurt.state.player.hp).toBe(2);
     const safe = run(start(['#@^...>#'], { start: { east: 'Shield' } }), 'E')[0]!;
-    expect(safe.state.player.hp).toBe(5);
+    expect(safe.state.player.hp).toBe(3);
   });
 
-  it('pool heals 2 and dries only with Heart on the bottom while hurt', () => {
+  it('pool heals 1 and dries only with Heart on the bottom while hurt', () => {
     const s = start(['#@~...>#'], { start: { east: 'Heart' } }, { hp: 2 });
     const r = run(s, 'E')[0]!;
-    expect(r.state.player.hp).toBe(4);
+    expect(r.state.player.hp).toBe(3);
     expect(r.state.tiles[2]).toBe('floor');
 
     const full = run(start(['#@~...>#'], { start: { east: 'Heart' } }), 'E')[0]!;
@@ -133,8 +133,8 @@ describe('tiles', () => {
     expect(wrongFace.state.tiles[2]).toBe('pool');
   });
 
-  it('heal is capped at max HP', () => {
-    const s = start(['#@~...>#'], { start: { east: 'Heart' } }, { hp: 4 });
+  it('heal is capped at max HP (a full die leaves the pool alone)', () => {
+    const s = start(['#@~...>#'], { start: { east: 'Heart' } }, { maxHp: 5, hp: 5 });
     expect(run(s, 'E')[0]!.state.player.hp).toBe(5);
   });
 
@@ -148,7 +148,7 @@ describe('tiles', () => {
     const s = start(['#@>....#', '#.k....#']);
     const r = run(s, 'E')[0]!;
     expect(r.state.status).toBe('won');
-    expect(r.state.player.hp).toBe(5);
+    expect(r.state.player.hp).toBe(3);
     expect(types(r.events)).toContain('won');
     expect(types(r.events)).not.toContain('enemyAttacked');
     // No further actions once won.

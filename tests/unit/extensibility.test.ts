@@ -103,7 +103,7 @@ describe('adding content through registries only', () => {
     // Rolling east brings the west face to the top; make sure it isn't Shield.
     const s = start(['#@.t..>#'], { start: { west: 'Heart' } }, {}, rules);
     const r = run(s, 'E', rules)[0]!;
-    expect(r.state.player.hp).toBe(3);
+    expect(r.state.player.hp).toBe(1);
     expect(r.state.enemies[0]).toMatchObject({ x: 3, y: 0 });
   });
 });

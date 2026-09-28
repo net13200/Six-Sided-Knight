@@ -35,7 +35,7 @@ import { setDieSkin } from './view/cube';
 import { activeSkin, newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/skins';
 import { canTransition, type Scene } from './scenes/scene';
 import type { PlaySession } from './session';
-import { starMask, type StarResult } from './stars';
+import type { StarResult } from './stars';
 import { C, displayPrefs, setHighContrast } from './view/palette';
 import type { Stage } from './view/stage';
 
@@ -46,8 +46,8 @@ export const TUTORIAL_LENGTH = 10;
 
 export interface WinSummary {
   readonly stars: StarResult;
-  /** Stars kept from earlier attempts (bitmask), before and after this win. */
-  readonly earlierMask: number;
+  /** Best star count before this win (earlier attempts), and after it. */
+  readonly earlierStars: number;
   readonly totalStars: number;
   readonly improved: boolean;
   readonly firstClear: boolean;
@@ -182,7 +182,7 @@ export class Game {
     this.goPlaySession({
       mode: 'campaign',
       level,
-      startHp: 5,
+      startHp: this.rules.config.maxHp,
       title: `${i + 1}. ${level.name}`,
       campaignIndex: i,
       lesson,
@@ -289,13 +289,12 @@ export class Game {
     const level = this.levels[index]!;
     const firstClear = (this.save.data.levels[level.id]?.completions ?? 0) === 0;
     const before = this.save.data.levels[level.id]?.stars ?? 0;
-    const earlierMask = this.save.data.levels[level.id]?.starMask ?? 0;
     const skinsBefore = unlockedSkins(this.save.data);
     let improved = false;
     let crowns = 0;
     this.save.update((d) => {
       improved = recordWin(d, level.id, {
-        starMask: starMask(stars),
+        stars: stars.count,
         moves: state.stats.moves,
         timeMs,
       });
@@ -318,7 +317,7 @@ export class Game {
     }
     const newSkins = newlyUnlocked(skinsBefore, unlockedSkins(this.save.data));
     const totalStars = this.save.data.levels[level.id]?.stars ?? stars.count;
-    return { stars, earlierMask, totalStars, improved, firstClear, crowns, newSkins };
+    return { stars, earlierStars: before, totalStars, improved, firstClear, crowns, newSkins };
   }
 
   // ---------- loop hooks ----------
