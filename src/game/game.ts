@@ -41,6 +41,7 @@ import { StoryScene } from './scenes/story';
 import { lessonFor, lessonKey, type Lesson } from './lessons';
 import { ENDING, STORY_KEYS, storyBeforeLevel, storySoFar, type StoryPage } from './story';
 import { setDieSkin } from './view/cube';
+import { setSkinMotion } from './view/skin-fx';
 import { activeSkin, newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/skins';
 import { canTransition, type Scene } from './scenes/scene';
 import type { PlaySession } from './session';
@@ -119,6 +120,8 @@ export class Game {
     displayPrefs.largeLabels = s.largeLabels;
     this.stage.root.classList.toggle('high-contrast', s.highContrast);
     this.stage.root.classList.toggle('large-labels', s.largeLabels);
+    // Skin flames and glints hold still when motion is reduced.
+    setSkinMotion(!this.reducedMotion);
   }
 
   /** Background music volume, 0 (off) to 1. */
@@ -138,6 +141,7 @@ export class Game {
   /** Draws the die with the equipped skin from now on. */
   applySkin(): void {
     setDieSkin(activeSkin(this.save.data));
+    setSkinMotion(!this.reducedMotion);
   }
 
   get tutorialLevels(): string[] {

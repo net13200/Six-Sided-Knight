@@ -1,7 +1,8 @@
 /**
  * Die skins: purely cosmetic, unlocked by stars and daily streaks. A skin
- * only changes the die's frame, rim and a subtle pattern; the face icons and
- * their role colours never change, so every skin reads the same in play.
+ * changes the die's frame, rim and pattern, and (src/game/view/skin-fx.ts) the
+ * top face's material and effects around the die; the face icons and the side
+ * facets' role colours never change, so every skin reads the same in play.
  */
 import { totalStars } from './progress';
 import type { SaveData } from './save';

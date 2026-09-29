@@ -13,6 +13,7 @@ import { SKINS, type SkinDef } from '../../meta/skins';
 import { drawFace } from './art';
 import { C } from './palette';
 import { roleColor } from './roles';
+import { SKIN_FX, skinTime } from './skin-fx';
 
 export function facesOf(die: DieState, orient = die.orient): Record<string, string> {
   const shape = getShape(die.shape);
@@ -71,7 +72,10 @@ export function drawDieCube(
   ctx.translate(cx, cy);
   ctx.scale(look.sx, look.sy);
 
-  if (skin.glow) {
+  const fx = SKIN_FX[skin.id];
+  const t = skinTime();
+  if (fx?.back) fx.back(ctx, R, t);
+  else if (skin.glow) {
     const g = ctx.createRadialGradient(0, 0, R * 0.6, 0, 0, R * 1.5);
     g.addColorStop(0, skin.glow);
     g.addColorStop(1, 'rgba(0,0,0,0)');
@@ -86,7 +90,7 @@ export function drawDieCube(
   ctx.fill();
   if (showBottom) drawBottomBadge(ctx, faces.bottom ?? '', R - 1, R + 2, 7.5, 0.95);
 
-  for (const [slot, dx, dy] of SIDES) {
+  SIDES.forEach(([slot, dx, dy], side) => {
     const face = faces[slot] ?? '';
     const path = () => {
       ctx.beginPath();
@@ -108,7 +112,13 @@ export function drawDieCube(
     ctx.fill();
     ctx.fillStyle = SIDE_LIGHT[slot]!;
     ctx.fill();
-    if (skin.pattern !== 'none') {
+    if (fx?.panel) {
+      ctx.save();
+      ctx.clip();
+      fx.panel(ctx, R, r, side, t);
+      ctx.restore();
+      path();
+    } else if (skin.pattern !== 'none') {
       ctx.save();
       ctx.clip();
       drawPattern(ctx, skin, R);
@@ -120,13 +130,22 @@ export function drawDieCube(
     ctx.stroke();
     const mid = (r + R) / 2;
     drawFace(ctx, face, dx * mid, dy * mid, 12);
-  }
+  });
 
-  // Top face
+  // Top face: the skin's material, or plain ivory.
   ctx.beginPath();
   ctx.roundRect(-r, -r, r * 2, r * 2, 4);
-  ctx.fillStyle = '#fbf6ea';
-  ctx.fill();
+  if (fx?.top) {
+    ctx.save();
+    ctx.clip();
+    fx.top(ctx, r, t);
+    ctx.restore();
+    ctx.beginPath();
+    ctx.roundRect(-r, -r, r * 2, r * 2, 4);
+  } else {
+    ctx.fillStyle = '#fbf6ea';
+    ctx.fill();
+  }
   ctx.strokeStyle = C.outline;
   ctx.lineWidth = 2.5;
   ctx.stroke();
@@ -144,6 +163,8 @@ export function drawDieCube(
     ctx.lineWidth = 2;
     ctx.stroke();
   }
+
+  fx?.front?.(ctx, R, t);
 
   if (look.flash > 0) {
     ctx.globalAlpha = look.flash * 0.55;

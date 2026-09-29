@@ -2,6 +2,10 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## Unreleased
+
+- **Skins come alive.** Each skin now has its own material and effects, not just a coloured rim. Ember's die burns: a molten top face with glowing cracks, flames licking off its sides and sparks rising. Flame roars with taller crimson fire, Frost is ice with crystals and glints, Gilded is gold with a sweeping shine, Night Sky has twinkling stars, a moon and the odd shooting star, Royal is purple velvet with gold trim, Bone is cracked ivory, and Moss creeps in from the corners. The side facets keep their role colours, so the die reads the same in play. With reduced motion, the effects hold still.
+
 ## 0.10.0 — One life, cold hands
 
 - **The Depths: one life.** No Undo, no Retry, and no peeking at the solution. Being knocked out ends the run on the spot and shows how deep you got; your high score (most floors cleared in one run) and your last run are saved. Leaving mid-floor keeps every move you made, so coming back picks up exactly where you were.
