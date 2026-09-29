@@ -19,6 +19,7 @@ function nodePos(i: number): { x: number; y: number } {
 
 export class RangerMapScene implements Scene {
   readonly name = 'ranger-map';
+  readonly backdrop = 'forest' as const;
   private t = 0;
 
   constructor(private readonly game: Game) {}

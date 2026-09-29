@@ -17,11 +17,13 @@ import { TUTORIAL_LENGTH, type Game } from '../game';
 import type { PlaySession } from '../session';
 import type { Command } from '../input';
 import { tapDirection } from '../input';
-import { computeStars } from '../stars';
+import { computeStars, twoStarLimit } from '../stars';
 import { el, icon, iconButton, place } from '../ui';
 import { IS_POKI } from '../../platform/target';
 import { animateBump, animateTurn } from '../view/animate';
 import { drawFace } from '../view/art';
+import { drawControls, sideCard, touchFirst, wrap } from '../view/backdrop';
+import { drawStar } from './common';
 import { drawBoard, drawCompass } from '../view/board';
 import { predictOutcome, type Outcome } from '../view/outcome';
 import { describeBoard, describeTurn } from '../view/describe';
@@ -29,6 +31,7 @@ import { Fx } from '../view/fx';
 import { BAR_Y, BOARD_X, BOARD_Y, TILE, tileAt } from '../view/layout';
 import { C, displayPrefs } from '../view/palette';
 import { muteButton } from './common';
+import { CHAPTER_NAMES, CHAPTER_SIZE } from '../../meta/progress';
 import { InspectView } from './inspect';
 import { LessonCard } from './lesson-card';
 import { SolutionWatch } from './watch';
@@ -592,6 +595,86 @@ export class PlayScene implements Scene {
       ctx.fillText(this.level.hint, 170, hy + 11);
       ctx.restore();
     }
+  }
+
+  /** Wide screens: the level and its star targets on the left, controls on the right. */
+  renderSide(ctx: CanvasRenderingContext2D, side: 'left' | 'right', w: number, h: number): void {
+    const cardH = side === 'left' ? 300 : 330;
+    ctx.save();
+    ctx.translate(0, (h - cardH) / 2);
+    if (side === 'left') this.levelCard(ctx, w, cardH);
+    else this.controlsCard(ctx, w, cardH);
+    ctx.restore();
+  }
+
+  private levelCard(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+    const s = this.state;
+    const i = this.session.campaignIndex;
+    let y = sideCard(
+      ctx,
+      w,
+      h,
+      i !== null
+        ? `Chapter ${Math.floor(i / CHAPTER_SIZE) + 1} · ${CHAPTER_NAMES[Math.floor(i / CHAPTER_SIZE)] ?? ''}`
+        : this.session.title,
+    );
+    ctx.fillStyle = C.text;
+    ctx.font = '800 20px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    y = wrap(ctx, i !== null ? this.level.name : this.level.name, 16, y + 4, w - 32, 24);
+    ctx.fillStyle = C.textDim;
+    ctx.font = '13px system-ui, sans-serif';
+    ctx.fillText('Moves', 16, y + 14);
+    ctx.fillStyle = C.text;
+    ctx.font = '800 34px system-ui, sans-serif';
+    ctx.fillText(String(s.stats.moves), 16, y + 44);
+    y += 78;
+    const par = this.level.par;
+    if (par !== undefined) {
+      const tiers: Array<[number, string]> = [
+        [3, `${par} moves or fewer`],
+        [2, `${twoStarLimit(par)} or fewer`],
+        [1, 'Reach the stairs'],
+      ];
+      const now = s.stats.moves <= par ? 3 : s.stats.moves <= twoStarLimit(par) ? 2 : 1;
+      for (const [n, text] of tiers) {
+        for (let k = 0; k < 3; k++) drawStar(ctx, 24 + k * 15, y, 6, k < n);
+        ctx.fillStyle = n === now ? C.text : C.textDim;
+        ctx.font = `${n === now ? 'bold ' : ''}13px system-ui, sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.fillText(text, 76, y + 1);
+        y += 28;
+      }
+    }
+    y += 6;
+    for (let k = 0; k < s.player.maxHp; k++) {
+      ctx.globalAlpha = k < s.player.hp ? 1 : 0.2;
+      drawFace(ctx, 'Heart', 26 + k * 24, y + 4, 18);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  private controlsCard(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+    const y = sideCard(ctx, w, h, 'How to play');
+    const rows: ReadonlyArray<readonly [string, string]> = touchFirst()
+      ? [
+          ['Swipe', 'Roll the die one tile'],
+          ['Tap', 'Roll toward a tile'],
+          ['Die', 'Tap it to see all six faces'],
+        ]
+      : [
+          ['← ↑ → ↓', 'Roll the die one tile (or W A S D)'],
+          ['Z', 'Undo a move'],
+          ['R', 'Retry the level'],
+          ['I', 'Look at all six faces'],
+          ['H', 'Hear the board described'],
+          ['M', 'Sound on or off'],
+          ['Esc', 'Back to the menu'],
+        ];
+    const end = drawControls(ctx, w, y + 4, rows);
+    ctx.fillStyle = C.textDim;
+    ctx.font = '12px system-ui, sans-serif';
+    wrap(ctx, 'The labels next to the die show what each roll would do.', 16, end + 6, w - 32, 16);
   }
 
   private announce(text: string): void {

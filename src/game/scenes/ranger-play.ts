@@ -30,6 +30,7 @@ import type { Game } from '../game';
 import type { Command } from '../input';
 import { lessonKey } from '../lessons';
 import { twoStarLimit } from '../stars';
+import { drawControls, sideCard, touchFirst, wrap } from '../view/backdrop';
 import { el, iconButton, place } from '../ui';
 import { drawFace } from '../view/art';
 import { C } from '../view/palette';
@@ -49,6 +50,7 @@ interface Flash {
 
 export class RangerPlayScene implements Scene {
   readonly name = 'ranger';
+  readonly backdrop = 'forest' as const;
   private history: RState[] = [];
   private state: RState;
   private t = 0;
@@ -388,6 +390,53 @@ export class RangerPlayScene implements Scene {
   private closeInfo(): void {
     this.info?.remove();
     this.info = null;
+  }
+
+  /** Wide screens: the stage and its targets on the left, controls on the right. */
+  renderSide(ctx: CanvasRenderingContext2D, side: 'left' | 'right', w: number, h: number): void {
+    const cardH = 280;
+    ctx.save();
+    ctx.translate(0, (h - cardH) / 2);
+    if (side === 'left') {
+      let y = sideCard(ctx, w, cardH, 'Bonus · The Greenwood');
+      ctx.fillStyle = C.text;
+      ctx.font = '800 20px system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      y = wrap(ctx, this.level.name, 16, y + 4, w - 32, 24);
+      ctx.fillStyle = C.textDim;
+      ctx.font = '13px system-ui, sans-serif';
+      ctx.fillText('Moves', 16, y + 14);
+      ctx.fillStyle = C.text;
+      ctx.font = '800 34px system-ui, sans-serif';
+      ctx.fillText(String(this.state.moves), 16, y + 44);
+      y += 78;
+      const par = this.level.par ?? 0;
+      ctx.font = '13px system-ui, sans-serif';
+      ctx.fillStyle = C.textDim;
+      wrap(ctx, `★★★ in ${par} moves or fewer, ★★ in ${twoStarLimit(par)}.`, 16, y, w - 32, 17);
+    } else {
+      const y = sideCard(ctx, w, cardH, 'How to play');
+      drawControls(
+        ctx,
+        w,
+        y + 4,
+        touchFirst()
+          ? [
+              ['Swipe', 'Roll across an edge'],
+              ['Tap', 'Roll to a neighbouring triangle'],
+              ['Die', 'Tap it to see your faces'],
+            ]
+          : [
+              ['← →', 'Roll along the row'],
+              ['↑ ↓', 'Roll through the flat edge'],
+              ['Z', 'Undo a move'],
+              ['R', 'Retry the stage'],
+              ['I', 'Your faces'],
+              ['Esc', 'Back to the map'],
+            ],
+      );
+    }
+    ctx.restore();
   }
 
   update(dt: number): void {

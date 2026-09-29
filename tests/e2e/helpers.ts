@@ -68,7 +68,7 @@ export async function toClient(
   x: number,
   y: number,
 ): Promise<{ x: number; y: number }> {
-  const box = (await page.locator('canvas').boundingBox())!;
+  const box = (await page.locator('canvas.stage-canvas').boundingBox())!;
   return { x: box.x + (x * box.width) / 340, y: box.y + (y * box.height) / 480 };
 }
 

@@ -1,4 +1,5 @@
 import type { Command } from '../input';
+import type { BackdropTheme, SideRenderer } from '../view/backdrop';
 
 export type SceneName =
   | 'boot'
@@ -51,4 +52,8 @@ export interface Scene {
    */
   idle?(): boolean;
   command?(cmd: Command): void;
+  /** The scenery around the game on wide screens (default: the dungeon wall). */
+  readonly backdrop?: BackdropTheme;
+  /** Fills the side panels on wide screens (see view/backdrop.ts). */
+  renderSide?: SideRenderer;
 }

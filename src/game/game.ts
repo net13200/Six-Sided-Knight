@@ -54,6 +54,7 @@ import {
 } from './story';
 import { setDieSkin } from './view/cube';
 import { setSkinMotion } from './view/skin-fx';
+import { drawBackdrop } from './view/backdrop';
 import { breakAllowed, type BreakMoment } from '../meta/ad-policy';
 import { NO_ADS } from '../platform/ads';
 import { activeSkin, newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/skins';
@@ -478,7 +479,19 @@ export class Game {
     ctx.fillStyle = C.bg;
     ctx.fillRect(0, 0, 340, 480);
     this.scene?.render(ctx);
+    this.renderBackdrop();
     return true;
+  }
+
+  private backdropTime = 0;
+
+  /** The scenery around the game (wide screens, very tall phones). */
+  private renderBackdrop(): void {
+    const { box, view } = this.stage;
+    if (box.x < 1 && box.y < 1 && box.w >= view.w - 1 && box.h >= view.h - 1) return;
+    const t = this.reducedMotion ? 0 : (this.backdropTime = performance.now() / 1000);
+    const scene = this.scene;
+    drawBackdrop(this.stage, scene?.backdrop ?? 'dungeon', t, scene?.renderSide?.bind(scene));
   }
 
   /** Called when the page is hidden or shown again. */

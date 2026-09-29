@@ -287,7 +287,7 @@ test.describe('Six Sided Knight', () => {
   test('the stage fits the viewport with no scrolling', async ({ page }) => {
     await page.goto('/?level=1');
     const vp = page.viewportSize()!;
-    const box = (await page.locator('canvas').boundingBox())!;
+    const box = (await page.locator('canvas.stage-canvas').boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(-0.5);
     expect(box.y).toBeGreaterThanOrEqual(-0.5);
     expect(box.x + box.width).toBeLessThanOrEqual(vp.width + 0.5);
@@ -300,10 +300,30 @@ test.describe('Six Sided Knight', () => {
     expect(Math.min(undo.width, undo.height)).toBeGreaterThanOrEqual(44);
   });
 
+  test('a 16:9 window is covered edge to edge: scenery and side panels, no empty bars', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 836, height: 470 });
+    await page.goto('/?level=12');
+    await expect.poll(() => scene(page)).toBe('play');
+    const backdrop = (await page.locator('canvas.stage-backdrop').boundingBox())!;
+    expect(backdrop).toMatchObject({ x: 0, y: 0, width: 836, height: 470 });
+    // The left panel is painted (not the plain background colour).
+    const painted = await page.evaluate(() => {
+      const c = document.querySelector<HTMLCanvasElement>('canvas.stage-backdrop')!;
+      const k = c.width / 836;
+      const px = c
+        .getContext('2d')!
+        .getImageData(Math.round(120 * k), Math.round(235 * k), 1, 1).data;
+      return [px[0], px[1], px[2]];
+    });
+    expect(painted).not.toEqual([20, 18, 28]);
+  });
+
   test('canvas is crisp on high-DPI screens', async ({ page }) => {
     await page.goto('/?level=1');
     const { width, cssWidth, dpr } = await page.evaluate(() => {
-      const c = document.querySelector('canvas')!;
+      const c = document.querySelector<HTMLCanvasElement>('canvas.stage-canvas')!;
       return { width: c.width, cssWidth: c.getBoundingClientRect().width, dpr: devicePixelRatio };
     });
     // Backing store matches the screen up to 2x (the cap; see PERFORMANCE.md).

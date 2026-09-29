@@ -19,7 +19,10 @@ test.describe('accessibility', () => {
     await expect(announcer).toContainText('Right: Sword leads');
     await page.keyboard.press('ArrowRight'); // Sword into the skeleton
     await expect(announcer).toContainText('Knocks out the Skeleton');
-    await expect(page.locator('canvas').first()).toHaveAttribute('aria-label', /Game board\. HP/);
+    await expect(page.locator('canvas.stage-canvas')).toHaveAttribute(
+      'aria-label',
+      /Game board\. HP/,
+    );
   });
 
   test('the title screen works with the keyboard alone', async ({ page }) => {

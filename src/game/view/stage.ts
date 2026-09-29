@@ -1,8 +1,10 @@
 /**
- * The stage is a fixed 340x480 logical box, scaled to fit the window and
- * letterboxed. The canvas backing store matches the real pixel size so it
- * stays crisp on high-DPI screens. DOM UI lives in a layer on top and scales
- * with the same transform.
+ * The stage is a fixed 340x480 logical box, scaled to fit the window. The
+ * canvas backing store matches the real pixel size so it stays crisp on
+ * high-DPI screens. DOM UI lives in a layer on top and scales with the same
+ * transform. Around it, a full-window backdrop canvas covers the rest of the
+ * screen (a wide 16:9 desktop window, a phone on its side), so there are no
+ * empty bars: scenery, and side panels the scene may fill.
  */
 export const LOGICAL_W = 340;
 export const LOGICAL_H = 480;
@@ -12,7 +14,13 @@ export class Stage {
   readonly canvas: HTMLCanvasElement;
   readonly ctx: CanvasRenderingContext2D;
   readonly ui: HTMLElement;
+  /** Full-window canvas behind the stage. */
+  readonly backdrop: HTMLCanvasElement;
+  readonly backdropCtx: CanvasRenderingContext2D;
   scale = 1;
+  /** Window size, and the stage's box in it (CSS pixels). */
+  view = { w: 0, h: 0 };
+  box = { x: 0, y: 0, w: 0, h: 0 };
   private dpr = 1;
   private offsetX = 0;
   private offsetY = 0;
@@ -29,7 +37,13 @@ export class Stage {
     this.ui = document.createElement('div');
     this.ui.className = 'stage-ui';
     this.root.append(this.canvas, this.ui);
-    container.append(this.root);
+    this.backdrop = document.createElement('canvas');
+    this.backdrop.className = 'stage-backdrop';
+    this.backdrop.setAttribute('aria-hidden', 'true');
+    container.append(this.backdrop, this.root);
+    const bctx = this.backdrop.getContext('2d');
+    if (!bctx) throw new Error('Canvas 2D is not supported');
+    this.backdropCtx = bctx;
     const ctx = this.canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas 2D is not supported');
     this.ctx = ctx;
@@ -49,6 +63,30 @@ export class Stage {
     this.root.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;
     this.canvas.width = Math.round(LOGICAL_W * this.scale * this.dpr);
     this.canvas.height = Math.round(LOGICAL_H * this.scale * this.dpr);
+    this.view = { w: vw, h: vh };
+    this.box = {
+      x: this.offsetX,
+      y: this.offsetY,
+      w: LOGICAL_W * this.scale,
+      h: LOGICAL_H * this.scale,
+    };
+    this.backdrop.width = Math.round(vw * this.dpr);
+    this.backdrop.height = Math.round(vh * this.dpr);
+    this.backdropVersion++;
+  }
+
+  /** Bumped on every resize (so cached backdrop art is redrawn). */
+  backdropVersion = 0;
+
+  /** Whether there is room around the stage (anything wider than the stage's shape). */
+  get hasSides(): boolean {
+    return this.box.x >= 8;
+  }
+
+  /** The backdrop's context, in CSS pixels. */
+  beginBackdrop(): CanvasRenderingContext2D {
+    this.backdropCtx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    return this.backdropCtx;
   }
 
   /** Device pixels per logical pixel (for extra canvases that must stay crisp). */
