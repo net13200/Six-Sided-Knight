@@ -29,7 +29,7 @@ A bump into a wall (or a door without the Key) costs no turn. Labels next to the
 | Bomb   | 2 damage plus 1 to enemies next to the target; the only face that hurts a Golem |                                                 |
 | Heart  | nothing                                                                         | Underneath on a pool: heals 1                   |
 | Key    | Opens locked doors                                                              |                                                 |
-| Coin   | Opens chests (+30 gold)                                                         |                                                 |
+| Coin   | Opens chests                                                                    |                                                 |
 | Freeze | The enemy skips its next 3 turns                                                | Bought at the Smith (200)                       |
 | Hook   | Pulls an enemy 2-3 tiles away next to you                                       | Bought at the Smith (300)                       |
 
@@ -44,11 +44,15 @@ Floor · **Wall** · **Spikes** (1 damage unless Shield is underneath) · **Heal
 - **Archer** (1 HP): never moves; shoots along the hatched red lanes. Walls, doors, chests and other enemies block arrows; Shield on top blocks the hit.
 - **Golem** (4 HP): only Bombs hurt it; moves every other turn.
 
-Knocking out an enemy gives 10 gold (Golem 20) and your die rolls onto its tile.
+Knocking out an enemy rolls your die onto its tile.
 
 ## Stars
 
 Stars are about moves. Finish at **par** (the fewest moves possible) or better for ★★★, within a few moves of par for ★★, and anywhere for ★. Damage doesn't cost stars, but you only have 3 HP. Your best result on each level is kept, and every star you earn for the first time pays **10 crowns**.
+
+## Languages
+
+English, Spanish, Portuguese, French, German, Italian, Dutch and Turkish. The game starts in your browser's language; change it in **Settings → Language**.
 
 ## Modes
 

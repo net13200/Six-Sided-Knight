@@ -2,6 +2,13 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.12.0 — Speaks your language
+
+- **Eight languages.** English, Spanish, Portuguese, French, German, Italian, Dutch and Turkish: menus, lessons, the story, every level name and hint, move labels and screen-reader descriptions. The game starts in your browser's language; **Settings → Language** changes it. Each language downloads only if you use it.
+- **Fills any screen.** On a wide screen (a desktop window, a phone on its side) the dungeon wall and torches fill the space around the game, and while playing, side panels show the level and its star targets on one side and the controls on the other.
+- **No more gold counter.** Gold never did anything; crowns and stars are what count.
+- **Fix:** the Heart's description said pools heal 2 (they heal 1).
+
 ## 0.11.0 — Skins on fire
 
 - **Skins come alive.** Each skin now has its own material and effects, not just a coloured rim. Ember's die burns: a molten top face with glowing cracks, flames licking off its sides and sparks rising. Flame roars with taller crimson fire, Frost is ice with crystals and glints, Gilded is gold with a sweeping shine, Night Sky has twinkling stars, a moon and the odd shooting star, Royal is purple velvet with gold trim, Bone is cracked ivory, and Moss creeps in from the corners. The side facets keep their role colours, so the die reads the same in play. With reduced motion, the effects hold still.
