@@ -1,9 +1,14 @@
 import { expect, test } from '@playwright/test';
+import { createState } from '../../src/engine';
+import { generateLevel } from '../../src/gen/generate';
+import { depthsFloorParams } from '../../src/meta/depths';
+import { STARTING_FACES } from '../../src/meta/store';
 import {
   KEY,
   gameState,
   losingPathFrom,
   playCurrentLevel,
+  rules,
   scene,
   solveCurrent,
   trackErrors,
@@ -108,13 +113,21 @@ test.describe('Daily Roll and Depths', () => {
   });
 
   test('depths: knocked out ends the run and keeps the record', async ({ page }) => {
+    // A run on floor 2 with 1 HP left, on a seed whose floor 2 can be lost
+    // (found here, so the test never depends on a random dungeon).
+    const seed = seedWithLosableFloor2();
     await page.goto('/');
+    await page.evaluate((key) => {
+      const save = JSON.parse(localStorage.getItem('ssk.save')!);
+      save.depths.bestFloor = 1;
+      save.depths.inProgress = { key, floor: 2, hp: 1, moves: 9, stars: 3 };
+      localStorage.setItem('ssk.save', JSON.stringify(save));
+    }, String(seed));
+    await page.reload();
     await page.getByTestId('depths').click();
     await page.getByTestId('depths-start').click();
-    await playCurrentLevel(page);
-    await expect.poll(() => scene(page), { timeout: 5000 }).toBe('floor');
-    await page.getByTestId('floor-next').click();
     await expect.poll(() => scene(page), { timeout: 15_000 }).toBe('play');
+    expect((await gameState(page)).player.hp).toBe(1);
     // Walk into trouble until the die falls.
     for (const dir of losingPathFrom(await gameState(page), 20))
       await page.keyboard.press(KEY[dir]);
@@ -127,3 +140,16 @@ test.describe('Daily Roll and Depths', () => {
     await expect(page.getByTestId('depths-start')).toContainText('Descend');
   });
 });
+
+/** The first run seed whose Depths floor 2, entered with 1 HP, can be lost. */
+function seedWithLosableFloor2(): number {
+  for (let seed = 1; ; seed++) {
+    const { level } = generateLevel(rules, depthsFloorParams(seed, 2, STARTING_FACES));
+    try {
+      losingPathFrom(createState(rules, level, { hp: 1 }), 20);
+      return seed;
+    } catch {
+      // No way to lose this one: try the next seed.
+    }
+  }
+}
