@@ -22,6 +22,10 @@ export interface LevelRecord {
   completions: number;
   /** Fastest win, in milliseconds of active play. */
   bestTimeMs: number;
+  /** Fingerprint of the level this record was earned on (see levelFingerprint). */
+  fp?: string;
+  /** Beaten before, but the level has changed since: solve it again for stars. */
+  redo?: boolean;
 }
 
 export interface Settings {
@@ -132,6 +136,8 @@ export interface SaveV3 extends Omit<SaveV2, 'version'> {
   starsBeforeReset: number;
   /** The campaign was just reset: the title screen explains it once. */
   campaignResetNotice: boolean;
+  /** Levels the player had beaten that changed in an update (the title screen says so once). */
+  changedLevelsNotice: number;
 }
 
 export type SaveData = SaveV3;
@@ -158,6 +164,7 @@ export function freshSave(now: number): SaveData {
     campaign: CAMPAIGN_EDITION,
     starsBeforeReset: 0,
     campaignResetNotice: false,
+    changedLevelsNotice: 0,
     daily: freshDaily(),
     depths: freshDepths(),
     hints: {},
@@ -286,6 +293,8 @@ export function normalize(data: Json, now: number): SaveData {
       bestMoves: clampInt(rec.bestMoves, 0, 1e6),
       completions: clampInt(rec.completions, 0, 1e9),
       bestTimeMs: clampInt(rec.bestTimeMs, 0, 1e12),
+      ...(typeof rec.fp === 'string' ? { fp: rec.fp } : {}),
+      ...(rec.redo === true ? { redo: true } : {}),
     };
   }
   const daily = { ...base.daily, ...(d.daily ?? {}) };
@@ -316,6 +325,7 @@ export function normalize(data: Json, now: number): SaveData {
     campaign: clampInt(d.campaign ?? 1, 1, 1e6),
     starsBeforeReset: clampInt(d.starsBeforeReset, 0, 1e6),
     campaignResetNotice: d.campaignResetNotice === true,
+    changedLevelsNotice: clampInt(d.changedLevelsNotice, 0, 1e4),
     hints,
     daily: {
       ...daily,

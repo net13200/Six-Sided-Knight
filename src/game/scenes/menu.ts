@@ -99,6 +99,8 @@ export class MenuScene implements Scene {
     );
     // Once, after an update that rebuilt the campaign.
     if (this.game.save.data.campaignResetNotice) this.openCampaignNotice();
+    // Once, after an update that changed levels the player had beaten.
+    else if (this.game.save.data.changedLevelsNotice > 0) this.openChangedNotice();
     // A text reference for players who have finished the tutorial.
     if (this.game.tutorialDone) {
       ui.append(
@@ -212,6 +214,37 @@ export class MenuScene implements Scene {
       456,
     );
     this.ui.append(this.sheet);
+  }
+
+  /** Explains, once, that some levels the player had beaten have changed. */
+  private openChangedNotice(): void {
+    if (this.sheet || !this.ui) return;
+    const n = this.game.save.data.changedLevelsNotice;
+    this.game.save.update((d) => (d.changedLevelsNotice = 0));
+    this.sheet = place(
+      el('div', { className: 'sheet', testId: 'changed-notice' }, [
+        el('h2', { text: n === 1 ? 'A level has changed' : `${n} levels have changed` }),
+        el('p', {
+          text: `${n === 1 ? 'One level you beat has' : `${n} levels you beat have`} been redesigned. ${n === 1 ? "It's" : "They're"} marked NEW on the map: solve ${n === 1 ? 'it' : 'them'} again to earn the stars back.`,
+        }),
+        el('p', { text: 'Every level after them stays open, and your skins stay unlocked.' }),
+        el('button', {
+          className: 'btn primary',
+          testId: 'changed-notice-ok',
+          text: "Let's roll",
+          onClick: () => this.closeSettings(),
+        }),
+      ]),
+      24,
+      120,
+      292,
+      0,
+    );
+    this.sheet.style.height = 'auto';
+    this.sheet.setAttribute('role', 'dialog');
+    this.sheet.setAttribute('aria-modal', 'true');
+    this.ui.append(this.sheet);
+    this.sheet.querySelector('button')?.focus();
   }
 
   /** Explains, once, that the campaign was rebuilt and progress starts fresh. */

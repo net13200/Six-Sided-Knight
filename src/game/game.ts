@@ -8,7 +8,16 @@ import type { GameState, LevelData, Rules } from '../engine';
 import { loadCampaign, loadGauntletFloors } from '../levels/campaign';
 import { LevelService } from '../gen/service';
 import { LocalAnalytics } from '../meta/analytics';
-import { CHAPTER_SIZE, continueIndex, isCompleted, isUnlocked, recordWin } from '../meta/progress';
+import {
+  CHAPTER_SIZE,
+  continueIndex,
+  isCompleted,
+  isUnlocked,
+  levelFingerprint,
+  recordWin,
+  refreshChangedLevels,
+} from '../meta/progress';
+import { FINGERPRINTS_0_9_0 } from '../meta/legacy-fingerprints';
 import { SaveStore, type Settings } from '../meta/save';
 import { crownsForStars, earnCrowns } from '../meta/store';
 import type { Platform } from '../platform/platform';
@@ -83,6 +92,10 @@ export class Game {
     this.gauntlets = loadGauntletFloors(this.rules);
     this.levelService = new LevelService(this.rules);
     this.save = new SaveStore(platform.storage, platform.now());
+    // Levels changed in an update: their stars are earned again on the new version.
+    this.save.update((d) =>
+      refreshChangedLevels(d, this.levels, this.gauntlets, FINGERPRINTS_0_9_0),
+    );
     this.audio.muted = this.save.data.settings.muted;
     this.audio.setMusicVolume(this.save.data.settings.musicVolume);
     this.analytics = new LocalAnalytics(platform.storage, platform.now, randomId, VERSION);
@@ -293,11 +306,12 @@ export class Game {
     let improved = false;
     let crowns = 0;
     this.save.update((d) => {
-      improved = recordWin(d, level.id, {
-        stars: stars.count,
-        moves: state.stats.moves,
-        timeMs,
-      });
+      improved = recordWin(
+        d,
+        level.id,
+        { stars: stars.count, moves: state.stats.moves, timeMs },
+        levelFingerprint(level, this.gauntlets.get(level.id)),
+      );
       crowns = earnCrowns(d, crownsForStars((d.levels[level.id]?.stars ?? 0) - before));
       d.stats.levelsCompleted++;
       d.stats.moves += state.stats.moves;

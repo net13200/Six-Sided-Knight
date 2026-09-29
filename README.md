@@ -165,6 +165,8 @@ Progress lives in `localStorage` under `ssk.save` as versioned JSON (`src/meta/s
 2. Add `migrations[oldVersion]`, which turns an old object into the new one.
 3. Add a case to `tests/unit/save.test.ts`.
 
+Changing a released level needs no migration: level records remember the version they were earned on, and beaten levels that changed are marked to solve again on the next start (`refreshChangedLevels` in `src/meta/progress.ts`). `npx tsx tools/level-fingerprints.ts` prints every level's fingerprint.
+
 Safety rules: unreadable data is copied to `ssk.save.corrupt.<time>` before starting fresh, and data from a newer version (after a rollback) is never overwritten. If storage is blocked, the game still runs from memory.
 
 ## Analytics and the KPI panel

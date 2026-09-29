@@ -6,6 +6,7 @@ import {
   chapterOf,
   isCompleted,
   isUnlocked,
+  needsRedo,
   totalStars,
 } from '../../meta/progress';
 import type { Game } from '../game';
@@ -52,6 +53,7 @@ export class LevelsScene implements Scene {
       const unlocked = isUnlocked(save, levels, i);
       const stars = save.levels[level.id]?.stars;
       const done = isCompleted(save, level);
+      const redo = needsRedo(save, level);
       const p = nodePosition(i - this.chapter * CHAPTER_SIZE);
       const floors = this.game.gauntlets.get(level.id);
       const gauntlet = floors ? `, gauntlet of ${floors.length + 1} floors` : '';
@@ -61,7 +63,7 @@ export class LevelsScene implements Scene {
           className: `node${done ? ' done' : ''}${unlocked ? '' : ' locked'}${floors ? ' gauntlet' : ''}`,
           testId: `level-${i + 1}`,
           label: unlocked
-            ? `Level ${i + 1}: ${level.name}${gauntlet}${done ? `, ${stars} of 3 stars` : ''}`
+            ? `Level ${i + 1}: ${level.name}${gauntlet}${done ? `, ${stars} of 3 stars` : ''}${redo ? ', changed: solve it again' : ''}`
             : `Level ${i + 1}, locked`,
           onClick: () => unlocked && this.game.goPlay(i),
         },
@@ -157,7 +159,7 @@ export class LevelsScene implements Scene {
     for (let k = 0; k + 1 < idx.length; k++) {
       const a = nodePosition(k);
       const b = nodePosition(k + 1);
-      const walked = isCompleted(save, levels[idx[k]!]!);
+      const walked = isCompleted(save, levels[idx[k]!]!) || needsRedo(save, levels[idx[k]!]!);
       ctx.strokeStyle = walked ? 'rgba(255,215,94,0.7)' : 'rgba(255,255,255,0.12)';
       ctx.lineWidth = 6;
       ctx.lineCap = 'round';
@@ -176,6 +178,17 @@ export class LevelsScene implements Scene {
       const stars = save.levels[levels[i]!.id]?.stars;
       if (stars !== undefined) {
         for (let s = 0; s < 3; s++) drawStar(ctx, p.x - 14 + s * 14, p.y + 38, 6, s < stars);
+      }
+      if (needsRedo(save, levels[i]!)) {
+        // Changed since the player beat it: a "new" tag until it's solved again.
+        ctx.fillStyle = C.heal;
+        ctx.beginPath();
+        ctx.roundRect(p.x - 38, p.y - NODE / 2 - 6, 30, 14, 7);
+        ctx.fill();
+        ctx.fillStyle = '#10240f';
+        ctx.font = 'bold 9px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('NEW', p.x - 23, p.y - NODE / 2 + 1.5);
       }
       const floors = this.game.gauntlets.get(levels[i]!.id);
       if (floors) {
