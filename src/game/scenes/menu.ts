@@ -68,7 +68,7 @@ export class MenuScene implements Scene {
         60,
       ),
       place(
-        small('forge', 'Forge', () => this.game.goForge()),
+        small('forge', 'Smith', () => this.game.goForge()),
         139,
         386,
         62,

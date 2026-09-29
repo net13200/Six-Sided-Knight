@@ -256,7 +256,7 @@ export class ForgeScene implements Scene {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = C.gold;
     ctx.font = '800 24px system-ui, sans-serif';
-    ctx.fillText('Forge', 170, 20);
+    ctx.fillText('Smith', 170, 20);
     drawCrowns(ctx, save.wallet.crowns, 196, 44);
     ctx.fillStyle = C.textDim;
     ctx.font = '11px system-ui, sans-serif';

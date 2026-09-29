@@ -4,7 +4,7 @@ A mobile-first puzzle-dungeon game where you are a rolling die. The face on the 
 
 - **Rules:** [SPEC.md](SPEC.md) is the source of truth.
 - **Docs:** how to play ([docs/GUIDE.md](docs/GUIDE.md)), [PRIVACY.md](PRIVACY.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [PERFORMANCE.md](PERFORMANCE.md), [RELEASE.md](RELEASE.md).
-- **Status:** all 6 milestones done. A 60-level campaign in six chapters (each from chapter 2 on ends in a 3-floor Gauntlet), Daily Roll with streaks and sharing, endless Depths, crowns and the Forge (buy faces, build your own die for Daily Roll and Depths), cosmetic die skins, a stats screen, saved progress, and on-device analytics with a hidden KPI panel.
+- **Status:** all 6 milestones done. A 60-level campaign in six chapters (each from chapter 2 on ends in a 3-floor Gauntlet), Daily Roll with streaks and sharing, endless Depths, crowns and the Smith (buy faces, build your own die for Daily Roll and Depths), cosmetic die skins, a stats screen, saved progress, and on-device analytics with a hidden KPI panel.
 
 ## Play online
 

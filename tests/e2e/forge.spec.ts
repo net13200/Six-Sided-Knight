@@ -47,7 +47,7 @@ async function seedVeteran(page: Page): Promise<void> {
   await page.reload();
 }
 
-test.describe('Forge, crowns and custom dice', () => {
+test.describe('Smith, crowns and custom dice', () => {
   let errors: string[];
   test.beforeEach(({ page }) => {
     errors = trackErrors(page);

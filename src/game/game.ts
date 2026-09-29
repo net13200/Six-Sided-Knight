@@ -274,7 +274,7 @@ export class Game {
     this.go(new DepthsScene(this));
   }
 
-  /** The Forge (store + die builder). `back` returns to where it was opened from. */
+  /** The Smith (store + die builder). `back` returns to where it was opened from. */
   goForge(back?: () => void): void {
     this.go(new ForgeScene(this, back));
   }

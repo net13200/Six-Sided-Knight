@@ -30,8 +30,8 @@ A bump into a wall (or a door without the Key) costs no turn. Labels next to the
 | Heart  | nothing                                                                         | Underneath on a pool: heals 1                   |
 | Key    | Opens locked doors                                                              |                                                 |
 | Coin   | Opens chests (+30 gold)                                                         |                                                 |
-| Freeze | The enemy skips its next 3 turns                                                | Bought in the Forge (200)                       |
-| Hook   | Pulls an enemy 2-3 tiles away next to you                                       | Bought in the Forge (300)                       |
+| Freeze | The enemy skips its next 3 turns                                                | Bought at the Smith (200)                       |
+| Hook   | Pulls an enemy 2-3 tiles away next to you                                       | Bought at the Smith (300)                       |
 
 ## Tiles
 
@@ -56,7 +56,7 @@ Stars are about moves. Finish at **par** (the fewest moves possible) or better f
 - **Daily Roll:** three floors, the same for everyone each day (UTC). HP carries over, with no healing between floors: one mistake too many ends the run. Keep a streak and share your result. Your own die is used; if it can't win a floor you're told, and you can change it between floors.
 - **Depths:** endless floors that start hard and get harder. One life: no Undo, no Retry, and being knocked out ends the run. Leaving mid-floor keeps every move you made. Your high score is the most floors cleared in one run.
 
-## The Forge
+## The Smith
 
 Spend crowns on new faces, then build your own die (which faces, and on which side) for Daily Roll and Depths. Campaign levels always use their own die. Skins (looks only) unlock with stars and daily streaks.
 

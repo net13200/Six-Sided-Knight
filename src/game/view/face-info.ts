@@ -1,4 +1,4 @@
-/** One-line descriptions of each face, for the Forge and the inspect view. */
+/** One-line descriptions of each face, for the Smith and the inspect view. */
 const INFO: Readonly<Record<string, string>> = {
   Sword: 'Hits for 3.',
   Shield: 'Hits for 1. On top it blocks hits; underneath it guards against spikes.',

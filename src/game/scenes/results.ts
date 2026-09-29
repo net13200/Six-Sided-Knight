@@ -148,7 +148,7 @@ export class ResultsScene implements Scene {
       ctx.fillStyle = C.heal;
       ctx.font = 'bold 12px system-ui, sans-serif';
       ctx.fillText(
-        `New skin: ${this.summary.newSkins.map((s) => s.name).join(', ')}! (Forge)`,
+        `New skin: ${this.summary.newSkins.map((s) => s.name).join(', ')}! (at the Smith)`,
         170,
         310,
       );

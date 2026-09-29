@@ -47,7 +47,7 @@ export const HOW_TO_PLAY: readonly HowToSection[] = [
     heading: 'Stars and crowns',
     lines: [
       'You have 3 HP, and nothing heals between floors. Stars are about moves: ★★★ at par or fewer, ★★ a few moves over, ★ for finishing. Your best result is kept.',
-      'Each new star pays 10 crowns. Spend them in the Forge on new faces for your own die (Daily Roll and Depths).',
+      'Each new star pays 10 crowns. Spend them at the Smith on new faces for your own die (Daily Roll and Depths).',
     ],
   },
   {

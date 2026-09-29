@@ -144,11 +144,11 @@ Every level names what it teaches (`teaches:` in its file), and its par route mu
 - The player can turn it off in Settings; turning it off deletes the stored events.
 - A session ends when the page is hidden or closed. Returning within 30 minutes continues the same session.
 
-## 9c. Crowns, the Forge and custom dice
+## 9c. Crowns, the Smith and custom dice
 
 - **Crowns** are the currency. Every star earned for the first time pays 10 crowns: campaign stars (improving a level from 1 to 3 stars pays for the 2 new ones), the stars of the day's first Daily Roll completion, and the stars of each Depths floor past your record. Replays for stars already earned pay nothing. Saves from before 0.5.0 are paid once for the stars they already hold.
-- **The Forge** sells faces for crowns: Freeze 200, Hook 300 (more later). Nothing is sold for real money.
-- **Custom die**: in the Forge the player chooses which of their owned faces go on their die and where (each home slot: top, bottom, north, south, east, west). Each face at most once; always six faces. The die is used for **Daily Roll and Depths** only; campaign levels always use their own fixed die.
+- **The Smith** sells faces for crowns: Freeze 200, Hook 300 (more later). Nothing is sold for real money.
+- **Custom die**: at the Smith the player chooses which of their owned faces go on their die and where (each home slot: top, bottom, north, south, east, west). Each face at most once; always six faces. The die is used for **Daily Roll and Depths** only; campaign levels always use their own fixed die.
 - **Daily Roll:** the floors are the same for everyone, with the same par, whatever their die (generated with the default die). If the player's die can't win a floor, a warning says so at the start of that floor; changing the die is part of the challenge. The Daily Roll uses the player's current die on each floor, so it can be changed between floors (and before resuming a floor).
 - **Depths** keeps the die it started with for the whole run. Its floors are generated with the default die first; if the player's die can't win one at the floor's HP, a variant floor is generated and proven winnable for that die, with par for that die.
 

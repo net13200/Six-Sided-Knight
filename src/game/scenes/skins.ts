@@ -38,7 +38,7 @@ export class SkinsScene implements Scene {
     });
     ui.append(
       place(
-        iconButton('back', 'Forge', () => this.game.goForge(), 'back'),
+        iconButton('back', 'Smith', () => this.game.goForge(), 'back'),
         4,
         415,
         64,
