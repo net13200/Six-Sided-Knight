@@ -18,7 +18,8 @@ import type { PlaySession } from '../session';
 import type { Command } from '../input';
 import { tapDirection } from '../input';
 import { computeStars } from '../stars';
-import { el, iconButton, place } from '../ui';
+import { el, icon, iconButton, place } from '../ui';
+import { IS_POKI } from '../../platform/target';
 import { animateBump, animateTurn } from '../view/animate';
 import { drawFace } from '../view/art';
 import { drawBoard, drawCompass } from '../view/board';
@@ -167,13 +168,16 @@ export class PlayScene implements Scene {
     if (this.offersSolutionAd) {
       ui.append(
         place(
-          el('button', {
-            className: 'btn small ad-btn',
-            testId: 'solution-ad',
-            text: '💡 Solve',
-            label: 'Show the solution (watch an ad)',
-            onClick: () => this.askSolutionAd(),
-          }),
+          el(
+            'button',
+            {
+              className: 'btn small ad-btn',
+              testId: 'solution-ad',
+              label: 'Show the solution (watch an ad)',
+              onClick: () => this.askSolutionAd(),
+            },
+            [icon('video'), el('span', { text: 'Solve' })],
+          ),
           204,
           8,
           64,
@@ -182,15 +186,18 @@ export class PlayScene implements Scene {
       );
     }
     // The secret combo for everyone: 5 quick taps on the level title (see
-    // secretTap). Invisible, and kept out of the tab order.
-    const secret = el('button', {
-      className: 'compass-btn',
-      testId: 'secret',
-      onClick: () => this.secretTap(),
-    });
-    secret.tabIndex = -1;
-    secret.setAttribute('aria-hidden', 'true');
-    ui.append(place(secret, 0, 0, 200, BOARD_Y - 2));
+    // secretTap). Invisible, and kept out of the tab order. Not on Poki, where
+    // the solution is a rewarded ad and hidden tools aren't allowed.
+    if (!IS_POKI) {
+      const secret = el('button', {
+        className: 'compass-btn',
+        testId: 'secret',
+        onClick: () => this.secretTap(),
+      });
+      secret.tabIndex = -1;
+      secret.setAttribute('aria-hidden', 'true');
+      ui.append(place(secret, 0, 0, 200, BOARD_Y - 2));
+    }
     this.openLesson(ui);
   }
 
@@ -202,15 +209,10 @@ export class PlayScene implements Scene {
     this.secretTaps = [...this.secretTaps.filter((t) => now - t < 2000), now];
     if (this.secretTaps.length >= 5) {
       this.secretTaps = [];
-      this.openWatch(true);
+      this.openWatch('secret');
     }
   }
 
-  /**
-   * Solve the level (in the worker) and watch the best solution play out. The
-   * developer button and P need debug mode; the secret combo (`secret`) works
-   * in the regular game.
-   */
   /** Whether this level offers the solution for a rewarded ad. */
   private get offersSolutionAd(): boolean {
     const i = this.session.campaignIndex;
@@ -226,29 +228,40 @@ export class PlayScene implements Scene {
   /** Makes clear an ad comes first, then (after it) plays the best solution. */
   private askSolutionAd(): void {
     if (!this.ui || this.watch || this.lesson || this.inspect || this.finishing) return;
+    this.game.setPlaying(false);
     this.hideOverlay();
     const sheet = place(
       el('div', { className: 'sheet', testId: 'solution-ad-sheet' }, [
         el('h2', { text: 'Show the solution?' }),
         el('p', { text: 'Watch a short ad, then see the best solution play out.' }),
-        el('button', {
-          className: 'btn primary',
-          testId: 'solution-ad-watch',
-          text: '▶ Watch ad',
-          onClick: () => {
-            sheet.remove();
-            void this.game.rewardedAd().then((ok) => {
-              if (ok) this.openWatch(true);
-              else this.flashNotice('No ad right now. Try again in a bit.');
-            });
-          },
-        }),
-        el('button', {
-          className: 'btn small',
-          testId: 'solution-ad-cancel',
-          text: 'Not now',
-          onClick: () => sheet.remove(),
-        }),
+        // Poki's rules: the plain choice comes first and is at least as big.
+        el('div', { className: 'row reward-row' }, [
+          el('button', {
+            className: 'btn',
+            testId: 'solution-ad-cancel',
+            text: 'Not now',
+            onClick: () => sheet.remove(),
+          }),
+          el(
+            'button',
+            {
+              className: 'btn reward-btn',
+              testId: 'solution-ad-watch',
+              label: 'Watch an ad to see the solution',
+              onClick: () => {
+                sheet.remove();
+                void this.game.rewardedAd().then((ok) => {
+                  // No ad (or an ad blocker): no reward and no message; Poki handles that.
+                  if (!ok) return;
+                  this.game.audio.play('unlock');
+                  this.flashNotice('Solution unlocked!');
+                  this.openWatch('reward');
+                });
+              },
+            },
+            [icon('video'), el('span', { text: 'Watch ad' })],
+          ),
+        ]),
       ]),
       40,
       120,
@@ -270,9 +283,15 @@ export class PlayScene implements Scene {
     setTimeout(() => n.remove(), 2500);
   }
 
-  private openWatch(secret = false): void {
-    if (!(this.game.debug || secret) || this.watch || this.lesson || this.inspect || !this.ui)
-      return;
+  /**
+   * Solve the level (in the worker) and watch the best solution play out:
+   * the developer button and P (debug mode), the secret combo (web version),
+   * or a rewarded ad (Poki), which plays it straight away.
+   */
+  private openWatch(how: 'dev' | 'secret' | 'reward' = 'dev'): void {
+    const allowed =
+      how === 'reward' || (how === 'dev' && this.game.debug) || (how === 'secret' && !IS_POKI);
+    if (!allowed || this.watch || this.lesson || this.inspect || !this.ui) return;
     // No peeking where there are no second chances.
     if (this.session.permadeath) return;
     if (this.finishing) return;
@@ -292,7 +311,8 @@ export class PlayScene implements Scene {
         this.watch = null;
       },
     });
-    this.watch.open(this.game.levelService.solve(this.initial));
+    this.game.setPlaying(false);
+    this.watch.open(this.game.levelService.solve(this.initial), how === 'reward');
   }
 
   /** The level's lesson, the first time: it types itself out and play waits for "Got it". */
@@ -313,6 +333,7 @@ export class PlayScene implements Scene {
 
   private openInspect(): void {
     if (this.inspect || !this.ui || this.finishing) return;
+    this.game.setPlaying(false);
     this.fx.finishAll();
     this.inspect = new InspectView(this.game, this.state, () => {
       this.inspect = null;
@@ -328,7 +349,7 @@ export class PlayScene implements Scene {
       return;
     }
     if (cmd.type === 'watch' || cmd.type === 'solution') {
-      this.openWatch(cmd.type === 'solution');
+      this.openWatch(cmd.type === 'solution' ? 'secret' : 'dev');
       return;
     }
     if (this.lesson) {
@@ -410,6 +431,8 @@ export class PlayScene implements Scene {
     animateTurn(this.fx, this.game.audio, result.events, before, result.state);
     // A watched solution: no stars, crowns, stats or analytics.
     if (watching) return;
+    // The player is playing (portals want this on the first real input).
+    this.game.setPlaying(result.state.status === 'playing');
     const face = leadingFace(before.player.die, dir);
     this.faceMoves.set(face, (this.faceMoves.get(face) ?? 0) + 1);
     this.moves.push(dir);

@@ -79,19 +79,27 @@ test('still runs when the SDK is blocked (ad blocker)', async ({ page }) => {
   await expect.poll(() => scene(page)).toBe('menu');
 });
 
-test('gameplay events, and a break before the next level (then play goes on)', async ({ page }) => {
+test('gameplay events follow the player: start on the first move, stop at the end', async ({
+  page,
+}) => {
   await withSdk(page, NO_WAIT);
   await tutorialDone(page);
   await page.goto('/?level=11');
-  await solve(page, 10);
+  await expect.poll(() => scene(page)).toBe('play');
+  expect(await calls(page)).not.toContain('start'); // not on load
+  const path = solutionFor(10);
+  await page.keyboard.press(KEY[path[0]!]);
+  await expect.poll(async () => (await calls(page)).filter((c) => c === 'start').length).toBe(1);
+  for (const d of path.slice(1)) await page.keyboard.press(KEY[d]);
+  await expect.poll(() => scene(page), { timeout: 5000 }).toBe('results');
   await page.getByTestId('next').click();
   await expect.poll(() => scene(page)).toBe('play');
   const c = await calls(page);
-  expect(c).toContain('break');
-  // Play stops before the ad and starts again after it.
-  const i = c.indexOf('break');
-  expect(c.slice(0, i)).toContain('stop');
-  expect(c.slice(i)).toContain('start');
+  // Never the same event twice in a row, and play stops before the ad.
+  const events = c.filter((x) => x === 'start' || x === 'stop');
+  for (let i = 1; i < events.length; i++) expect(events[i]).not.toBe(events[i - 1]);
+  expect(c.lastIndexOf('stop')).toBeLessThan(c.indexOf('break'));
+  expect(c.at(-1)).toBe('break'); // the next start comes with the next move
 });
 
 test('no ads in the tutorial, even when the pacing would allow one', async ({ page }) => {
@@ -119,23 +127,42 @@ test('default pacing: a break after 2 finished levels (before 3 minutes are up)'
   expect(await breaks(page)).toBe(1);
 });
 
-test('rewarded ad: "Solve" asks first, then shows the solution', async ({ page }) => {
+test('rewarded ad: "Solve" asks first, then plays the solution; no ad, no reward', async ({
+  page,
+}) => {
   await withSdk(page);
   await tutorialDone(page);
   await page.goto('/?level=11');
   await expect.poll(() => scene(page)).toBe('play');
   await page.getByTestId('solution-ad').click();
   await expect(page.getByTestId('solution-ad-sheet')).toContainText('ad');
+  // The plain choice is there too, and at least as big.
+  const plain = await page.getByTestId('solution-ad-cancel').boundingBox();
+  const reward = await page.getByTestId('solution-ad-watch').boundingBox();
+  expect(plain!.width * plain!.height).toBeGreaterThanOrEqual(reward!.width * reward!.height - 1);
   await page.getByTestId('solution-ad-watch').click();
-  await expect(page.getByTestId('watch-any')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByTestId('notice')).toContainText('unlocked');
+  await expect(page.getByTestId('watch-bar')).toBeVisible({ timeout: 10_000 });
   expect(await calls(page)).toContain('rewarded');
-  // No ad to show: the game says so, and play goes on.
-  await page.getByTestId('watch-cancel').click();
+  await page.getByTestId('watch-stop').click();
+  // No ad to show (or an ad blocker): no reward, and no message of our own.
   await page.evaluate(() => ((window as unknown as { __noReward: boolean }).__noReward = true));
   await page.getByTestId('solution-ad').click();
   await page.getByTestId('solution-ad-watch').click();
-  await expect(page.getByTestId('notice')).toContainText('No ad');
-  await expect(page.getByTestId('watch-any')).toHaveCount(0);
+  await page.waitForTimeout(300);
+  await expect(page.getByTestId('watch-bar')).toHaveCount(0);
+  await expect(page.getByTestId('notice')).toHaveCount(0);
+});
+
+test('no hidden tools: no secret combo, no debug mode', async ({ page }) => {
+  await withSdk(page);
+  await tutorialDone(page);
+  await page.goto('/?level=11#debug');
+  await expect.poll(() => scene(page)).toBe('play');
+  await expect(page.getByTestId('secret')).toHaveCount(0);
+  await expect(page.getByTestId('watch')).toHaveCount(0);
+  await page.keyboard.press('Shift+P');
+  await expect(page.getByTestId('watch-chooser')).toHaveCount(0);
 });
 
 test('no "Solve" in the tutorial', async ({ page }) => {

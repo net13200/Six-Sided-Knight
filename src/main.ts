@@ -17,7 +17,10 @@ if (!IS_POKI || POKI_OPTIONS.splash) runSplash();
 else document.getElementById('splash')?.remove();
 
 const params = new URLSearchParams(location.search);
-const debug = params.has('debug') || location.hash === '#debug';
+// Developer tools (the KPI panel, ?level, ?perf, the test hook) are left out of the
+// Poki build, except for automated test browsers.
+const devTools = !IS_POKI || navigator.webdriver;
+const debug = !IS_POKI && (params.has('debug') || location.hash === '#debug');
 
 const platform = IS_POKI ? createPokiPlatform() : createBrowserPlatform();
 const stage = new Stage(document.getElementById('app')!);
@@ -42,7 +45,7 @@ for (const t of ['pointerdown', 'touchend', 'click', 'keydown'] as const) {
 window.addEventListener('pageshow', () => game.audio.resume());
 
 // ?perf records how long each frame's update + draw takes (see PERFORMANCE.md).
-const perf: number[] | null = params.has('perf') ? [] : null;
+const perf: number[] | null = devTools && params.has('perf') ? [] : null;
 const loop = new Loop(
   (dt) => game.update(dt),
   () => {
@@ -69,7 +72,7 @@ platform.onVisibilityChange((visible) => {
 window.addEventListener('pagehide', () => game.visibilityChanged(false));
 
 // ?level=3 jumps straight into a level, skipping story and lessons (handy for testing and sharing).
-const levelParam = Number(params.get('level'));
+const levelParam = devTools ? Number(params.get('level')) : 0;
 if (levelParam >= 1) game.goPlay(levelParam - 1, { story: false, lessons: false });
 else game.goMenu();
 loop.start();
@@ -83,7 +86,7 @@ if (!IS_POKI) registerServiceWorker();
 // Hidden KPI panel: #debug or ?debug.
 if (debug) openDebugPanel(game);
 window.addEventListener('hashchange', () => {
-  if (location.hash === '#debug') {
+  if (!IS_POKI && location.hash === '#debug') {
     game.debug = true;
     openDebugPanel(game);
   }
@@ -95,14 +98,15 @@ declare global {
     __ssk?: unknown;
   }
 }
-window.__ssk = {
-  version: VERSION_LABEL,
-  scene: () => game.scene?.name,
-  state: () =>
-    game.scene && 'state' in game.scene ? (game.scene as { state: unknown }).state : null,
-  perf: () => perf,
-  music: () => game.audio.currentTrack,
-  audioRunning: () => game.audio.running,
-  levelIndex: () =>
-    game.scene && 'index' in game.scene ? (game.scene as { index: number }).index : null,
-};
+if (devTools)
+  window.__ssk = {
+    version: VERSION_LABEL,
+    scene: () => game.scene?.name,
+    state: () =>
+      game.scene && 'state' in game.scene ? (game.scene as { state: unknown }).state : null,
+    perf: () => perf,
+    music: () => game.audio.currentTrack,
+    audioRunning: () => game.audio.running,
+    levelIndex: () =>
+      game.scene && 'index' in game.scene ? (game.scene as { index: number }).index : null,
+  };

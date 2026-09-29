@@ -156,6 +156,13 @@ export class Game {
     });
   }
 
+  /** The player is playing (a move) or stopped (level end, a menu, a card). */
+  setPlaying(on: boolean): void {
+    if (this.adPlaying) return; // never an SDK event during an ad
+    if (on) this.platform.ads.gameplayStart();
+    else this.platform.ads.gameplayStop();
+  }
+
   /** A level, floor or bonus stage was finished (counts toward the next ad break). */
   levelDone(): void {
     this.adPolicy.levelDone();
@@ -182,8 +189,6 @@ export class Game {
     } finally {
       this.adPlaying = false;
       this.audio.resume();
-      if (this.scene?.name === 'play' || this.scene?.name === 'ranger')
-        this.platform.ads.gameplayStart();
     }
   }
 
@@ -239,9 +244,9 @@ export class Game {
     const music = musicFor(next);
     if (music !== 'keep') this.audio.setTrack(music);
     this.stage.root.dataset.scene = next.name;
-    // Portals want to know when the player is actually playing.
-    if (next.name === 'play' || next.name === 'ranger') this.platform.ads.gameplayStart();
-    else this.platform.ads.gameplayStop();
+    // Portals want to know when the player is playing: a new screen stops
+    // play; the play screens report their first real input.
+    this.platform.ads.gameplayStop();
     next.enter(this.stage.ui);
   }
 

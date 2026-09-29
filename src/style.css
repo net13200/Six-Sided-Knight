@@ -660,13 +660,32 @@ button:focus-visible {
   font-size: 14px;
 }
 
-/* Poki build: the rewarded "Solve" button in the HUD. */
-.btn.ad-btn {
-  font-size: 12px;
-  padding: 0 6px;
+/* Poki build: rewarded buttons (never green; a video icon; never bigger than the plain choice). */
+.btn.ad-btn,
+.btn.reward-btn {
+  gap: 4px;
   background: #3b3160;
   border-color: #ffd75e;
   color: #ffe9a6;
+}
+.btn.ad-btn {
+  font-size: 12px;
+  padding: 0 6px;
+}
+.btn.ad-btn svg,
+.btn.reward-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+}
+.reward-row {
+  display: flex;
+  gap: 8px;
+}
+.reward-row .btn {
+  flex: 1 1 0;
 }
 
 /* A short message over the board (fades by itself). */

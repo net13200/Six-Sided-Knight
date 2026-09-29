@@ -192,6 +192,7 @@ export class RangerPlayScene implements Scene {
       return;
     }
     this.history.push(this.state);
+    this.game.setPlaying(r.state.status === 'playing');
     this.prev = this.state;
     this.moveT = 0;
     this.state = r.state;
@@ -345,6 +346,7 @@ export class RangerPlayScene implements Scene {
   /** The die's eight faces: where each one is now, and what it does. */
   private openInfo(): void {
     if (!this.ui || this.info) return;
+    this.game.setPlaying(false);
     const lo = this.level.loadout;
     const s = this.state;
     const slots: Array<[string, string]> = [

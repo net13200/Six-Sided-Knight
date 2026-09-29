@@ -165,10 +165,11 @@ CI builds and tests it on every push; the zip is attached to each CI run as the 
 What differs from the web build (`src/platform/target.ts`, `src/platform/poki.ts`, the `ssk-poki` plugin in `vite.config.ts`):
 
 - Poki's SDK is loaded by `index.html`; `src/platform/ads.ts` wraps it. Without the SDK (blocked by an ad blocker, or offline) every call is a no-op and the game runs normally.
-- Events: loading finished when the title screen is up; gameplay start/stop when a level (or bonus stage) is on screen or not.
+- Events: loading finished when the title screen is up; gameplay start on the player's first move in a level (or bonus stage), gameplay stop when the level ends or play is interrupted (a menu, the die view, a card, leaving the level, before an ad). Never the same event twice in a row, and none while an ad plays.
+- No developer tools: no debug mode, secret combo, `?level`/`?perf` or test hook (automated test browsers excepted).
 - No installable-app bits (manifest, service worker, update notice), and shared Daily Roll results carry no link.
 - The SugiGames splash is kept. Build with `VITE_POKI_SPLASH=0` to drop it.
-- **Rewarded ad: "💡 Solve".** On campaign levels past the tutorial, a Solve button in the top bar asks first ("watch a short ad?"), then plays the level's best solution. Not in the tutorial, the Daily Roll or the Depths. If no ad is available, the game says so and play goes on.
+- **Rewarded ad: "Solve"** (with a video icon, never green). On campaign levels past the tutorial, it asks first, with "Not now" next to and as big as "Watch ad"; after the ad the best solution plays straight away ("Solution unlocked!"). Not in the tutorial, the Daily Roll or the Depths. No ad (or an ad blocker): no reward and no message of our own (Poki handles that).
 
 **Ad breaks** (`src/meta/ad-policy.ts`, on top of Poki's own pacing). A break is only ever asked for when the player is heading back into play:
 

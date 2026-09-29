@@ -45,11 +45,11 @@ export class SolutionWatch {
     return this.playing;
   }
 
-  /** Solves, then offers the par solution. */
-  open(solutions: Promise<SolveResult>): void {
+  /** Solves, then offers the par solution (or, with `autoStart`, plays it right away). */
+  open(solutions: Promise<SolveResult>, autoStart = false): void {
     this.showChooser(null);
     solutions.then(
-      (a) => this.showChooser(a),
+      (a) => (autoStart && a.status === 'solved' ? this.start(a.path) : this.showChooser(a)),
       () => this.showChooser(undefined),
     );
   }
