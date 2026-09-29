@@ -50,6 +50,10 @@ Knocking out an enemy rolls your die onto its tile.
 
 Stars are about moves. Finish at **par** (the fewest moves possible) or better for ★★★, within a few moves of par for ★★, and anywhere for ★. Damage doesn't cost stars, but you only have 3 HP. Your best result on each level is kept, and every star you earn for the first time pays **10 crowns**.
 
+## The world map
+
+Levels sit on a road across Oddmere, one district per chapter. Roll your die along the road (swipe or arrow keys), or tap a level to roll there; land on it and press Play. Beating a level opens the road to the next one. The Smith and the Daily Roll board are by the start; the Well is at the top.
+
 ## Languages
 
 English, Spanish, Portuguese, French, German, Italian, Dutch and Turkish. The game starts in your browser's language; change it in **Settings → Language**.

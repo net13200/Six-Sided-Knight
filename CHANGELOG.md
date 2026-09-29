@@ -2,6 +2,14 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.13.0 — A world to roll across
+
+- **A world map.** The level map is now Oddmere itself: one board, a district per chapter from the village up to the Well, and you roll your die along the road between the levels. Swipe or use the arrow keys, or tap a level and the die rolls there by itself. Land on a level to see its stars and par, then Play.
+- **Roads flip into place.** Beat a level and the road to the next one appears tile by tile, each tile flipping over like a die face, and your die rolls on to it.
+- **Places to visit.** The Smith and the Daily Roll's notice board stand by the start of the road; roll into them to go in. The Well waits at the top of the world.
+- **Each district looks its own:** fields, a frozen lake, the vaults, the garrison, the graveyard and the palace. Sleepy dice townsfolk doze by the road, and wake up when you get every level in their district to ★★★ (a gold flag flies there too).
+- **The tutorial's die shows only what you've learned.** Faces not taught yet are plain dice faces with pips: level 1 is a plain die, and the Sword, Shield, Key, Coin, Heart and Bomb appear as their lessons come up. Levels 3, 4 and 9 have a new par (11, 14 and 12), and players who beat levels 1-9 solve them again for their stars (they're marked NEW).
+
 ## 0.12.0 — Speaks your language
 
 - **Eight languages.** English, Spanish, Portuguese, French, German, Italian, Dutch and Turkish: menus, lessons, the story, every level name and hint, move labels and screen-reader descriptions. The game starts in your browser's language; **Settings → Language** changes it. Each language downloads only if you use it.
