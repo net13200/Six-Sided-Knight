@@ -1,0 +1,13 @@
+id: r-01
+name: Greenwood
+par: 19
+hint: Three edges, three ways to roll
+loadout: Herb Leaf Leaf Leaf Leaf Leaf Leaf Leaf
+teaches: roll
+---
+@....####
+####...##
+#####....
+.......##
+..#######
+..>######

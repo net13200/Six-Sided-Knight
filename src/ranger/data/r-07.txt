@@ -1,0 +1,13 @@
+id: r-07
+name: The Old Stag
+par: 11
+hint: Stags strike down their rows
+loadout: Leaf Herb Bow Knife Trap Rope Cloak Boots
+teaches: bow
+---
+.......s.
+........s
+..w.@..w.
+..w>~w...
+.........
+.........

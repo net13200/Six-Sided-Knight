@@ -138,6 +138,8 @@ export interface SaveV3 extends Omit<SaveV2, 'version'> {
   campaignResetNotice: boolean;
   /** Levels the player had beaten that changed in an update (the title screen says so once). */
   changedLevelsNotice: number;
+  /** The bonus chapter (Eight-Sided Ranger), kept apart from the campaign's stars. */
+  bonus: Record<string, LevelRecord>;
 }
 
 export type SaveData = SaveV3;
@@ -165,6 +167,7 @@ export function freshSave(now: number): SaveData {
     starsBeforeReset: 0,
     campaignResetNotice: false,
     changedLevelsNotice: 0,
+    bonus: {},
     daily: freshDaily(),
     depths: freshDepths(),
     hints: {},
@@ -285,18 +288,8 @@ export function migrate(raw: Json, now: number, legacy: Json | null = null): Jso
 export function normalize(data: Json, now: number): SaveData {
   const base = freshSave(now);
   const d = data as Partial<SaveV3>;
-  const levels: Record<string, LevelRecord> = {};
-  for (const [id, rec] of Object.entries(d.levels ?? {})) {
-    if (!rec || typeof rec !== 'object') continue;
-    levels[id] = {
-      stars: clampInt(rec.stars, 0, 3),
-      bestMoves: clampInt(rec.bestMoves, 0, 1e6),
-      completions: clampInt(rec.completions, 0, 1e9),
-      bestTimeMs: clampInt(rec.bestTimeMs, 0, 1e12),
-      ...(typeof rec.fp === 'string' ? { fp: rec.fp } : {}),
-      ...(rec.redo === true ? { redo: true } : {}),
-    };
-  }
+  const levels = normalizeRecords(d.levels);
+  const bonus = normalizeRecords(d.bonus);
   const daily = { ...base.daily, ...(d.daily ?? {}) };
   const depths = { ...base.depths, ...(d.depths ?? {}) };
   const hints: Record<string, boolean> = {};
@@ -326,6 +319,7 @@ export function normalize(data: Json, now: number): SaveData {
     starsBeforeReset: clampInt(d.starsBeforeReset, 0, 1e6),
     campaignResetNotice: d.campaignResetNotice === true,
     changedLevelsNotice: clampInt(d.changedLevelsNotice, 0, 1e4),
+    bonus,
     hints,
     daily: {
       ...daily,
@@ -361,6 +355,22 @@ function normalizeSettings(s: Settings): Settings {
         ? Math.max(0, Math.min(1, s.musicVolume))
         : 0.5,
   };
+}
+
+function normalizeRecords(raw: unknown): Record<string, LevelRecord> {
+  const levels: Record<string, LevelRecord> = {};
+  for (const [id, rec] of Object.entries((raw ?? {}) as Record<string, Partial<LevelRecord>>)) {
+    if (!rec || typeof rec !== 'object') continue;
+    levels[id] = {
+      stars: clampInt(rec.stars, 0, 3),
+      bestMoves: clampInt(rec.bestMoves, 0, 1e6),
+      completions: clampInt(rec.completions, 0, 1e9),
+      bestTimeMs: clampInt(rec.bestTimeMs, 0, 1e12),
+      ...(typeof rec.fp === 'string' ? { fp: rec.fp } : {}),
+      ...(rec.redo === true ? { redo: true } : {}),
+    };
+  }
+  return levels;
 }
 
 function normalizeRun(r: unknown): RunProgress | null {

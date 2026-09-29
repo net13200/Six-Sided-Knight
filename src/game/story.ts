@@ -7,7 +7,17 @@
 import { CHAPTER_NAMES, CHAPTER_SIZE } from '../meta/progress';
 
 export type StoryArt =
-  'queen' | 'well' | 'dice' | 'you' | 'chapter' | 'bottom' | 'sentence' | 'awaken' | 'depths';
+  | 'queen'
+  | 'well'
+  | 'dice'
+  | 'you'
+  | 'chapter'
+  | 'bottom'
+  | 'sentence'
+  | 'awaken'
+  | 'depths'
+  | 'greenwood'
+  | 'soon';
 
 export interface StoryPage {
   readonly art: StoryArt;
@@ -65,12 +75,37 @@ export const ENDING: readonly StoryPage[] = [
     art: 'depths',
     text: 'Not all of them. The ones who like it better this way are still down in the Depths.',
   },
+  {
+    art: 'greenwood',
+    title: 'Meanwhile, in the Greenwood',
+    text: 'Past the edge of Oddmere, something with eight sides is rolling on purpose too. A bonus chapter is open on the title screen.',
+  },
+];
+
+/** Before the first bonus stage. */
+export const RANGER_INTRO: readonly StoryPage[] = [
+  {
+    art: 'greenwood',
+    title: 'Bonus: The Greenwood',
+    text: 'Meet the Eight-Sided Ranger. Eight faces, three ways to roll, and a forest full of wolves.',
+  },
+];
+
+/** After the last bonus stage. */
+export const RANGER_OUTRO: readonly StoryPage[] = [
+  {
+    art: 'soon',
+    title: 'Coming soon',
+    text: 'The Ranger has a story of their own, and it is still being written. Coming soon: Eight-Sided Ranger.',
+  },
 ];
 
 /** Save flags (in `hints`) for what has been shown. */
 export const STORY_KEYS = {
   intro: 'story:intro',
   ending: 'story:ending',
+  rangerIntro: 'story:ranger',
+  rangerOutro: 'story:ranger-end',
   chapter: (i: number) => `story:ch${i + 1}`,
 } as const;
 
@@ -113,5 +148,7 @@ export function storySoFar(seen: (key: string) => boolean, chaptersOpen: number)
   const pages: StoryPage[] = [...INTRO];
   for (let i = 0; i < Math.max(1, chaptersOpen); i++) pages.push(chapterPage(i));
   if (seen(STORY_KEYS.ending)) pages.push(...ENDING);
+  if (seen(STORY_KEYS.rangerIntro)) pages.push(...RANGER_INTRO);
+  if (seen(STORY_KEYS.rangerOutro)) pages.push(...RANGER_OUTRO);
   return pages;
 }

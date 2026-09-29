@@ -36,7 +36,7 @@ describe('story', () => {
     expect(storySoFar(none, 2)).toHaveLength(INTRO.length + 2);
     const all = storySoFar((k) => k === STORY_KEYS.ending, 6);
     expect(all).toHaveLength(INTRO.length + 6 + ENDING.length);
-    expect(all.at(-1)!.art).toBe('depths');
+    expect(all.at(-1)!.art).toBe('greenwood');
   });
 
   it('there is a line for every chapter, and every page is short enough to fit', () => {

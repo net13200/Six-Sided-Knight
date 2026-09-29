@@ -1,0 +1,13 @@
+id: r-04
+name: Snare
+par: 9
+hint: Land the Trap face-down, then lure
+loadout: Leaf Leaf Knife Leaf Leaf Trap Leaf Leaf
+teaches: trap
+---
+w>..@....
+...#..#..
+.w.w...#.
+.........
+.........
+.........

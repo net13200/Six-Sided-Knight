@@ -170,6 +170,14 @@ Every level names what it teaches (`teaches:` in its file), and its par route mu
 - Every move is saved as it is made: leaving mid-floor and coming back resumes the floor exactly where it was (not from its start).
 - A run lasts until the die is knocked out or the player ends it from the hub. Score: floors cleared. The high score (best run) and the last run's result are saved.
 
+## 11b. Bonus chapter: Eight-Sided Ranger
+
+- Opens when the campaign's last level is beaten (a **Bonus** button on the title screen; the ending gains a page pointing to it). 7 stages (`src/ranger/data`), with an intro page before the first and "Coming soon: Eight-Sided Ranger" after the last.
+- Its own small rules module (`src/ranger/`): a d8 (octahedron, 24 orientations) on a grid of triangles, 9 per row, 6 rows; cell (x, y) points up when x + y is even. Moves: W and E along the row, and through the flat edge (S from an up triangle, N from a down one). The lower faces at the three edges lead; rolling tips that face down.
+- Faces: Bow (along the row to the first enemy, over water: 1 damage; the die stays), Knife (adjacent: 2), Trap (face-down on grass: lays a snare; a wolf stepping in is caught 3 turns), Rope (along the row to a post 2-5 away, over water: lands next to it without rolling), Boots (leap over the next cell in the row, rolling twice), Cloak (on top: wolves and stags don't act), Herb (face-down on a spring: heal 1), Leaf (nothing).
+- Enemies: wolf (2 HP) bites when next to you, else steps toward you; stag (3 HP) strikes when you end a turn in its row with a clear line. 3 HP, as in the campaign.
+- Stars and par work as in the campaign; progress is kept apart (`bonus` in the save), and new stars pay crowns. Each stage's par route uses its face and the stage can't be won without it (the face swapped for a Leaf); a test proves this.
+
 ## 11a. Generated levels
 
 - Seeded: the same seed and parameters give the same level on every device.

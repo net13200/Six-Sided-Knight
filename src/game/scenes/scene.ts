@@ -12,12 +12,14 @@ export type SceneName =
   | 'forge'
   | 'stats'
   | 'skins'
-  | 'story';
+  | 'story'
+  | 'ranger-map'
+  | 'ranger';
 
 /** Allowed transitions of the scene state machine. */
 export const TRANSITIONS: Readonly<Record<SceneName, readonly SceneName[]>> = {
   boot: ['menu', 'play', 'story'],
-  menu: ['levels', 'play', 'daily', 'depths', 'forge', 'stats', 'story'],
+  menu: ['levels', 'play', 'daily', 'depths', 'forge', 'stats', 'story', 'ranger-map'],
   levels: ['menu', 'play', 'levels', 'story'], // levels -> levels: changing chapter
   play: ['results', 'menu', 'levels', 'play', 'floor', 'daily', 'depths', 'story'],
   results: ['play', 'levels', 'menu', 'story'],
@@ -27,7 +29,9 @@ export const TRANSITIONS: Readonly<Record<SceneName, readonly SceneName[]>> = {
   forge: ['menu', 'daily', 'depths', 'skins', 'floor'],
   stats: ['menu'],
   skins: ['forge'],
-  story: ['play', 'menu', 'levels'],
+  story: ['play', 'menu', 'levels', 'ranger', 'ranger-map'],
+  'ranger-map': ['menu', 'ranger', 'story'],
+  ranger: ['ranger', 'ranger-map', 'story', 'menu'],
 };
 
 export function canTransition(from: SceneName, to: SceneName): boolean {

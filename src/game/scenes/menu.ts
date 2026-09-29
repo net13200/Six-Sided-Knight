@@ -60,27 +60,7 @@ export class MenuScene implements Scene {
         107,
         60,
       ),
-      place(
-        small('levels', 'Map', () => this.game.goLevels()),
-        74,
-        386,
-        62,
-        60,
-      ),
-      place(
-        small('forge', 'Smith', () => this.game.goForge()),
-        139,
-        386,
-        62,
-        60,
-      ),
-      place(
-        small('stats', 'Stats', () => this.game.goStats()),
-        204,
-        386,
-        62,
-        60,
-      ),
+      ...this.smallButtons(small),
       place(
         iconButton('book', 'Story', () => this.game.goStorySoFar(), 'story'),
         4,
@@ -132,6 +112,24 @@ export class MenuScene implements Scene {
     const streak = currentStreak(this.game.save.data, today);
     if (this.game.save.data.daily.results[today]) return `done · ${streak}-day streak`;
     return streak > 0 ? `${streak}-day streak` : 'new every day';
+  }
+
+  /** Map, Smith, Stats, and the bonus chapter once the campaign is beaten. */
+  private smallButtons(
+    small: (id: string, text: string, onClick: () => void) => HTMLButtonElement,
+  ): HTMLElement[] {
+    const buttons = [
+      small('levels', 'Map', () => this.game.goLevels()),
+      small('forge', 'Smith', () => this.game.goForge()),
+      small('stats', 'Stats', () => this.game.goStats()),
+    ];
+    if (this.game.bonusUnlocked) {
+      const b = small('bonus', 'Bonus', () => this.game.goRangerMap());
+      b.classList.add('bonus-btn');
+      buttons.push(b);
+    }
+    const left = 170 - (buttons.length * 65 - 3) / 2;
+    return buttons.map((b, i) => place(b, left + i * 65, 386, 62, 60));
   }
 
   private depthsLabel(): string {

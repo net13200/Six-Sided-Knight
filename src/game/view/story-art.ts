@@ -4,6 +4,7 @@ import type { StoryPage } from '../story';
 import { drawCrown, drawEnemy, drawFace, drawTile } from './art';
 import { cameraMatrix, drawCube3d } from './cube';
 import { C } from './palette';
+import { drawOctahedron } from '../../ranger/view';
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -225,6 +226,22 @@ function goatDie(ctx: Ctx, x: number, y: number, size: number, yaw: number, alph
   ctx.restore();
 }
 
+function pineTree(ctx: Ctx, x: number, y: number, h: number, lean: number): void {
+  ctx.fillStyle = '#4a3220';
+  ctx.fillRect(x - 3, y - 4, 6, 12);
+  ctx.fillStyle = '#2f6b3a';
+  for (let i = 0; i < 3; i++) {
+    const w = h * (0.22 + i * 0.1);
+    const top = y - h + i * h * 0.25;
+    ctx.beginPath();
+    ctx.moveTo(x + lean, top);
+    ctx.lineTo(x - w, top + h * 0.45);
+    ctx.lineTo(x + w, top + h * 0.45);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
 /**
  * Draws a page's illustration centred at (cx, cy), roughly 300 x 220.
  * `t` is seconds since the page opened; `still` turns motion off.
@@ -353,6 +370,35 @@ export function drawStoryArt(
           ctx.fill();
         }
       }
+      break;
+    }
+    case 'greenwood': {
+      // A clearing in the pines, and the d8 rolling through it.
+      glow(ctx, cx, cy + 20, 140, 'rgba(111,191,79,ALPHA)', 0.2);
+      for (const [dx, dy, h] of [
+        [-120, 20, 60],
+        [-80, -30, 70],
+        [95, -20, 75],
+        [130, 30, 55],
+        [-135, -60, 50],
+        [120, -75, 50],
+      ] as const)
+        pineTree(ctx, cx + dx, cy + dy + 40, h, sway(dx, 2));
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 62, 46, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      drawOctahedron(ctx, cx, cy + 12 - Math.abs(sway(3, 6)), 46, tt);
+      break;
+    }
+    case 'soon': {
+      glow(ctx, cx, cy, 150, GOLD, 0.22);
+      drawOctahedron(ctx, cx, cy - 10, 58, tt * 0.8);
+      ctx.fillStyle = C.gold;
+      ctx.font = '800 20px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Eight-Sided Ranger', cx, cy + 92);
+      rising(ctx, cx, cy + 60, 110, tt, 8);
       break;
     }
   }

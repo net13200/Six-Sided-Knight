@@ -28,10 +28,12 @@ test.describe('story', () => {
     await page.getByTestId('next').click();
     await expect.poll(() => scene(page)).toBe('story');
     await expect(page.getByTestId('story-text')).toContainText('bottom of the Well');
-    for (let i = 0; i < 3; i++) await page.getByTestId('story-next').click();
+    for (let i = 0; i < 4; i++) await page.getByTestId('story-next').click();
+    await expect(page.getByTestId('story-text')).toContainText('bonus chapter');
     await expect(page.getByTestId('story-next')).toContainText('The end');
     await page.getByTestId('story-next').click();
     await expect.poll(() => scene(page)).toBe('menu');
+    await expect(page.getByTestId('bonus')).toBeVisible();
     const save = await page.evaluate(() => JSON.parse(localStorage.getItem('ssk.save')!));
     expect(save.hints['story:ending']).toBe(true);
   });

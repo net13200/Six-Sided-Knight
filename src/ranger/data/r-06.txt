@@ -1,0 +1,13 @@
+id: r-06
+name: Unseen
+par: 8
+hint: Cloak on top, and they lose you
+loadout: Leaf Leaf Knife Bow Leaf Cloak Leaf Leaf
+teaches: cloak
+---
+.>.......
+.........
+...w.....
+w.w@.....
+......w..
+..w...w..

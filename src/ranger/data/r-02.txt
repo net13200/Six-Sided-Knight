@@ -1,0 +1,13 @@
+id: r-02
+name: First Arrow
+par: 8
+hint: Arrows fly along the row, over water
+loadout: Leaf Leaf Leaf Leaf Leaf Bow Leaf Leaf
+teaches: bow
+---
+.........
+.....#...
+...~@.#..
+...~.w...
+........>
+.........

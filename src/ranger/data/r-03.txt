@@ -1,0 +1,13 @@
+id: r-03
+name: Close Quarters
+par: 11
+hint: The Knife ends it in one
+loadout: Leaf Leaf Bow Leaf Leaf Leaf Knife Leaf
+teaches: knife
+---
+.....~@.~
+.........
+.....w.#.
+.........
+.........
+.....>...

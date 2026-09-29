@@ -38,8 +38,20 @@ import { ResultsScene } from './scenes/results';
 import { SkinsScene } from './scenes/skins';
 import { StatsScene } from './scenes/stats';
 import { StoryScene } from './scenes/story';
+import { RangerMapScene } from './scenes/ranger-map';
+import { RangerPlayScene } from './scenes/ranger-play';
+import { loadRangerLevels } from '../ranger/levels';
+import type { RLevel } from '../ranger/rules';
 import { lessonFor, lessonKey, type Lesson } from './lessons';
-import { ENDING, STORY_KEYS, storyBeforeLevel, storySoFar, type StoryPage } from './story';
+import {
+  ENDING,
+  RANGER_INTRO,
+  RANGER_OUTRO,
+  STORY_KEYS,
+  storyBeforeLevel,
+  storySoFar,
+  type StoryPage,
+} from './story';
 import { setDieSkin } from './view/cube';
 import { setSkinMotion } from './view/skin-fx';
 import { activeSkin, newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/skins';
@@ -74,6 +86,8 @@ export class Game {
   readonly levels: LevelData[];
   /** Extra floors of gauntlet levels, by level id. */
   readonly gauntlets: Map<string, LevelData[]>;
+  /** The bonus chapter (Eight-Sided Ranger). */
+  readonly rangerLevels: RLevel[];
   readonly audio = new Audio();
   readonly save: SaveStore;
   readonly analytics: LocalAnalytics;
@@ -91,6 +105,7 @@ export class Game {
     this.rules = defaultRules();
     this.levels = loadCampaign(this.rules);
     this.gauntlets = loadGauntletFloors(this.rules);
+    this.rangerLevels = loadRangerLevels();
     this.levelService = new LevelService(this.rules);
     this.save = new SaveStore(platform.storage, platform.now());
     // Levels changed in an update: their stars are earned again on the new version.
@@ -256,6 +271,36 @@ export class Game {
   get endingPending(): boolean {
     const last = this.levels[this.levels.length - 1];
     return !!last && isCompleted(this.save.data, last) && !this.storySeen(STORY_KEYS.ending);
+  }
+
+  /** The bonus chapter opens once the campaign's last level is beaten. */
+  get bonusUnlocked(): boolean {
+    const last = this.levels[this.levels.length - 1];
+    return !!last && isCompleted(this.save.data, last);
+  }
+
+  goRangerMap(): void {
+    this.go(new RangerMapScene(this));
+  }
+
+  /** A bonus stage; the chapter's intro page plays before the first one, once. */
+  goRangerPlay(index: number): void {
+    const i = Math.max(0, Math.min(index, this.rangerLevels.length - 1));
+    if (i === 0 && !this.storySeen(STORY_KEYS.rangerIntro)) {
+      this.goStory(RANGER_INTRO, () => this.goRangerPlay(0), [STORY_KEYS.rangerIntro], 'Begin');
+      return;
+    }
+    this.go(new RangerPlayScene(this, i));
+  }
+
+  /** After the last bonus stage: "Coming soon". */
+  goRangerOutro(): void {
+    this.goStory(
+      RANGER_OUTRO,
+      () => this.goRangerMap(),
+      [STORY_KEYS.rangerOutro],
+      'Back to the Greenwood',
+    );
   }
 
   goEnding(): void {
