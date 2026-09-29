@@ -140,7 +140,7 @@ export class Game {
     if (
       this.platform.ads === NO_ADS ||
       this.adPlaying ||
-      !this.adPolicy.allows(now, moment, level)
+      !this.adPolicy.allows(now, moment, level, this.tutorialDone)
     ) {
       next();
       return;
@@ -154,6 +154,37 @@ export class Game {
       this.audio.resume();
       next();
     });
+  }
+
+  /** A level, floor or bonus stage was finished (counts toward the next ad break). */
+  levelDone(): void {
+    this.adPolicy.levelDone();
+  }
+
+  /** Whether this build can show rewarded ads (the Poki build). */
+  get hasRewardedAds(): boolean {
+    return this.platform.ads !== NO_ADS;
+  }
+
+  /**
+   * A rewarded ad the player asked for. Resolves true if they watched it and
+   * earned the reward. It also counts as an ad break for pacing.
+   */
+  async rewardedAd(): Promise<boolean> {
+    if (this.platform.ads === NO_ADS || this.adPlaying) return false;
+    this.adPlaying = true;
+    this.platform.ads.gameplayStop();
+    this.audio.suspend();
+    try {
+      const ok = await this.platform.ads.rewardedBreak();
+      if (ok) this.adPolicy.took(this.platform.now());
+      return ok;
+    } finally {
+      this.adPlaying = false;
+      this.audio.resume();
+      if (this.scene?.name === 'play' || this.scene?.name === 'ranger')
+        this.platform.ads.gameplayStart();
+    }
   }
 
   /** Reduce motion: the player's choice, or the system setting if they haven't chosen. */
@@ -384,6 +415,7 @@ export class Game {
 
   /** Stores a finished level and returns what changed. */
   recordWin(index: number, state: GameState, stars: StarResult, timeMs: number): WinSummary {
+    this.levelDone();
     const level = this.levels[index]!;
     const firstClear = (this.save.data.levels[level.id]?.completions ?? 0) === 0;
     const before = this.save.data.levels[level.id]?.stars ?? 0;

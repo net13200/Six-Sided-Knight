@@ -6,26 +6,40 @@ import { createPokiAds } from '../../src/platform/ads';
 const MIN = 60_000;
 
 describe('ad pacing', () => {
-  it('no break in the first minutes of a session', () => {
+  const DONE = true;
+
+  it('3 minutes, or 2 finished levels, whichever comes first', () => {
     const p = new AdPolicy(0);
-    expect(p.allows(2 * MIN, 'daily-start')).toBe(false);
-    expect(p.allows(DEFAULT_PACING.firstAfterMs, 'daily-start')).toBe(true);
+    expect(p.allows(2 * MIN, 'daily-start', undefined, DONE)).toBe(false);
+    expect(p.allows(DEFAULT_PACING.minGapMs, 'daily-start', undefined, DONE)).toBe(true);
+    // Or sooner: two levels finished.
+    const q = new AdPolicy(0);
+    q.levelDone();
+    expect(q.allows(MIN, 'next-level', 20, DONE)).toBe(false);
+    q.levelDone();
+    expect(q.allows(MIN, 'next-level', 21, DONE)).toBe(true);
   });
 
-  it('breaks are minutes apart', () => {
+  it('a break starts both counts again', () => {
     const p = new AdPolicy(0);
     const t = 10 * MIN;
-    expect(p.allows(t, 'next-level', 20)).toBe(true);
+    p.levelDone();
+    p.levelDone();
     p.took(t);
-    expect(p.allows(t + 2 * MIN, 'next-level', 21)).toBe(false);
-    expect(p.allows(t + 3 * MIN, 'next-level', 21)).toBe(true);
+    expect(p.allows(t + 2 * MIN, 'next-level', 21, DONE)).toBe(false);
+    p.levelDone();
+    expect(p.allows(t + 2 * MIN, 'next-level', 22, DONE)).toBe(false);
+    p.levelDone();
+    expect(p.allows(t + 2 * MIN, 'next-level', 23, DONE)).toBe(true);
+    expect(p.allows(t + 3 * MIN, 'next-level', 23, DONE)).toBe(true);
   });
 
-  it('never in the tutorial', () => {
+  it('never before the tutorial is done, or when heading into a tutorial level', () => {
     const p = new AdPolicy(0);
-    expect(p.allows(30 * MIN, 'next-level', 9)).toBe(false);
-    expect(p.allows(30 * MIN, 'map-level', 3)).toBe(false);
-    expect(p.allows(30 * MIN, 'next-level', 10)).toBe(true);
+    expect(p.allows(30 * MIN, 'daily-start', undefined, false)).toBe(false);
+    expect(p.allows(30 * MIN, 'next-level', 9, DONE)).toBe(false);
+    expect(p.allows(30 * MIN, 'map-level', 3, DONE)).toBe(false);
+    expect(p.allows(30 * MIN, 'next-level', 10, DONE)).toBe(true);
   });
 });
 

@@ -239,6 +239,7 @@ export class RangerPlayScene implements Scene {
   }
 
   private win(): void {
+    this.game.levelDone();
     this.finished = true;
     const moves = this.state.moves;
     const par = this.level.par ?? moves;

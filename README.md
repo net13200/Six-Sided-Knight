@@ -167,7 +167,8 @@ What differs from the web build (`src/platform/target.ts`, `src/platform/poki.ts
 - Poki's SDK is loaded by `index.html`; `src/platform/ads.ts` wraps it. Without the SDK (blocked by an ad blocker, or offline) every call is a no-op and the game runs normally.
 - Events: loading finished when the title screen is up; gameplay start/stop when a level (or bonus stage) is on screen or not.
 - No installable-app bits (manifest, service worker, update notice), and shared Daily Roll results carry no link.
-- The SugiGames splash is off. Build with `VITE_POKI_SPLASH=1` to keep it.
+- The SugiGames splash is kept. Build with `VITE_POKI_SPLASH=0` to drop it.
+- **Rewarded ad: "💡 Solve".** On campaign levels past the tutorial, a Solve button in the top bar asks first ("watch a short ad?"), then plays the level's best solution. Not in the tutorial, the Daily Roll or the Depths. If no ad is available, the game says so and play goes on.
 
 **Ad breaks** (`src/meta/ad-policy.ts`, on top of Poki's own pacing). A break is only ever asked for when the player is heading back into play:
 
@@ -175,7 +176,7 @@ What differs from the web build (`src/platform/target.ts`, `src/platform/poki.ts
 - starting a new Daily Roll or Depths run (never when continuing one)
 - the next bonus stage
 
-Never: in the first 3 minutes of a session, within 3 minutes of the last break, in the tutorial (levels 1-10), or in the middle of a run (between Daily Roll, Depths or Gauntlet floors). While an ad plays, the game is silent and ignores input. To try breaks without waiting, set `localStorage['ssk.adpacing'] = '{"firstAfterMs":0,"minGapMs":0,"fromLevel":0}'`.
+Spacing: a break may come once **3 minutes or 2 finished levels** (whichever comes first) have passed since the last ad (or since the session began; a rewarded ad counts too). Never before the tutorial (levels 1-10) is finished, never when heading into a tutorial level, and never in the middle of a run (between Daily Roll, Depths or Gauntlet floors). While an ad plays, the game is silent and ignores input. To try breaks without waiting, set `localStorage['ssk.adpacing'] = '{"minGapMs":0,"minLevels":0,"fromLevel":0}'`.
 
 ## Solver, difficulty and generator
 

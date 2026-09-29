@@ -5,9 +5,6 @@
 export const IS_POKI = import.meta.env.MODE === 'poki';
 
 export const POKI_OPTIONS = {
-  /**
-   * The SugiGames intro splash. Off by default (portals prefer landing
-   * straight in the game); build with VITE_POKI_SPLASH=1 to keep it.
-   */
-  splash: import.meta.env.VITE_POKI_SPLASH === '1',
+  /** The SugiGames intro splash. On; build with VITE_POKI_SPLASH=0 to drop it. */
+  splash: import.meta.env.VITE_POKI_SPLASH !== '0',
 } as const;

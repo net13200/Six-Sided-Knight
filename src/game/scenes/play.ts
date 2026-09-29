@@ -13,7 +13,7 @@ import {
   type History,
   type LevelData,
 } from '../../engine';
-import type { Game } from '../game';
+import { TUTORIAL_LENGTH, type Game } from '../game';
 import type { PlaySession } from '../session';
 import type { Command } from '../input';
 import { tapDirection } from '../input';
@@ -163,6 +163,24 @@ export class PlayScene implements Scene {
         ),
       );
     }
+    // Poki build: the best solution, for a rewarded ad (campaign levels past the tutorial).
+    if (this.offersSolutionAd) {
+      ui.append(
+        place(
+          el('button', {
+            className: 'btn small ad-btn',
+            testId: 'solution-ad',
+            text: '💡 Solve',
+            label: 'Show the solution (watch an ad)',
+            onClick: () => this.askSolutionAd(),
+          }),
+          204,
+          8,
+          64,
+          34,
+        ),
+      );
+    }
     // The secret combo for everyone: 5 quick taps on the level title (see
     // secretTap). Invisible, and kept out of the tab order.
     const secret = el('button', {
@@ -193,6 +211,65 @@ export class PlayScene implements Scene {
    * developer button and P need debug mode; the secret combo (`secret`) works
    * in the regular game.
    */
+  /** Whether this level offers the solution for a rewarded ad. */
+  private get offersSolutionAd(): boolean {
+    const i = this.session.campaignIndex;
+    return (
+      this.game.hasRewardedAds &&
+      this.session.mode === 'campaign' &&
+      !this.session.permadeath &&
+      i !== null &&
+      i >= TUTORIAL_LENGTH
+    );
+  }
+
+  /** Makes clear an ad comes first, then (after it) plays the best solution. */
+  private askSolutionAd(): void {
+    if (!this.ui || this.watch || this.lesson || this.inspect || this.finishing) return;
+    this.hideOverlay();
+    const sheet = place(
+      el('div', { className: 'sheet', testId: 'solution-ad-sheet' }, [
+        el('h2', { text: 'Show the solution?' }),
+        el('p', { text: 'Watch a short ad, then see the best solution play out.' }),
+        el('button', {
+          className: 'btn primary',
+          testId: 'solution-ad-watch',
+          text: '▶ Watch ad',
+          onClick: () => {
+            sheet.remove();
+            void this.game.rewardedAd().then((ok) => {
+              if (ok) this.openWatch(true);
+              else this.flashNotice('No ad right now. Try again in a bit.');
+            });
+          },
+        }),
+        el('button', {
+          className: 'btn small',
+          testId: 'solution-ad-cancel',
+          text: 'Not now',
+          onClick: () => sheet.remove(),
+        }),
+      ]),
+      40,
+      120,
+      260,
+      0,
+    );
+    sheet.style.height = 'auto';
+    sheet.setAttribute('role', 'dialog');
+    this.ui.append(sheet);
+    (sheet.querySelector('button') as HTMLButtonElement | null)?.focus();
+  }
+
+  /** A short message over the board that fades by itself. */
+  private flashNotice(text: string): void {
+    if (!this.ui) return;
+    const n = place(el('div', { className: 'toast', testId: 'notice', text }), 40, 200, 260, 40);
+    n.setAttribute('role', 'status');
+    this.ui.append(n);
+    setTimeout(() => n.remove(), 2500);
+  }
+
   private openWatch(secret = false): void {
     if (!(this.game.debug || secret) || this.watch || this.lesson || this.inspect || !this.ui)
       return;

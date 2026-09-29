@@ -65,6 +65,14 @@ test.describe('watching the par solution (developer mode)', () => {
     await expect(page.getByTestId('watch-chooser')).toHaveCount(0);
   });
 
+  test('the web version has no ads: no "Solve" button, even past the tutorial', async ({
+    page,
+  }) => {
+    await page.goto('/?level=12');
+    await expect.poll(() => scene(page)).toBe('play');
+    await expect(page.getByTestId('solution-ad')).toHaveCount(0);
+  });
+
   test('the secret combo works in the regular game: 5 taps on the title, or Shift+P', async ({
     page,
   }) => {

@@ -24,7 +24,7 @@ const POKI_SDK = 'https://game-cdn.poki.com/scripts/v2/poki-sdk.js';
 /**
  * The Poki build (`vite build --mode poki`): adds the SDK, and drops what a
  * portal doesn't want: the installable-app manifest and service worker, and
- * (unless VITE_POKI_SPLASH=1) the SugiGames splash.
+ * (with VITE_POKI_SPLASH=0) the SugiGames splash.
  */
 function poki(outDir: string): Plugin {
   return {
@@ -35,7 +35,7 @@ function poki(outDir: string): Plugin {
         .replace(/\s*<link rel="apple-touch-icon"[^>]*>/, '')
         .replace(/\s*<meta name="(mobile-web-app-capable|apple-mobile-web-app-[a-z-]+)"[^>]*>/g, '')
         .replace('</head>', `  <script src="${POKI_SDK}"></script>\n  </head>`);
-      if (process.env.VITE_POKI_SPLASH !== '1')
+      if (process.env.VITE_POKI_SPLASH === '0')
         out = out.replace(
           /\s*<div id="splash"[\s\S]*?<\/svg>\s*<div id="splash-word">[\s\S]*?<\/div>\s*<\/div>/,
           '',
