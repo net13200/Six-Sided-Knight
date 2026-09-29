@@ -54,7 +54,7 @@ import {
 } from './story';
 import { setDieSkin } from './view/cube';
 import { setSkinMotion } from './view/skin-fx';
-import { AdPolicy, DEFAULT_PACING, type AdPacing, type BreakMoment } from '../meta/ad-policy';
+import { breakAllowed, type BreakMoment } from '../meta/ad-policy';
 import { NO_ADS } from '../platform/ads';
 import { activeSkin, newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/skins';
 import { canTransition, type Scene } from './scenes/scene';
@@ -98,8 +98,6 @@ export class Game {
   /** Developer mode (#debug or ?debug): KPI panel, watching solutions. */
   debug: boolean;
   private hiddenAt = 0;
-  /** When the Poki build may show an ad break (see ad-policy.ts). */
-  private readonly adPolicy: AdPolicy;
   /** True while an ad plays: the game waits (no input, no sound). */
   adPlaying = false;
 
@@ -127,7 +125,6 @@ export class Game {
     this.analytics.startSession(SESSION_GAP_MS);
     this.applySkin();
     this.applyDisplay();
-    this.adPolicy = new AdPolicy(platform.now(), adPacing(platform));
   }
 
   /**
@@ -136,16 +133,14 @@ export class Game {
    * `level` is the campaign level the player is heading into, if any.
    */
   breakThen(moment: BreakMoment, next: () => void, level?: number): void {
-    const now = this.platform.now();
     if (
       this.platform.ads === NO_ADS ||
       this.adPlaying ||
-      !this.adPolicy.allows(now, moment, level, this.tutorialDone)
+      !breakAllowed(moment, level, this.tutorialDone)
     ) {
       next();
       return;
     }
-    this.adPolicy.took(now);
     this.adPlaying = true;
     this.platform.ads.gameplayStop();
     this.audio.suspend();
@@ -163,11 +158,6 @@ export class Game {
     else this.platform.ads.gameplayStop();
   }
 
-  /** A level, floor or bonus stage was finished (counts toward the next ad break). */
-  levelDone(): void {
-    this.adPolicy.levelDone();
-  }
-
   /** Whether this build can show rewarded ads (the Poki build). */
   get hasRewardedAds(): boolean {
     return this.platform.ads !== NO_ADS;
@@ -175,7 +165,7 @@ export class Game {
 
   /**
    * A rewarded ad the player asked for. Resolves true if they watched it and
-   * earned the reward. It also counts as an ad break for pacing.
+   * earned the reward.
    */
   async rewardedAd(): Promise<boolean> {
     if (this.platform.ads === NO_ADS || this.adPlaying) return false;
@@ -183,9 +173,7 @@ export class Game {
     this.platform.ads.gameplayStop();
     this.audio.suspend();
     try {
-      const ok = await this.platform.ads.rewardedBreak();
-      if (ok) this.adPolicy.took(this.platform.now());
-      return ok;
+      return await this.platform.ads.rewardedBreak();
     } finally {
       this.adPlaying = false;
       this.audio.resume();
@@ -345,6 +333,16 @@ export class Game {
     return !!last && isCompleted(this.save.data, last) && !this.storySeen(STORY_KEYS.ending);
   }
 
+  /** Nothing played yet, and the story not seen. */
+  get isNewPlayer(): boolean {
+    const d = this.save.data;
+    return (
+      Object.keys(d.levels).length === 0 &&
+      d.lastLevelId === null &&
+      !this.storySeen(STORY_KEYS.intro)
+    );
+  }
+
   /** The bonus chapter opens once the campaign's last level is beaten. */
   get bonusUnlocked(): boolean {
     const last = this.levels[this.levels.length - 1];
@@ -420,7 +418,6 @@ export class Game {
 
   /** Stores a finished level and returns what changed. */
   recordWin(index: number, state: GameState, stars: StarResult, timeMs: number): WinSummary {
-    this.levelDone();
     const level = this.levels[index]!;
     const firstClear = (this.save.data.levels[level.id]?.completions ?? 0) === 0;
     const before = this.save.data.levels[level.id]?.stars ?? 0;
@@ -537,18 +534,4 @@ function randomId(): string {
   const bytes = new Uint8Array(8);
   crypto.getRandomValues(bytes);
   return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-/**
- * Ad pacing. Tests (and anyone checking the Poki build by hand) can override
- * it with a JSON object in localStorage under `ssk.adpacing`.
- */
-function adPacing(platform: Platform): AdPacing {
-  try {
-    const raw = platform.storage.get('ssk.adpacing');
-    if (raw) return { ...DEFAULT_PACING, ...(JSON.parse(raw) as Partial<AdPacing>) };
-  } catch {
-    // ignore a bad override
-  }
-  return DEFAULT_PACING;
 }

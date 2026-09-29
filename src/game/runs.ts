@@ -163,7 +163,6 @@ export class Run implements FloorRun {
   }
 
   private floorCleared(moves: number, hp: number, stars: number): FloorSummary {
-    this.game.levelDone();
     const p = this.progress;
     p.moves += moves;
     p.stars += stars;

@@ -171,13 +171,13 @@ What differs from the web build (`src/platform/target.ts`, `src/platform/poki.ts
 - The SugiGames splash is kept. Build with `VITE_POKI_SPLASH=0` to drop it.
 - **Rewarded ad: "Solve"** (with a video icon, never green). On campaign levels past the tutorial, it asks first, with "Not now" next to and as big as "Watch ad"; after the ad the best solution plays straight away ("Solution unlocked!"). Not in the tutorial, the Daily Roll or the Depths. No ad (or an ad blocker): no reward and no message of our own (Poki handles that).
 
-**Ad breaks** (`src/meta/ad-policy.ts`, on top of Poki's own pacing). A break is only ever asked for when the player is heading back into play:
+**Ad breaks** (`src/meta/ad-policy.ts`). A break is only ever asked for when the player is heading back into play:
 
 - next level or replay from the results screen; a level started from the map or the title screen's Play
 - starting a new Daily Roll or Depths run (never when continuing one)
 - the next bonus stage
 
-Spacing: a break may come once **3 minutes or 2 finished levels** (whichever comes first) have passed since the last ad (or since the session began; a rewarded ad counts too). Never before the tutorial (levels 1-10) is finished, never when heading into a tutorial level, and never in the middle of a run (between Daily Roll, Depths or Gauntlet floors). While an ad plays, the game is silent and ignores input. To try breaks without waiting, set `localStorage['ssk.adpacing'] = '{"minGapMs":0,"minLevels":0,"fromLevel":0}'`.
+How often ads actually show is up to Poki: its rules forbid internal ad timers, so the game has no spacing of its own. Never before the tutorial (levels 1-10) is finished, never when heading into a tutorial level, and never in the middle of a run (between Daily Roll, Depths or Gauntlet floors). While an ad plays, the game is silent and ignores input.
 
 ## Solver, difficulty and generator
 

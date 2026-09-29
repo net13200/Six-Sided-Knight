@@ -72,7 +72,6 @@ export class StatsScene implements Scene {
       ['Stars', String(totalStars(save))],
       ['Moves', String(st.moves)],
       ['Enemies beaten', String(st.kills)],
-      ['Gold found', String(st.gold)],
       ['Knocked out', String(st.deaths)],
       ['Undos', String(st.undos)],
       ['Play time', mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : `${mins} min`],

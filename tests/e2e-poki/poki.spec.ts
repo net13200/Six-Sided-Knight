@@ -13,19 +13,13 @@ const STUB = `
     rewardedBreak: () => { __poki.push('rewarded'); return Promise.resolve(!window.__noReward); },
   };`;
 
-async function withSdk(page: Page, pacing?: object): Promise<void> {
+async function withSdk(page: Page): Promise<void> {
   await page.route('**/poki-sdk.js', (r) =>
     r.fulfill({ contentType: 'application/javascript', body: STUB }),
   );
-  if (pacing)
-    await page.addInitScript(
-      (p) => localStorage.setItem('ssk.adpacing', JSON.stringify(p)),
-      pacing,
-    );
 }
 const calls = (page: Page) =>
   page.evaluate(() => (window as unknown as { __poki: string[] }).__poki);
-const NO_WAIT = { minGapMs: 0, minLevels: 0, fromLevel: 0 };
 const breaks = async (page: Page) => (await calls(page)).filter((c) => c === 'break').length;
 
 /** A player who has finished the tutorial (levels 1-10). */
@@ -63,8 +57,16 @@ test('a portal-ready build: SDK up, loading reported, splash kept, no install bi
 }) => {
   await withSdk(page);
   await page.goto('/');
-  await expect.poll(() => scene(page)).toBe('menu');
+  // A first-time player skips the title screen: the story, then level 1.
+  await expect.poll(() => scene(page)).toBe('story');
   await expect.poll(() => calls(page)).toEqual(['init', 'loaded']);
+  await page.getByTestId('story-skip').click();
+  await expect.poll(() => scene(page)).toBe('play');
+  expect(
+    await page.evaluate(() =>
+      (window as unknown as { __ssk: { levelIndex(): number } }).__ssk.levelIndex(),
+    ),
+  ).toBe(0);
   // The SugiGames splash is kept (it hides itself for automated browsers).
   expect(await (await page.request.get('/')).text()).toContain('id="splash"');
   await expect(page.locator('link[rel="manifest"]')).toHaveCount(0);
@@ -76,13 +78,13 @@ test('a portal-ready build: SDK up, loading reported, splash kept, no install bi
 test('still runs when the SDK is blocked (ad blocker)', async ({ page }) => {
   await page.route('**/poki-sdk.js', (r) => r.abort());
   await page.goto('/');
-  await expect.poll(() => scene(page)).toBe('menu');
+  await expect.poll(() => scene(page)).toBe('story');
 });
 
 test('gameplay events follow the player: start on the first move, stop at the end', async ({
   page,
 }) => {
-  await withSdk(page, NO_WAIT);
+  await withSdk(page);
   await tutorialDone(page);
   await page.goto('/?level=11');
   await expect.poll(() => scene(page)).toBe('play');
@@ -102,8 +104,8 @@ test('gameplay events follow the player: start on the first move, stop at the en
   expect(c.at(-1)).toBe('break'); // the next start comes with the next move
 });
 
-test('no ads in the tutorial, even when the pacing would allow one', async ({ page }) => {
-  await withSdk(page, NO_WAIT);
+test('no ads in the tutorial', async ({ page }) => {
+  await withSdk(page);
   await page.goto('/?level=1');
   await solve(page, 0);
   await page.getByTestId('next').click();
@@ -111,20 +113,17 @@ test('no ads in the tutorial, even when the pacing would allow one', async ({ pa
   expect(await breaks(page)).toBe(0);
 });
 
-test('default pacing: a break after 2 finished levels (before 3 minutes are up)', async ({
-  page,
-}) => {
+test('no spacing of our own: every natural moment asks Poki (Poki decides)', async ({ page }) => {
   test.slow();
   await withSdk(page);
   await tutorialDone(page);
   await page.goto('/?level=11');
   await solve(page, 10);
-  await page.getByTestId('next').click(); // 1 level finished: no break yet
+  await page.getByTestId('next').click();
   await solve(page, 11);
-  expect(await breaks(page)).toBe(0);
-  await page.getByTestId('next').click(); // 2 levels: a break
+  await page.getByTestId('next').click();
   await expect.poll(() => scene(page)).toBe('play');
-  expect(await breaks(page)).toBe(1);
+  expect(await breaks(page)).toBe(2);
 });
 
 test('rewarded ad: "Solve" asks first, then plays the solution; no ad, no reward', async ({
@@ -174,9 +173,10 @@ test('no "Solve" in the tutorial', async ({ page }) => {
 
 test('Daily Roll: a break may come before the run, never between its floors', async ({ page }) => {
   test.slow();
-  await withSdk(page, NO_WAIT);
+  await withSdk(page);
   await tutorialDone(page);
   await page.goto('/');
+  await expect.poll(() => scene(page)).toBe('menu'); // a returning player gets the title screen
   await page.getByTestId('daily').click();
   await page.getByTestId('daily-start').click();
   await expect.poll(() => scene(page), { timeout: 15_000 }).toBe('play');

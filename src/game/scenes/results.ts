@@ -145,12 +145,7 @@ export class ResultsScene implements Scene {
     ctx.textAlign = 'center';
     ctx.fillStyle = C.gold;
     ctx.font = 'bold 14px system-ui, sans-serif';
-    if (this.summary.crowns > 0) {
-      ctx.fillText(`Gold ${this.state.gold}`, 120, 286);
-      drawCrownGain(ctx, this.summary.crowns, 225, 286);
-    } else {
-      ctx.fillText(`Gold ${this.state.gold}`, 170, 286);
-    }
+    if (this.summary.crowns > 0) drawCrownGain(ctx, this.summary.crowns, 170, 286);
     if (this.summary.newSkins.length > 0) {
       ctx.fillStyle = C.heal;
       ctx.font = 'bold 12px system-ui, sans-serif';

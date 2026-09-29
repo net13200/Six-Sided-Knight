@@ -654,9 +654,4 @@ function drawHud(
     drawFace(ctx, 'Heart', 328 - (s.player.maxHp - i) * 17 + 8, 16, 14);
   }
   ctx.globalAlpha = 1;
-  drawFace(ctx, 'Coin', 318, 35, 12);
-  ctx.textAlign = 'right';
-  ctx.fillStyle = C.gold;
-  ctx.font = 'bold 12px system-ui, sans-serif';
-  ctx.fillText(String(s.gold), 308, 35);
 }

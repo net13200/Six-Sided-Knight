@@ -74,6 +74,8 @@ window.addEventListener('pagehide', () => game.visibilityChanged(false));
 // ?level=3 jumps straight into a level, skipping story and lessons (handy for testing and sharing).
 const levelParam = devTools ? Number(params.get('level')) : 0;
 if (levelParam >= 1) game.goPlay(levelParam - 1, { story: false, lessons: false });
+// On Poki, a first-time player skips the title screen: logo, story, level 1.
+else if (IS_POKI && game.isNewPlayer) game.goPlay(0);
 else game.goMenu();
 loop.start();
 
