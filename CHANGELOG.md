@@ -4,6 +4,7 @@ Versions follow [semantic versioning](https://semver.org). The version shown in 
 
 ## Unreleased
 
+- **"Freeze the archer" moves to stage 46 (Deep Freeze)**, which can't be won without freezing an archer. Stage 42 (Stand Still) keeps its map as a Freeze stage with a new hint; it could be won by freezing only the skeletons. A "freeze the archer" level now has to need exactly that: the check makes Freeze useless against archers and requires the level to become unwinnable.
 - **Skins come alive.** Each skin now has its own material and effects, not just a coloured rim. Ember's die burns: a molten top face with glowing cracks, flames licking off its sides and sparks rising. Flame roars with taller crimson fire, Frost is ice with crystals and glints, Gilded is gold with a sweeping shine, Night Sky has twinkling stars, a moon and the odd shooting star, Royal is purple velvet with gold trim, Bone is cracked ivory, and Moss creeps in from the corners. The side facets keep their role colours, so the die reads the same in play. With reduced motion, the effects hold still.
 
 ## 0.10.0 — One life, cold hands

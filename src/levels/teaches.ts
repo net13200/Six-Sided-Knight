@@ -48,7 +48,8 @@ export const TEACHES = [
 export type Teach = (typeof TEACHES)[number];
 
 /** Mechanics that can be switched off to see whether a level needs them. */
-type Switch = 'block' | 'guard' | 'heal' | 'splash' | 'freeze' | 'hook' | 'arrows' | 'spikes';
+type Switch =
+  'block' | 'guard' | 'heal' | 'splash' | 'freeze' | 'freeze-archer' | 'hook' | 'arrows' | 'spikes';
 
 /** Rules with one mechanic switched off. */
 export function rulesWithout(off: Switch): Rules {
@@ -79,6 +80,18 @@ export function rulesWithout(off: Switch): Rules {
         onAttack: (ctx, target) => (ctx.damageEnemy(target.id, 0, 'Freeze'), false),
       });
       break;
+    case 'freeze-archer': {
+      // Freeze still works, just not on archers.
+      const freeze = face('Freeze');
+      r.faces.replace({
+        ...freeze,
+        onAttack: (ctx, target, info) =>
+          target.kind === 'archer'
+            ? (ctx.damageEnemy(target.id, 0, 'Freeze'), false)
+            : freeze.onAttack!(ctx, target, info),
+      });
+      break;
+    }
     case 'hook':
       r.faces.replace({ ...face('Hook'), onLeadInto: undefined });
       break;
@@ -360,7 +373,8 @@ export function checkTeach(
       break;
     case 'freeze-archer':
       want(f.freezes.includes('archer'), 'freeze an archer');
-      if (f.freezes.includes('archer')) also(essential(level, 'freeze'));
+      // Freezing the archer itself must be essential, not just Freeze in general.
+      if (f.freezes.includes('archer')) also(essential(level, 'freeze-archer'));
       break;
     case 'freeze-stopper':
       want(f.slideStops.includes('frozen-enemy'), 'stop a slide against a frozen enemy');

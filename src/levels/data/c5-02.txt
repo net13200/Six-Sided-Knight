@@ -1,9 +1,9 @@
 id: c5-02
 name: Stand Still
 par: 12
-hint: A frozen archer holds its fire
+hint: Frozen foes can't touch you. Walk by
 loadout: Shield Heart Bomb Key Sword Freeze
-teaches: freeze-archer
+teaches: freeze
 ---
 ########
 #...#k.#
