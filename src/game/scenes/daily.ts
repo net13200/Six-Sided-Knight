@@ -42,7 +42,9 @@ export class DailyScene implements Scene {
           ? new Run(this.game, 'daily', progress)
           : Run.newDaily(this.game, this.date);
         if (!progress) this.game.analytics.track('daily_started', { date: this.date });
-        void this.start(run, primary);
+        // A new run may start with an ad break; a run in progress never has one.
+        if (progress) void this.start(run, primary);
+        else this.game.breakThen('daily-start', () => void this.start(run, primary));
       });
     }
     ui.append(place(primary, 50, 318, 240, 58));
@@ -52,7 +54,11 @@ export class DailyScene implements Scene {
         className: 'btn',
         testId: 'daily-practice',
         text: 'Practice run',
-        onClick: () => void this.start(Run.newDaily(this.game, this.date, true), practice),
+        onClick: () =>
+          this.game.breakThen(
+            'daily-start',
+            () => void this.start(Run.newDaily(this.game, this.date, true), practice),
+          ),
       });
       ui.append(place(practice, 80, 386, 180, 46));
     }
@@ -91,7 +97,7 @@ export class DailyScene implements Scene {
     const result = this.game.save.data.daily.results[this.date];
     if (!result) return;
     const streak = currentStreak(this.game.save.data, this.date);
-    const text = shareText(this.date, result, streak, location.origin + location.pathname);
+    const text = shareText(this.date, result, streak, this.game.platform.shareUrl);
     const outcome = await this.game.platform.share({ text, title: 'Six Sided Knight' });
     this.game.analytics.track('share_clicked', { mode: 'daily', result: outcome });
     const label = button.querySelector('span');

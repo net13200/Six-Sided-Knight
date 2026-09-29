@@ -6,17 +6,20 @@ import { Loop } from './game/loop';
 import { Stage } from './game/view/stage';
 import { runSplash } from './splash';
 import { createBrowserPlatform } from './platform/browser';
+import { createPokiPlatform } from './platform/poki';
+import { IS_POKI, POKI_OPTIONS } from './platform/target';
 import { registerServiceWorker } from './platform/pwa';
 import { VERSION_LABEL } from './version';
 import './style.css';
 
-// The SugiGames splash plays over the game while it starts up.
-runSplash();
+// The SugiGames splash plays over the game while it starts up (not on portals, by default).
+if (!IS_POKI || POKI_OPTIONS.splash) runSplash();
+else document.getElementById('splash')?.remove();
 
 const params = new URLSearchParams(location.search);
 const debug = params.has('debug') || location.hash === '#debug';
 
-const platform = createBrowserPlatform();
+const platform = IS_POKI ? createPokiPlatform() : createBrowserPlatform();
 const stage = new Stage(document.getElementById('app')!);
 const game = new Game(stage, platform, { debug });
 
@@ -71,8 +74,11 @@ if (levelParam >= 1) game.goPlay(levelParam - 1, { story: false, lessons: false 
 else game.goMenu();
 loop.start();
 
-// Installed app: offline support.
-registerServiceWorker();
+// The title screen is up: tell the portal loading is done.
+platform.ads.loaded();
+
+// Installed app: offline support (the web build only; portals host the game themselves).
+if (!IS_POKI) registerServiceWorker();
 
 // Hidden KPI panel: #debug or ?debug.
 if (debug) openDebugPanel(game);

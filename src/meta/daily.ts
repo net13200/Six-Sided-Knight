@@ -91,7 +91,12 @@ export function recordDaily(save: SaveData, date: string, result: DailyResult): 
   return true;
 }
 
-export function shareText(date: string, r: DailyResult, streak: number, url: string): string {
+export function shareText(
+  date: string,
+  r: DailyResult,
+  streak: number,
+  url: string | null,
+): string {
   const max = DAILY_FLOORS * 3;
   const stars = '★'.repeat(r.stars) + '☆'.repeat(Math.max(0, max - r.stars));
   return [
@@ -99,6 +104,6 @@ export function shareText(date: string, r: DailyResult, streak: number, url: str
     `${stars} ${r.stars}/${max}`,
     `${r.moves} moves · ${r.hp}/${START_HP} HP left`,
     ...(streak > 1 ? [`${streak}-day streak`] : []),
-    url,
+    ...(url ? [url] : []),
   ].join('\n');
 }

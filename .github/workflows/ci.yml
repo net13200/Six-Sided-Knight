@@ -21,6 +21,14 @@ jobs:
       - run: npm run size
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      # The Poki build: checked the same way, and its zip kept for upload.
+      - run: npm run build:poki
+      - run: npm run size -- dist-poki
+      - run: npm run test:e2e:poki
+      - uses: actions/upload-artifact@v4
+        with:
+          name: six-sided-knight-poki
+          path: six-sided-knight-poki.zip
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

@@ -15,11 +15,17 @@ export interface Analytics {
   track(name: string, props?: Readonly<Record<string, string | number | boolean>>): void;
 }
 
+import type { Ads } from './ads';
+
 export type ShareResult = 'shared' | 'copied' | 'failed';
 
 export interface Platform {
   readonly storage: KeyValueStorage;
   readonly analytics: Analytics;
+  /** Ad breaks and portal events (none on the web build). */
+  readonly ads: Ads;
+  /** The link shared results point to, or null where outside links aren't allowed (portals). */
+  readonly shareUrl: string | null;
   share(data: { text: string; title?: string }): Promise<ShareResult>;
   /** Calls back with false when the game is hidden, true when visible again. */
   onVisibilityChange(cb: (visible: boolean) => void): () => void;

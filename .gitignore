@@ -4,3 +4,5 @@ coverage
 test-results
 playwright-report
 *.log
+dist-poki
+six-sided-knight-poki.zip

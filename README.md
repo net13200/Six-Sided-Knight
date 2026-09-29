@@ -151,6 +151,32 @@ The version lives in `package.json` and is shown in the game as `v0.3.0 (commit)
 2. Add an entry to [CHANGELOG.md](CHANGELOG.md).
 3. Commit to `main` (this deploys automatically), then tag it: `git tag v0.4.0 && git push origin v0.4.0`.
 
+## Poki build
+
+The same game, packaged for [Poki](https://developers.poki.com). The web version (GitHub Pages) is unaffected.
+
+```bash
+npm run build:poki      # -> dist-poki/ and six-sided-knight-poki.zip (upload the zip to Poki)
+npm run test:e2e:poki   # browser tests of the Poki build, with a stand-in SDK
+```
+
+CI builds and tests it on every push; the zip is attached to each CI run as the `six-sided-knight-poki` artifact.
+
+What differs from the web build (`src/platform/target.ts`, `src/platform/poki.ts`, the `ssk-poki` plugin in `vite.config.ts`):
+
+- Poki's SDK is loaded by `index.html`; `src/platform/ads.ts` wraps it. Without the SDK (blocked by an ad blocker, or offline) every call is a no-op and the game runs normally.
+- Events: loading finished when the title screen is up; gameplay start/stop when a level (or bonus stage) is on screen or not.
+- No installable-app bits (manifest, service worker, update notice), and shared Daily Roll results carry no link.
+- The SugiGames splash is off. Build with `VITE_POKI_SPLASH=1` to keep it.
+
+**Ad breaks** (`src/meta/ad-policy.ts`, on top of Poki's own pacing). A break is only ever asked for when the player is heading back into play:
+
+- next level or replay from the results screen; a level started from the map or the title screen's Play
+- starting a new Daily Roll or Depths run (never when continuing one)
+- the next bonus stage
+
+Never: in the first 3 minutes of a session, within 3 minutes of the last break, in the tutorial (levels 1-10), or in the middle of a run (between Daily Roll, Depths or Gauntlet floors). While an ad plays, the game is silent and ignores input. To try breaks without waiting, set `localStorage['ssk.adpacing'] = '{"firstAfterMs":0,"minGapMs":0,"fromLevel":0}'`.
+
 ## Solver, difficulty and generator
 
 - **Solver** (`src/solver/solve.ts`): breadth-first search or IDA* over full game states, with a node budget. States are de-duplicated with compact keys: position, orientation, HP, enemies, and only the tiles that changed. IDA* uses the distance to the nearest exit as its heuristic (never an overestimate, so solutions stay optimal).

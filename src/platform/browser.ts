@@ -1,3 +1,4 @@
+import { NO_ADS } from './ads';
 import type { Analytics, KeyValueStorage, Platform, ShareResult } from './platform';
 
 /** localStorage with an in-memory fallback when storage is blocked or full. */
@@ -41,6 +42,8 @@ export function createBrowserPlatform(): Platform {
   return {
     storage: new BrowserStorage(),
     analytics: noopAnalytics,
+    ads: NO_ADS,
+    shareUrl: location.origin + location.pathname,
     async share({ text, title }): Promise<ShareResult> {
       try {
         if (navigator.share) {

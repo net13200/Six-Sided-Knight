@@ -18,8 +18,10 @@
     "test:coverage": "vitest run --coverage",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:poki": "tsc --noEmit && vite build --mode poki && node tools/package-poki.mjs",
     "preview": "vite preview",
     "test:e2e": "playwright test",
+    "test:e2e:poki": "playwright test -c playwright.poki.config.ts",
     "replay": "tsx tools/replay.ts",
     "size": "node tools/check-size.mjs"
   },

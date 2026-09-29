@@ -272,7 +272,8 @@ export class RangerPlayScene implements Scene {
   }
 
   private next(): void {
-    if (!this.isLast) this.game.goRangerPlay(this.index + 1);
+    if (!this.isLast)
+      this.game.breakThen('bonus-next', () => this.game.goRangerPlay(this.index + 1));
     else this.game.goRangerOutro();
   }
 

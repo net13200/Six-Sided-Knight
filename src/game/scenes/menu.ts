@@ -37,7 +37,10 @@ export class MenuScene implements Scene {
       {
         className: 'btn primary',
         testId: 'play',
-        onClick: () => this.game.goPlay(this.game.continueIndex()),
+        onClick: () => {
+          const i = this.game.continueIndex();
+          this.game.breakThen('map-level', () => this.game.goPlay(i), i);
+        },
       },
       [icon('play'), el('span', { text: started ? `Continue: level ${next + 1}` : 'Play' })],
     );

@@ -117,7 +117,7 @@ export class FloorScene implements Scene {
       date,
       { moves: s.moves, hp: s.hp, stars: s.stars },
       currentStreak(this.game.save.data, date),
-      location.origin + location.pathname,
+      this.game.platform.shareUrl,
     );
     const outcome = await this.game.platform.share({ text, title: 'Six Sided Knight' });
     this.game.analytics.track('share_clicked', { mode: 'daily', result: outcome });

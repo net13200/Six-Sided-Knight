@@ -36,7 +36,7 @@ export class ResultsScene implements Scene {
     ui.append(
       place(primary, 50, 330, 240, 58),
       place(
-        iconButton('retry', 'Retry', () => this.game.goPlay(this.index), 'results-retry'),
+        iconButton('retry', 'Retry', () => this.retry(), 'results-retry'),
         70,
         404,
         90,
@@ -52,15 +52,22 @@ export class ResultsScene implements Scene {
     );
   }
 
+  /** Replaying the level: a natural moment for a break too. */
+  private retry(): void {
+    this.game.breakThen('next-level', () => this.game.goPlay(this.index), this.index);
+  }
+
   private next(): void {
-    if (this.hasNext) this.game.goPlay(this.index + 1);
-    else if (this.game.endingPending) this.game.goEnding();
+    if (this.hasNext) {
+      const i = this.index + 1;
+      this.game.breakThen('next-level', () => this.game.goPlay(i), i);
+    } else if (this.game.endingPending) this.game.goEnding();
     else this.game.goLevels();
   }
 
   command(cmd: Command): void {
     if (cmd.type === 'confirm' || cmd.type === 'move') this.next();
-    else if (cmd.type === 'retry') this.game.goPlay(this.index);
+    else if (cmd.type === 'retry') this.retry();
     else if (cmd.type === 'back') this.game.goLevels();
   }
 

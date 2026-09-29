@@ -65,7 +65,7 @@ export class LevelsScene implements Scene {
           label: unlocked
             ? `Level ${i + 1}: ${level.name}${gauntlet}${done ? `, ${stars} of 3 stars` : ''}${redo ? ', changed: solve it again' : ''}`
             : `Level ${i + 1}, locked`,
-          onClick: () => unlocked && this.game.goPlay(i),
+          onClick: () => unlocked && this.game.breakThen('map-level', () => this.game.goPlay(i), i),
         },
         unlocked ? [el('strong', { text: String(i + 1) })] : [icon('lock')],
       );
@@ -78,7 +78,11 @@ export class LevelsScene implements Scene {
       place(
         el(
           'button',
-          { className: 'btn primary', testId: 'map-play', onClick: () => this.game.goPlay(next) },
+          {
+            className: 'btn primary',
+            testId: 'map-play',
+            onClick: () => this.game.breakThen('map-level', () => this.game.goPlay(next), next),
+          },
           [icon('play'), el('span', { text: `Play level ${next + 1}` })],
         ),
         78,

@@ -54,6 +54,8 @@ import {
 } from './story';
 import { setDieSkin } from './view/cube';
 import { setSkinMotion } from './view/skin-fx';
+import { AdPolicy, DEFAULT_PACING, type AdPacing, type BreakMoment } from '../meta/ad-policy';
+import { NO_ADS } from '../platform/ads';
 import { activeSkin, newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/skins';
 import { canTransition, type Scene } from './scenes/scene';
 import type { PlaySession } from './session';
@@ -96,6 +98,10 @@ export class Game {
   /** Developer mode (#debug or ?debug): KPI panel, watching solutions. */
   debug: boolean;
   private hiddenAt = 0;
+  /** When the Poki build may show an ad break (see ad-policy.ts). */
+  private readonly adPolicy: AdPolicy;
+  /** True while an ad plays: the game waits (no input, no sound). */
+  adPlaying = false;
 
   constructor(
     readonly stage: Stage,
@@ -121,6 +127,33 @@ export class Game {
     this.analytics.startSession(SESSION_GAP_MS);
     this.applySkin();
     this.applyDisplay();
+    this.adPolicy = new AdPolicy(platform.now(), adPacing(platform));
+  }
+
+  /**
+   * Goes on with `next`, first showing an ad break if this is a good moment
+   * for one (Poki build only; the web build has no ads and goes on at once).
+   * `level` is the campaign level the player is heading into, if any.
+   */
+  breakThen(moment: BreakMoment, next: () => void, level?: number): void {
+    const now = this.platform.now();
+    if (
+      this.platform.ads === NO_ADS ||
+      this.adPlaying ||
+      !this.adPolicy.allows(now, moment, level)
+    ) {
+      next();
+      return;
+    }
+    this.adPolicy.took(now);
+    this.adPlaying = true;
+    this.platform.ads.gameplayStop();
+    this.audio.suspend();
+    void this.platform.ads.commercialBreak().finally(() => {
+      this.adPlaying = false;
+      this.audio.resume();
+      next();
+    });
   }
 
   /** Reduce motion: the player's choice, or the system setting if they haven't chosen. */
@@ -175,6 +208,9 @@ export class Game {
     const music = musicFor(next);
     if (music !== 'keep') this.audio.setTrack(music);
     this.stage.root.dataset.scene = next.name;
+    // Portals want to know when the player is actually playing.
+    if (next.name === 'play' || next.name === 'ranger') this.platform.ads.gameplayStart();
+    else this.platform.ads.gameplayStop();
     next.enter(this.stage.ui);
   }
 
@@ -386,6 +422,7 @@ export class Game {
   // ---------- loop hooks ----------
 
   command(cmd: Command): void {
+    if (this.adPlaying) return;
     if (cmd.type === 'mute') {
       this.toggleMute();
       return;
@@ -463,4 +500,18 @@ function randomId(): string {
   const bytes = new Uint8Array(8);
   crypto.getRandomValues(bytes);
   return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Ad pacing. Tests (and anyone checking the Poki build by hand) can override
+ * it with a JSON object in localStorage under `ssk.adpacing`.
+ */
+function adPacing(platform: Platform): AdPacing {
+  try {
+    const raw = platform.storage.get('ssk.adpacing');
+    if (raw) return { ...DEFAULT_PACING, ...(JSON.parse(raw) as Partial<AdPacing>) };
+  } catch {
+    // ignore a bad override
+  }
+  return DEFAULT_PACING;
 }

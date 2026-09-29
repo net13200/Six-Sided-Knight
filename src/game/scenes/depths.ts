@@ -20,7 +20,7 @@ export class DepthsScene implements Scene {
       icon('play'),
       el('span', { text: progress ? `Continue floor ${progress.floor}` : 'Descend' }),
     ]);
-    primary.addEventListener('click', () => {
+    const go = () => {
       if (this.busy) return;
       let run: Run;
       if (progress) {
@@ -34,7 +34,11 @@ export class DepthsScene implements Scene {
       primary.disabled = true;
       primary.replaceChildren(el('span', { text: 'Carving the dungeon…' }));
       void run.play();
-    });
+    };
+    // A new run may start with an ad break; a run in progress never has one.
+    primary.addEventListener('click', () =>
+      progress ? go() : this.game.breakThen('depths-start', go),
+    );
     ui.append(place(primary, 50, 318, 240, 58));
 
     if (progress) {
