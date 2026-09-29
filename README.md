@@ -179,6 +179,8 @@ What differs from the web build (`src/platform/target.ts`, `src/platform/poki.ts
 
 How often ads actually show is up to Poki: its rules forbid internal ad timers, so the game has no spacing of its own. Never before the tutorial (levels 1-10) is finished, never when heading into a tutorial level, and never in the middle of a run (between Daily Roll, Depths or Gauntlet floors). While an ad plays, the game is silent and ignores input.
 
+Thumbnails for Poki's game page are in `poki/`: `thumbnail-1080.png` (and a 628 copy) and `thumbnail-animated.mp4` (1080x1080, three 2-second scenes). `node tools/thumbnails/make.mjs` redraws them from the game itself. It needs an ffmpeg with H.264 (`pip install imageio-ffmpeg` is enough).
+
 ## Solver, difficulty and generator
 
 - **Solver** (`src/solver/solve.ts`): breadth-first search or IDA* over full game states, with a node budget. States are de-duplicated with compact keys: position, orientation, HP, enemies, and only the tiles that changed. IDA* uses the distance to the nearest exit as its heuristic (never an overestimate, so solutions stay optimal).
