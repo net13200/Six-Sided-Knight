@@ -56,10 +56,6 @@ Stars are about moves. Finish at **par** (the fewest moves possible) or better f
 - **Daily Roll:** three floors, the same for everyone each day (UTC). HP carries over, with no healing between floors: one mistake too many ends the run. Keep a streak and share your result. Your own die is used; if it can't win a floor you're told, and you can change it between floors.
 - **Depths:** endless floors that start hard and get harder. One life: no Undo, no Retry, and being knocked out ends the run. Leaving mid-floor keeps every move you made. Your high score is the most floors cleared in one run.
 
-## Bonus: the Eight-Sided Ranger
-
-Beat the campaign to open the Greenwood (the **Bonus** button on the title screen): 7 stages with a d8 on a grid of triangles. From every triangle there are three ways to roll: left, right, and through its flat edge. Rows are straight lines: the Bow shoots along them, Boots leap along them and the Rope swings along them to a post. Land the Trap face-down to snare a wolf; with the Cloak on top, nobody can see you. Stags strike anyone who stops in their row.
-
 ## The Smith
 
 Spend crowns on new faces, then build your own die (which faces, and on which side) for Daily Roll and Depths. Campaign levels always use their own die. Skins (looks only) unlock with stars and daily streaks.
