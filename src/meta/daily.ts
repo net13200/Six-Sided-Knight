@@ -6,6 +6,7 @@ import { CORE_CONFIG } from '../content/register';
 import { seedFrom } from '../engine';
 import type { GenParams } from '../gen/generate';
 import type { SaveData } from './save';
+import { t } from '../i18n';
 
 export const DAILY_FLOORS = 3;
 /** Difficulty band per floor (rater score). */
@@ -100,10 +101,10 @@ export function shareText(
   const max = DAILY_FLOORS * 3;
   const stars = '★'.repeat(r.stars) + '☆'.repeat(Math.max(0, max - r.stars));
   return [
-    `Six Sided Knight · Daily Roll ${date}`,
+    `Six Sided Knight · ${t('Daily Roll')} ${date}`,
     `${stars} ${r.stars}/${max}`,
-    `${r.moves} moves · ${r.hp}/${START_HP} HP left`,
-    ...(streak > 1 ? [`${streak}-day streak`] : []),
+    t('{moves} moves · {hp}/{max} HP left', { moves: r.moves, hp: r.hp, max: START_HP }),
+    ...(streak > 1 ? [t('{n}-day streak', { n: streak })] : []),
     ...(url ? [url] : []),
   ].join('\n');
 }

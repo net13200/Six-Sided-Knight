@@ -14,11 +14,31 @@ import { ease } from '../view/fx';
 import { predictOutcome, type Outcome } from '../view/outcome';
 import { C } from '../view/palette';
 import { roleColor } from '../view/roles';
+import { t, tk } from '../../i18n';
 
 const CX = 170;
 const CY = 196;
 const CUBE = 100;
-const DIR_NAME: Record<Dir, string> = { N: 'north', E: 'east', S: 'south', W: 'west' };
+const PREVIEW_NAME: Record<Dir, string> = {
+  N: tk('Preview: roll north'),
+  E: tk('Preview: roll east'),
+  S: tk('Preview: roll south'),
+  W: tk('Preview: roll west'),
+};
+const ARROW_LABEL: Record<Dir, string> = {
+  N: tk('Preview rolling north'),
+  E: tk('Preview rolling east'),
+  S: tk('Preview rolling south'),
+  W: tk('Preview rolling west'),
+};
+const SLOT_NAME: Record<string, string> = {
+  top: tk('top'),
+  north: tk('north'),
+  east: tk('east'),
+  south: tk('south'),
+  west: tk('west'),
+  bottom: tk('bottom'),
+};
 const PREVIEW_SECONDS = 0.35;
 
 export class InspectView {
@@ -40,7 +60,7 @@ export class InspectView {
     this.canvas = document.createElement('canvas');
     this.canvas.className = 'inspect-canvas';
     this.canvas.setAttribute('role', 'img');
-    this.canvas.setAttribute('aria-label', 'Your die in 3D. Drag to spin it.');
+    this.canvas.setAttribute('aria-label', t('Your die in 3D. Drag to spin it.'));
     const k = game.stage.pixelRatio;
     this.canvas.width = Math.round(340 * k);
     this.canvas.height = Math.round(480 * k);
@@ -51,10 +71,10 @@ export class InspectView {
       {
         className: 'icon-btn',
         testId: 'inspect-close',
-        label: 'Close',
+        label: t('Close'),
         onClick: () => this.close(),
       },
-      [icon('close'), el('span', { text: 'Close' })],
+      [icon('close'), el('span', { text: t('Close') })],
     );
 
     this.root = el('div', { className: 'inspect', testId: 'inspect' }, [this.canvas]);
@@ -64,7 +84,7 @@ export class InspectView {
       const b = el('button', {
         className: 'inspect-arrow',
         testId: `inspect-${d}`,
-        label: `Preview rolling ${DIR_NAME[d]}`,
+        label: t(ARROW_LABEL[d]),
         onClick: () => this.showPreview(d),
       });
       b.style.setProperty('--rot', `${Math.atan2(DIR_DELTA[d].dy, DIR_DELTA[d].dx)}rad`);
@@ -162,11 +182,11 @@ export class InspectView {
 
     const s = this.state;
     const pv = this.preview;
-    const t = ease.inOut(this.progress());
-    label(ctx, pv ? `Preview: roll ${DIR_NAME[pv.dir]}` : 'Your die', CX, 34, C.gold, 18, 800);
+    const prog = ease.inOut(this.progress());
+    label(ctx, t(pv ? PREVIEW_NAME[pv.dir] : 'Your die'), CX, 34, C.gold, 18, 800, 196);
     label(
       ctx,
-      pv ? 'Just a preview: nothing moves yet' : 'Drag to spin · arrows preview a roll',
+      t(pv ? 'Just a preview: nothing moves yet' : 'Drag to spin · arrows preview a roll'),
       CX,
       58,
       C.textDim,
@@ -176,7 +196,7 @@ export class InspectView {
     const camera = cameraMatrix(this.yaw, this.pitch);
     const rolls =
       pv && (pv.outcome.after.player.x !== s.player.x || pv.outcome.after.player.y !== s.player.y);
-    const model = pv && rolls ? rollRotation(pv.dir, t) : IDENTITY;
+    const model = pv && rolls ? rollRotation(pv.dir, prog) : IDENTITY;
     drawCube3d(
       ctx,
       s.player.die,
@@ -185,7 +205,7 @@ export class InspectView {
       CUBE,
       camera,
       model,
-      pv && rolls && t >= 1 ? 'top' : null,
+      pv && rolls && prog >= 1 ? 'top' : null,
     );
 
     // Panel
@@ -198,12 +218,12 @@ export class InspectView {
     ctx.stroke();
     if (pv) this.drawPreviewPanel(ctx, pv.dir, pv.outcome);
     else this.drawFacesPanel(ctx);
-    label(ctx, 'Tap outside the die to close', CX, 464, C.textDim, 11);
+    label(ctx, t('Tap outside the die to close'), CX, 464, C.textDim, 11);
   }
 
   private drawFacesPanel(ctx: CanvasRenderingContext2D): void {
     const f = facesOf(this.state.player.die);
-    label(ctx, 'All six faces', CX, 366, C.text, 14, 700);
+    label(ctx, t('All six faces'), CX, 366, C.text, 14, 700);
     (['top', 'north', 'east', 'south', 'west', 'bottom'] as const).forEach((slot, i) => {
       const x = 45 + i * 50;
       ctx.beginPath();
@@ -211,7 +231,7 @@ export class InspectView {
       ctx.fillStyle = roleColor(f[slot] ?? '');
       ctx.fill();
       drawFace(ctx, f[slot] ?? '', x, 397, 24);
-      label(ctx, slot, x, 427, C.textDim, 9);
+      label(ctx, t(SLOT_NAME[slot] ?? slot), x, 427, C.textDim, 9, 400, 48);
     });
   }
 
@@ -236,8 +256,8 @@ export class InspectView {
     const y = o.then ? 418 : 412;
     for (const [i, [name, face]] of (
       [
-        ['Top', f.top],
-        ['Bottom', f.bottom],
+        [t('Top'), f.top],
+        [t('Bottom'), f.bottom],
       ] as const
     ).entries()) {
       const x = 58 + i * 120;
@@ -249,15 +269,15 @@ export class InspectView {
       ctx.textAlign = 'left';
       ctx.fillStyle = C.textDim;
       ctx.font = '10px system-ui, sans-serif';
-      ctx.fillText(name, x + 21, y - 6);
+      ctx.fillText(name, x + 21, y - 6, 90);
       ctx.fillStyle = C.text;
       ctx.font = 'bold 13px system-ui, sans-serif';
-      ctx.fillText(face ?? '', x + 21, y + 8);
+      ctx.fillText(t(face ?? ''), x + 21, y + 8, 90);
     }
     ctx.textAlign = 'left';
     ctx.fillStyle = C.textDim;
     ctx.font = '10px system-ui, sans-serif';
-    ctx.fillText('HP after', 264, y - 6);
+    ctx.fillText(t('HP after'), 264, y - 6, 54);
     ctx.fillStyle = o.after.player.hp < this.state.player.hp ? C.hurt : C.text;
     ctx.font = 'bold 13px system-ui, sans-serif';
     ctx.fillText(`${o.after.player.hp}/${o.after.player.maxHp}`, 264, y + 8);
@@ -272,10 +292,11 @@ function label(
   color: string,
   size: number,
   weight = 400,
+  maxWidth = 300,
 ): void {
   ctx.fillStyle = color;
   ctx.font = `${weight} ${size}px system-ui, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(text, x, y);
+  ctx.fillText(text, x, y, maxWidth);
 }

@@ -4,7 +4,8 @@
  * `npm run size -- dist-poki` checks the Poki build.
  * Counts everything a player downloads: HTML, JS (game + generator worker),
  * CSS, the manifest, the service worker, fonts and icons. Source maps are
- * not downloaded by players and are skipped.
+ * not downloaded by players and are skipped. A player downloads one language
+ * file at most, so only the largest counts.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -20,16 +21,21 @@ function files(dir) {
   });
 }
 
+const LANG_FILE = /assets\/(de|es|fr|it|nl|pt|tr)-[\w-]+\.js$/;
 let total = 0;
+let langMax = 0;
 const rows = [];
 for (const f of files(root)) {
   if (f.endsWith('.map')) continue;
   const data = readFileSync(f);
   // Images and fonts are already compressed; count them as-is.
   const size = /\.(png|woff2)$/.test(f) ? data.length : gzipSync(data, { level: 9 }).length;
-  total += size;
-  rows.push([relative(root, f), size]);
+  const name = relative(root, f).replace(/\\/g, '/');
+  if (LANG_FILE.test(name)) langMax = Math.max(langMax, size);
+  else total += size;
+  rows.push([name, size]);
 }
+total += langMax;
 rows.sort((a, b) => b[1] - a[1]);
 for (const [name, size] of rows) console.log(`${(size / 1024).toFixed(1).padStart(7)} KB  ${name}`);
 console.log(`${(total / 1024).toFixed(1).padStart(7)} KB  total (budget ${BUDGET_KB} KB)`);

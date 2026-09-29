@@ -6,6 +6,7 @@
 import type { Dir } from '../../engine';
 import type { SolveResult } from '../../solver/solve';
 import { el, place } from '../ui';
+import { t } from '../../i18n';
 
 /** Seconds between moves at ×1 (after the previous move's animation). */
 const STEP_SECONDS = 0.35;
@@ -56,14 +57,14 @@ export class SolutionWatch {
 
   private showChooser(r: SolveResult | null | undefined): void {
     this.chooser?.remove();
-    const body: HTMLElement[] = [el('h2', { text: 'Watch a solution' })];
-    if (r === null) body.push(el('p', { testId: 'watch-solving', text: 'Solving…' }));
-    else if (r === undefined) body.push(el('p', { text: "The solver couldn't finish." }));
+    const body: HTMLElement[] = [el('h2', { text: t('Watch a solution') })];
+    if (r === null) body.push(el('p', { testId: 'watch-solving', text: t('Solving…') }));
+    else if (r === undefined) body.push(el('p', { text: t("The solver couldn't finish.") }));
     else {
       const b = el('button', {
         className: 'btn',
         testId: 'watch-any',
-        text: r.status === 'solved' ? `Par · ${r.moves} moves` : 'Par · no solution',
+        text: r.status === 'solved' ? t('Par · {n} moves', { n: r.moves }) : t('Par · no solution'),
         onClick: () => this.start(r.path),
       });
       b.disabled = r.status !== 'solved';
@@ -73,7 +74,7 @@ export class SolutionWatch {
       el('button', {
         className: 'btn small',
         testId: 'watch-cancel',
-        text: 'Cancel',
+        text: t('Cancel'),
         onClick: () => this.stop(),
       }),
     );
@@ -106,9 +107,9 @@ export class SolutionWatch {
       el('div', { className: 'watch-bar', testId: 'watch-bar' }, [
         this.label,
         this.pauseBtn,
-        btn('watch-step', 'Step', () => this.step()),
+        btn('watch-step', t('Step'), () => this.step()),
         this.speedBtn,
-        btn('watch-stop', 'Stop', () => this.stop()),
+        btn('watch-stop', t('Stop'), () => this.stop()),
       ]),
       0,
       0,
@@ -159,10 +160,10 @@ export class SolutionWatch {
     if (!this.label) return;
     const done = this.i >= this.path.length;
     this.label.textContent = done
-      ? `Par ✓ ${this.path.length}`
-      : `Par ${this.i}/${this.path.length}`;
+      ? t('Par ✓ {n}', { n: this.path.length })
+      : t('Par {i}/{n}', { i: this.i, n: this.path.length });
     this.pauseBtn!.textContent = this.paused ? '▶' : '❚❚';
-    this.pauseBtn!.setAttribute('aria-label', this.paused ? 'Play' : 'Pause');
+    this.pauseBtn!.setAttribute('aria-label', t(this.paused ? 'Play' : 'Pause'));
     this.pauseBtn!.disabled = done;
     this.speedBtn!.textContent = `×${SPEEDS[this.speed]}`;
   }

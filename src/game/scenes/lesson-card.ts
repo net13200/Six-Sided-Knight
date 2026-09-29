@@ -4,6 +4,7 @@
  */
 import type { Lesson } from '../lessons';
 import { el, place } from '../ui';
+import { t } from '../../i18n';
 
 /** Characters per second while typing. */
 const CPS = 45;
@@ -15,11 +16,16 @@ export class LessonCard {
   private shown = 0;
   private timer: ReturnType<typeof setInterval> | null = null;
 
+  /** The lesson, translated. */
+  private readonly lesson: Lesson;
+
   constructor(
-    private readonly lesson: Lesson,
+    lesson: Lesson,
     private readonly onClose: () => void,
     private readonly instant: boolean,
-  ) {}
+  ) {
+    this.lesson = { title: t(lesson.title), text: t(lesson.text) };
+  }
 
   get typing(): boolean {
     return this.shown < this.lesson.text.length;
@@ -35,11 +41,11 @@ export class LessonCard {
     this.button = el('button', {
       className: 'btn primary',
       testId: 'lesson-ok',
-      text: 'Got it',
+      text: t('Got it'),
       onClick: () => this.advance(),
     });
     this.root = el('div', { className: 'sheet lesson', testId: 'lesson' }, [
-      el('small', { className: 'lesson-tag', text: 'Lesson' }),
+      el('small', { className: 'lesson-tag', text: t('Lesson') }),
       title,
       el('p', {}, [full, this.typed]),
       this.button,

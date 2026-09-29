@@ -6,6 +6,7 @@ import { el, iconButton, place } from '../ui';
 import { drawDieCube } from '../view/cube';
 import { C } from '../view/palette';
 import type { Scene } from './scene';
+import { t } from '../../i18n';
 
 const CARD_W = 100;
 const CARD_H = 104;
@@ -29,7 +30,9 @@ export class SkinsScene implements Scene {
       const b = el('button', {
         className: 'slot-btn',
         testId: `skin-${skin.id}`,
-        label: unlocked ? `${skin.name} skin` : `${skin.name} skin, locked: ${unlockText(skin)}`,
+        label: unlocked
+          ? t('{name} skin', { name: t(skin.name) })
+          : t('{name} skin, locked: {how}', { name: t(skin.name), how: unlockText(skin) }),
         onClick: () => this.equip(skin.id),
       });
       b.disabled = !unlocked;
@@ -38,7 +41,7 @@ export class SkinsScene implements Scene {
     });
     ui.append(
       place(
-        iconButton('back', 'Smith', () => this.game.goForge(), 'back'),
+        iconButton('back', t('Smith'), () => this.game.goForge(), 'back'),
         4,
         415,
         64,
@@ -77,10 +80,10 @@ export class SkinsScene implements Scene {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = C.gold;
     ctx.font = '800 26px system-ui, sans-serif';
-    ctx.fillText('Skins', 170, 34);
+    ctx.fillText(t('Skins'), 170, 34);
     ctx.fillStyle = C.textDim;
     ctx.font = '12px system-ui, sans-serif';
-    ctx.fillText('Just for looks. Earn them with stars and streaks.', 170, 62);
+    ctx.fillText(t('Just for looks. Earn them with stars and streaks.'), 170, 62, 320);
 
     const die = {
       shape: this.game.rules.config.dieShape,
@@ -114,13 +117,14 @@ export class SkinsScene implements Scene {
       ctx.restore();
       ctx.fillStyle = unlocked ? C.text : C.textDim;
       ctx.font = 'bold 12px system-ui, sans-serif';
-      ctx.fillText(skin.name, x + CARD_W / 2, y + 82);
+      ctx.fillText(t(skin.name), x + CARD_W / 2, y + 82, CARD_W - 8);
       ctx.fillStyle = equipped ? C.gold : C.textDim;
       ctx.font = '10px system-ui, sans-serif';
       ctx.fillText(
-        equipped ? 'Equipped' : unlocked ? 'Tap to wear' : unlockText(skin),
+        equipped ? t('Equipped') : unlocked ? t('Tap to wear') : unlockText(skin),
         x + CARD_W / 2,
         y + 96,
+        CARD_W - 8,
       );
     });
   }

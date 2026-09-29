@@ -9,6 +9,7 @@ import { el, icon, place } from '../ui';
 import { C } from '../view/palette';
 import { drawStoryArt } from '../view/story-art';
 import type { Scene } from './scene';
+import { t, tk } from '../../i18n';
 
 export class StoryScene implements Scene {
   readonly name = 'story';
@@ -23,7 +24,7 @@ export class StoryScene implements Scene {
     private readonly pages: readonly StoryPage[],
     private readonly onDone: () => void,
     /** Label on the last page's button. */
-    private readonly finalLabel = 'Continue',
+    private readonly finalLabel: string = tk('Continue'),
   ) {}
 
   enter(ui: HTMLElement): void {
@@ -37,8 +38,8 @@ export class StoryScene implements Scene {
     const skip = el('button', {
       className: 'btn small story-skip',
       testId: 'story-skip',
-      text: 'Skip',
-      label: 'Skip the story',
+      text: t('Skip'),
+      label: t('Skip the story'),
       onClick: () => this.finish(),
     });
     ui.append(
@@ -55,11 +56,11 @@ export class StoryScene implements Scene {
     this.t = 0;
     const last = this.page === this.pages.length - 1;
     this.text!.replaceChildren(
-      ...(p.title ? [el('strong', { text: p.title })] : []),
-      el('p', { text: p.text }),
+      ...(p.title ? [el('strong', { text: t(p.title) })] : []),
+      el('p', { text: t(p.text) }),
     );
     this.nextBtn!.replaceChildren(
-      el('span', { text: last ? this.finalLabel : 'Next' }),
+      el('span', { text: t(last ? this.finalLabel : 'Next') }),
       icon(last ? 'play' : 'next'),
     );
   }

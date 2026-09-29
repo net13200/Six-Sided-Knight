@@ -538,6 +538,38 @@ button:focus-visible {
   margin: 0;
   accent-color: #ffd75e;
 }
+.lang-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+}
+.lang-row strong {
+  font-size: 15px;
+}
+.lang-row select {
+  min-width: 0;
+  max-width: 60%;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 10px;
+  border: 1px solid #5b547a;
+  background: #2a2638;
+  color: #ece6d6;
+  font:
+    600 14px system-ui,
+    sans-serif;
+}
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 .sheet.settings {
   gap: 4px;
   padding: 14px 16px;

@@ -23,6 +23,7 @@ import { newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/skins';
 import { STARTING_FACES, crownsForStars, earnCrowns, playerLoadout } from '../meta/store';
 import type { Game } from './game';
 import type { PlaySession } from './session';
+import { t } from '../i18n';
 
 /** Something played floor by floor (Daily Roll, Depths, a campaign Gauntlet). */
 export interface FloorRun {
@@ -126,15 +127,23 @@ export class Run implements FloorRun {
     const p = this.progress;
     const title =
       this.mode === 'daily'
-        ? `Daily Roll · floor ${p.floor}/${DAILY_FLOORS}${this.practice ? ' (practice)' : ''}`
-        : `Depths · floor ${p.floor}`;
+        ? t(
+            this.practice
+              ? 'Daily Roll · floor {n}/{max} (practice)'
+              : 'Daily Roll · floor {n}/{max}',
+            {
+              n: p.floor,
+              max: DAILY_FLOORS,
+            },
+          )
+        : t('Depths · floor {n}', { n: p.floor });
     return {
       mode: this.mode,
       level,
       startHp: p.hp,
       music: this.mode === 'depths' ? 'depths' : 'puzzle',
       title,
-      ...(winnable ? {} : { notice: "Your die can't win this floor. Change it at the Smith" }),
+      ...(winnable ? {} : { notice: t("Your die can't win this floor. Change it at the Smith") }),
       campaignIndex: null,
       ...(this.mode === 'depths'
         ? {

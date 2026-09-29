@@ -40,6 +40,8 @@ export interface Settings {
   reduceMotion: boolean | null;
   /** Background music volume, 0 (off) to 1 (0.7.0). */
   musicVolume: number;
+  /** Language code, or null to follow the browser (0.12.0). */
+  lang?: string | null;
 }
 
 export interface LifetimeStats {
@@ -179,6 +181,7 @@ export function freshSave(now: number): SaveData {
       largeLabels: false,
       reduceMotion: null,
       musicVolume: 0.5,
+      lang: null,
     },
     levels: {},
     lastLevelId: null,
@@ -354,6 +357,7 @@ function normalizeSettings(s: Settings): Settings {
       typeof s.musicVolume === 'number' && Number.isFinite(s.musicVolume)
         ? Math.max(0, Math.min(1, s.musicVolume))
         : 0.5,
+    lang: typeof s.lang === 'string' ? s.lang : null,
   };
 }
 

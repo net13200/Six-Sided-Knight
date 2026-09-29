@@ -5,6 +5,7 @@ import { drawCrown, drawEnemy, drawFace, drawTile } from './art';
 import { cameraMatrix, drawCube3d } from './cube';
 import { C } from './palette';
 import { drawOctahedron } from '../../ranger/view';
+import { t as tr } from '../../i18n';
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -197,7 +198,7 @@ function bubble(
   ctx.font = `bold ${text.length > 3 ? 15 : 20}px system-ui, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(text, x, y - 1);
+  ctx.fillText(text, x, y - 1, w - 16);
   ctx.restore();
 }
 
@@ -329,7 +330,7 @@ export function drawStoryArt(
     case 'sentence':
       cube(ctx, cx - 75, cy + 30, 36, 0, -30);
       queenDie(ctx, cx + 80, cy + 45, 22, -50, 0.85);
-      bubble(ctx, cx, cy - 70, 190, 40, cx - 55, cy - 20, 'Just the next move.');
+      bubble(ctx, cx, cy - 70, 190, 40, cx - 55, cy - 20, tr('Just the next move.'));
       break;
     case 'awaken': {
       glow(ctx, cx, cy + 20, 150, GOLD, 0.18);

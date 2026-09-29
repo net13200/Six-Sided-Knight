@@ -13,6 +13,7 @@ import {
 } from '../../engine';
 import { drawFace } from './art';
 import { C, displayPrefs } from './palette';
+import { t } from '../../i18n';
 
 export type OutcomeKind =
   | 'kill'
@@ -65,8 +66,10 @@ export function predictOutcome(rules: Rules, s: GameState, dir: Dir): Outcome {
     return {
       kind: 'blocked',
       chip: needsFace ? { label: '✕', color: C.textDim } : null,
-      text: needsFace ? `${def!.name}: this face won't open it` : 'Blocked by a wall',
-      then: 'No turn used',
+      text: needsFace
+        ? t("{name}: this face won't open it", { name: t(def!.name) })
+        : t('Blocked by a wall'),
+      then: t('No turn used'),
       after: s,
     };
   }
@@ -77,25 +80,25 @@ export function predictOutcome(rules: Rules, s: GameState, dir: Dir): Outcome {
   const killed = own.filter((e) => e.type === 'killed');
   if (killed[0]?.type === 'killed') {
     // A Bomb's splash can knock out the neighbours too: count them all.
-    const name = rules.enemies.get(killed[0].kind).name;
+    const name = t(rules.enemies.get(killed[0].kind).name);
     const n = killed.length;
     return {
       ...base,
       kind: 'kill',
       chip: { label: n > 1 ? `KO×${n}` : 'KO', color: C.hurt, icon: 'skull' },
-      text: n > 1 ? `Knocks out ${n} enemies at once` : `Knocks out the ${name}`,
+      text:
+        n > 1 ? t('Knocks out {n} enemies at once', { n }) : t('Knocks out the {name}', { name }),
     };
   }
   const effect = own.find((e) => e.type === 'effectApplied');
   if (effect?.type === 'effectApplied') {
     const target = s.enemies.find((e) => e.id === effect.enemyId);
-    const name = target ? rules.enemies.get(target.kind).name : 'enemy';
-    const what = rules.effects.get(effect.effect).name.toLowerCase();
+    const name = t(target ? rules.enemies.get(target.kind).name : 'enemy');
     return {
       ...base,
       kind: 'freeze',
-      chip: { label: `${what.slice(0, 6)} ${effect.turns}`, color: FROST },
-      text: `The ${name} is ${what} for ${effect.turns} turns`,
+      chip: { label: t('frozen {n}', { n: effect.turns }), color: FROST },
+      text: t('The {name} is frozen for {n} turns', { name, n: effect.turns }),
     };
   }
   const pulled = own.find((e) => e.type === 'pulled');
@@ -106,24 +109,24 @@ export function predictOutcome(rules: Rules, s: GameState, dir: Dir): Outcome {
       ...base,
       kind: 'pull',
       chip: {
-        label: target ? 'pull' : `+${gold?.type === 'gold' ? gold.amount : 0}`,
+        label: target ? t('pull') : `+${gold?.type === 'gold' ? gold.amount : 0}`,
         color: target ? C.textDim : C.gold,
       },
       text: target
-        ? `Pulls the ${rules.enemies.get(target.kind).name} next to you`
-        : 'Hooks the gem from afar',
+        ? t('Pulls the {name} next to you', { name: t(rules.enemies.get(target.kind).name) })
+        : t('Hooks the gem from afar'),
     };
   }
   const hit = own.find((e) => e.type === 'attacked' && !e.splash);
   if (hit?.type === 'attacked') {
     const target = s.enemies.find((e) => e.id === hit.target);
-    const name = target ? rules.enemies.get(target.kind).name : 'enemy';
+    const name = t(target ? rules.enemies.get(target.kind).name : 'enemy');
     return hit.damage > 0
       ? {
           ...base,
           kind: 'hit',
           chip: { label: `-${hit.damage}`, color: '#ff9d3a' },
-          text: `Hits the ${name} for ${hit.damage}`,
+          text: t('Hits the {name} for {n}', { name, n: hit.damage }),
         }
       : {
           ...base,
@@ -131,16 +134,16 @@ export function predictOutcome(rules: Rules, s: GameState, dir: Dir): Outcome {
           chip: { label: '0', color: C.textDim },
           text:
             target && rules.enemies.get(target.kind).modifyDamage
-              ? `The ${name} shrugs it off: no damage`
-              : `Bumps the ${name}: no damage`,
+              ? t('The {name} shrugs it off: no damage', { name })
+              : t('Bumps the {name}: no damage', { name }),
         };
   }
   if (own.some((e) => e.type === 'won')) {
     return {
       ...base,
       kind: 'win',
-      chip: { label: 'exit', color: C.gold },
-      text: 'Reaches the exit!',
+      chip: { label: t('exit'), color: C.gold },
+      text: t('Reaches the exit!'),
     };
   }
   const gold = own
@@ -151,20 +154,20 @@ export function predictOutcome(rules: Rules, s: GameState, dir: Dir): Outcome {
       ...base,
       kind: 'open',
       chip: { label: `+${gold}`, color: C.gold, icon: 'check' },
-      text: `Opens the chest: +${gold} gold`,
+      text: t('Opens the chest: +{n} gold', { n: gold }),
     };
   }
   if (own.some((e) => e.type === 'unlocked')) {
     return {
       ...base,
       kind: 'unlock',
-      chip: { label: 'open', color: C.heal, icon: 'check' },
-      text: 'Unlocks the door',
+      chip: { label: t('open'), color: C.heal, icon: 'check' },
+      text: t('Unlocks the door'),
     };
   }
   const hurt = own.find((e) => e.type === 'hurt' && e.source.kind === 'tile');
   if (hurt?.type === 'hurt' && hurt.source.kind === 'tile') {
-    const name = rules.tiles.get(hurt.source.tile).name;
+    const name = t(rules.tiles.get(hurt.source.tile).name);
     return {
       ...base,
       kind: 'hurt',
@@ -178,7 +181,7 @@ export function predictOutcome(rules: Rules, s: GameState, dir: Dir): Outcome {
       ...base,
       kind: 'heal',
       chip: { label: `+${heal.amount}`, color: C.heal, icon: 'heart' },
-      text: `Heals +${heal.amount} HP`,
+      text: t('Heals +{n} HP', { n: heal.amount }),
     };
   }
   const slides = own.filter((e) => e.type === 'slid').length;
@@ -186,15 +189,18 @@ export function predictOutcome(rules: Rules, s: GameState, dir: Dir): Outcome {
     return {
       ...base,
       kind: 'slide',
-      chip: { label: `slide ${slides + 1}`, color: FROST },
-      text: `Slides ${slides + 1} tiles on the ice${gold > 0 ? `, +${gold} gold` : ''}`,
+      chip: { label: t('slide {n}', { n: slides + 1 }), color: FROST },
+      text:
+        gold > 0
+          ? t('Slides {n} tiles on the ice, +{gold} gold', { n: slides + 1, gold })
+          : t('Slides {n} tiles on the ice', { n: slides + 1 }),
     };
   }
   return {
     ...base,
     kind: 'move',
     chip: null,
-    text: gold > 0 ? `Picks up +${gold} gold` : 'Rolls to the next tile',
+    text: gold > 0 ? t('Picks up +{n} gold', { n: gold }) : t('Rolls to the next tile'),
   };
 }
 
@@ -206,11 +212,13 @@ function retaliation(rules: Rules, s: GameState, events: readonly GameEvent[]): 
     if (e.type === 'enemyAttacked' && e.damage > 0) {
       dmg += e.damage;
       const enemy = s.enemies.find((x) => x.id === e.enemyId);
-      who = enemy ? rules.enemies.get(enemy.kind).name : 'An enemy';
+      who = enemy ? rules.enemies.get(enemy.kind).name : '';
     }
   }
   if (dmg === 0) return null;
-  return `Then the ${who} hits you: -${dmg} HP`;
+  return who
+    ? t('Then the {name} hits you: -{n} HP', { name: t(who), n: dmg })
+    : t('Then an enemy hits you: -{n} HP', { n: dmg });
 }
 
 /** Draws outcome labels on the far edge of each neighbouring tile. */

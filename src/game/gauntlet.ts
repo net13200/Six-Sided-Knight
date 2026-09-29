@@ -10,6 +10,7 @@ import type { FloorRun, FloorSummary } from './runs';
 import type { Lesson } from './lessons';
 import type { PlaySession } from './session';
 import { computeStars } from './stars';
+import { t } from '../i18n';
 
 export class Gauntlet implements FloorRun {
   private floor = 0;
@@ -54,7 +55,7 @@ export class Gauntlet implements FloorRun {
       level,
       startHp: this.hp,
       music: 'depths',
-      title: `${this.index + 1}. ${first.name} · ${this.floor + 1}/${n}`,
+      title: `${this.index + 1}. ${t(first.name)} · ${this.floor + 1}/${n}`,
       campaignIndex: this.index,
       lesson: this.floor === 0 ? this.lesson : null,
       onStart: () => this.game.save.update((d) => (d.lastLevelId = first.id)),

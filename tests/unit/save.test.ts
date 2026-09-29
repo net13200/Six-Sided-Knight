@@ -89,6 +89,7 @@ describe('save loading', () => {
       largeLabels: false,
       reduceMotion: null,
       musicVolume: 0.5,
+      lang: null,
     });
     expect(save.stats.levelsCompleted).toBe(0);
   });

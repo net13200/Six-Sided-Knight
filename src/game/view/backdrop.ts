@@ -183,8 +183,8 @@ export function drawControls(
     ctx.textAlign = 'left';
     ctx.fillStyle = '#b9b0cc';
     ctx.font = '12px system-ui, sans-serif';
-    wrap(ctx, what, 16 + kw + 10, y, w - kw - 42, 15);
-    y += 32;
+    const end = wrap(ctx, what, 16 + kw + 10, y, w - kw - 42, 15);
+    y = Math.max(y + 32, end + 12);
   }
   return y;
 }

@@ -9,6 +9,7 @@ import { C } from '../view/palette';
 import { drawFlame } from './daily';
 import { drawStar } from './common';
 import type { Scene } from './scene';
+import { t } from '../../i18n';
 
 export class FloorScene implements Scene {
   readonly name = 'floor';
@@ -34,7 +35,7 @@ export class FloorScene implements Scene {
           el('button', {
             className: 'btn primary',
             testId: 'floor-over',
-            text: 'Back to the Depths',
+            text: t('Back to the Depths'),
             onClick: () => this.game.goDepths(),
           }),
           50,
@@ -43,7 +44,7 @@ export class FloorScene implements Scene {
           58,
         ),
         place(
-          iconButton('menu', 'Menu', () => this.game.goMenu(), 'floor-done'),
+          iconButton('menu', t('Menu'), () => this.game.goMenu(), 'floor-done'),
           138,
           404,
           64,
@@ -55,13 +56,13 @@ export class FloorScene implements Scene {
     if (s.final) {
       const share = el('button', { className: 'btn primary', testId: 'floor-share' }, [
         icon('next'),
-        el('span', { text: 'Share result' }),
+        el('span', { text: t('Share result') }),
       ]);
       share.addEventListener('click', () => void this.share(share));
       ui.append(
         place(share, 50, 330, 240, 58),
         place(
-          iconButton('menu', 'Done', () => this.game.goMenu(), 'floor-done'),
+          iconButton('menu', t('Done'), () => this.game.goMenu(), 'floor-done'),
           138,
           404,
           64,
@@ -71,20 +72,20 @@ export class FloorScene implements Scene {
       return;
     }
     const next = el('button', { className: 'btn primary', testId: 'floor-next' }, [
-      el('span', { text: `Next floor (${s.floor + 1})` }),
+      el('span', { text: t('Next floor ({n})', { n: s.floor + 1 }) }),
       icon('next'),
     ]);
     next.addEventListener('click', () => {
       if (this.busy) return;
       this.busy = true;
       next.disabled = true;
-      next.replaceChildren(el('span', { text: 'Carving the dungeon…' }));
+      next.replaceChildren(el('span', { text: t('Carving the dungeon…') }));
       void this.run.play();
     });
     ui.append(
       place(next, 50, 330, 240, 58),
       place(
-        iconButton('back', 'Later', () => this.back(), 'floor-back'),
+        iconButton('back', t('Later'), () => this.back(), 'floor-back'),
         138,
         404,
         64,
@@ -97,7 +98,7 @@ export class FloorScene implements Scene {
         place(
           iconButton(
             'die',
-            'Your die',
+            t('Your die'),
             () => this.game.goForge(() => this.game.goFloor(s, this.run)),
             'your-die',
           ),
@@ -125,10 +126,10 @@ export class FloorScene implements Scene {
     if (label)
       label.textContent =
         outcome === 'copied'
-          ? 'Copied to clipboard'
+          ? t('Copied to clipboard')
           : outcome === 'shared'
-            ? 'Shared!'
-            : 'Could not share';
+            ? t('Shared!')
+            : t('Could not share');
   }
 
   command(cmd: Command): void {
@@ -145,16 +146,20 @@ export class FloorScene implements Scene {
     }
     ctx.fillStyle = C.gold;
     ctx.font = '800 26px system-ui, sans-serif';
-    const title = s.final ? 'Daily Roll complete!' : `Floor ${s.floor} cleared`;
-    ctx.fillText(title, 170, 56);
+    const title = s.final ? t('Daily Roll complete!') : t('Floor {n} cleared', { n: s.floor });
+    ctx.fillText(title, 170, 56, 320);
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
     ctx.fillText(
       s.mode === 'depths'
-        ? 'The Depths'
-        : `${s.mode === 'gauntlet' ? 'Gauntlet · ' : ''}Floor ${s.floor} of ${s.floors}`,
+        ? t('The Depths')
+        : t(s.mode === 'gauntlet' ? 'Gauntlet · floor {n} of {max}' : 'Floor {n} of {max}', {
+            n: s.floor,
+            max: s.floors ?? 0,
+          }),
       170,
       84,
+      320,
     );
 
     // HP carries over as it is: what's left now is what the next floor starts with.
@@ -166,33 +171,42 @@ export class FloorScene implements Scene {
     ctx.fillStyle = C.text;
     ctx.font = '13px system-ui, sans-serif';
     ctx.fillText(
-      s.final ? `${s.hp}/${START_HP} HP left` : `Next floor starts at ${s.hp}/${START_HP} HP`,
+      t(s.final ? '{hp}/{max} HP left' : 'Next floor starts at {hp}/{max} HP', {
+        hp: s.hp,
+        max: START_HP,
+      }),
       170,
       162,
+      320,
     );
 
     ctx.font = 'bold 15px system-ui, sans-serif';
     ctx.fillStyle = C.text;
     ctx.fillText(
       s.mode === 'gauntlet'
-        ? `${s.moves} moves so far`
-        : `${s.moves} moves ${s.final ? 'in total' : 'so far'} · ${s.stars} stars`,
+        ? t('{n} moves so far', { n: s.moves })
+        : t(s.final ? '{n} moves in total · {stars} stars' : '{n} moves so far · {stars} stars', {
+            n: s.moves,
+            stars: s.stars,
+          }),
       170,
       200,
+      320,
     );
     if (s.mode === 'gauntlet') {
       ctx.fillStyle = C.textDim;
       ctx.font = '12px system-ui, sans-serif';
-      ctx.fillText('Leaving now means starting the gauntlet over', 170, 232);
+      ctx.fillText(t('Leaving now means starting the gauntlet over'), 170, 232, 320);
     }
 
     if (s.mode === 'depths') {
       ctx.fillStyle = s.newBest ? C.heal : C.textDim;
       ctx.font = '13px system-ui, sans-serif';
       ctx.fillText(
-        s.newBest ? `New best: floor ${s.bestFloor}!` : `Best: floor ${s.bestFloor}`,
+        t(s.newBest ? 'New best: floor {n}!' : 'Best: floor {n}', { n: s.bestFloor }),
         170,
         232,
+        320,
       );
       if (s.crowns > 0) drawCrownGain(ctx, s.crowns, 170, 262);
     } else if (s.final) {
@@ -202,18 +216,23 @@ export class FloorScene implements Scene {
         ctx.fillStyle = C.text;
         ctx.font = '800 20px system-ui, sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText(`${s.streak}-day streak`, 154, 286);
+        ctx.fillText(t('{n}-day streak', { n: s.streak }), 154, 286, 170);
         ctx.textAlign = 'center';
         if (s.crowns > 0) drawCrownGain(ctx, s.crowns, 170, 316);
         if (s.newSkins?.length) {
           ctx.fillStyle = C.heal;
           ctx.font = 'bold 12px system-ui, sans-serif';
-          ctx.fillText(`New skin: ${s.newSkins.map((k) => k.name).join(', ')}!`, 170, 216);
+          ctx.fillText(
+            t('New skin: {names}!', { names: s.newSkins.map((k) => t(k.name)).join(', ') }),
+            170,
+            216,
+            320,
+          );
         }
       } else {
         ctx.fillStyle = C.textDim;
         ctx.font = '12px system-ui, sans-serif';
-        ctx.fillText('Practice run: today’s result was already recorded', 170, 282);
+        ctx.fillText(t('Practice run: today’s result was already recorded'), 170, 282, 320);
       }
     }
   }
@@ -224,10 +243,10 @@ function renderRunOver(ctx: CanvasRenderingContext2D, s: FloorSummary): void {
   const cleared = s.floor - 1;
   ctx.fillStyle = C.hurt;
   ctx.font = '800 26px system-ui, sans-serif';
-  ctx.fillText('Knocked out', 170, 56);
+  ctx.fillText(t('Knocked out'), 170, 56, 320);
   ctx.fillStyle = C.textDim;
   ctx.font = '13px system-ui, sans-serif';
-  ctx.fillText(`The Depths · the run ends on floor ${s.floor}`, 170, 84);
+  ctx.fillText(t('The Depths · the run ends on floor {n}', { n: s.floor }), 170, 84, 320);
 
   for (let i = 0; i < START_HP; i++) {
     ctx.globalAlpha = 0.2;
@@ -240,13 +259,18 @@ function renderRunOver(ctx: CanvasRenderingContext2D, s: FloorSummary): void {
   ctx.fillText(String(cleared), 170, 196);
   ctx.fillStyle = C.textDim;
   ctx.font = '13px system-ui, sans-serif';
-  ctx.fillText(cleared === 1 ? 'floor cleared' : 'floors cleared', 170, 228);
+  ctx.fillText(t(cleared === 1 ? 'floor cleared' : 'floors cleared'), 170, 228, 320);
 
   const record = cleared > 0 && cleared >= s.bestFloor;
   ctx.fillStyle = record ? C.heal : C.textDim;
   ctx.font = 'bold 14px system-ui, sans-serif';
-  ctx.fillText(record ? 'Your best run!' : `Best: ${s.bestFloor} floors`, 170, 262);
+  ctx.fillText(
+    record ? t('Your best run!') : t('Best: {n} floors', { n: s.bestFloor }),
+    170,
+    262,
+    320,
+  );
   ctx.fillStyle = C.textDim;
   ctx.font = '12px system-ui, sans-serif';
-  ctx.fillText(`${s.moves} moves · ${s.stars} stars`, 170, 290);
+  ctx.fillText(t('{n} moves · {stars} stars', { n: s.moves, stars: s.stars }), 170, 290, 320);
 }

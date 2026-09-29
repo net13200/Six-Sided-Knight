@@ -90,3 +90,32 @@ export function iconButton(
   b.type = 'button';
   return b;
 }
+
+/** Whether a box's content spills out of it. */
+function overflows(box: HTMLElement): boolean {
+  return box.scrollWidth > box.clientWidth + 1 || box.scrollHeight > box.clientHeight + 1;
+}
+
+/** Shrinks a button's text until it fits (long words in some languages), to about 55% at most. */
+export function fitLabel(box: HTMLElement): void {
+  if (!box.isConnected || box.clientWidth === 0 || !overflows(box)) return;
+  const texts = [box, ...box.querySelectorAll<HTMLElement>('span, strong, small')];
+  for (let i = 0; i < 7 && overflows(box); i++) {
+    for (const t of texts)
+      t.style.fontSize = `${parseFloat(getComputedStyle(t).fontSize) * 0.92}px`;
+  }
+}
+
+/** Keeps every button under `root` fitting its label, as screens and labels change. */
+export function autoFitLabels(root: HTMLElement): void {
+  let queued = false;
+  const run = () => {
+    queued = false;
+    root.querySelectorAll<HTMLElement>('button').forEach(fitLabel);
+  };
+  new MutationObserver(() => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(run);
+  }).observe(root, { childList: true, subtree: true, characterData: true });
+}

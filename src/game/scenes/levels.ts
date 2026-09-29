@@ -15,6 +15,7 @@ import { el, icon, iconButton, place } from '../ui';
 import { C } from '../view/palette';
 import { drawStar } from './common';
 import type { Scene } from './scene';
+import { t } from '../../i18n';
 
 const NODE = 60;
 
@@ -56,15 +57,18 @@ export class LevelsScene implements Scene {
       const redo = needsRedo(save, level);
       const p = nodePosition(i - this.chapter * CHAPTER_SIZE);
       const floors = this.game.gauntlets.get(level.id);
-      const gauntlet = floors ? `, gauntlet of ${floors.length + 1} floors` : '';
+      const gauntlet = floors ? t(', gauntlet of {n} floors', { n: floors.length + 1 }) : '';
       const b = el(
         'button',
         {
           className: `node${done ? ' done' : ''}${unlocked ? '' : ' locked'}${floors ? ' gauntlet' : ''}`,
           testId: `level-${i + 1}`,
           label: unlocked
-            ? `Level ${i + 1}: ${level.name}${gauntlet}${done ? `, ${stars} of 3 stars` : ''}${redo ? ', changed: solve it again' : ''}`
-            : `Level ${i + 1}, locked`,
+            ? t('Level {n}: {name}', { n: i + 1, name: t(level.name) }) +
+              gauntlet +
+              (done ? t(', {n} of 3 stars', { n: stars ?? 0 }) : '') +
+              (redo ? t(', changed: solve it again') : '')
+            : t('Level {n}, locked', { n: i + 1 }),
           onClick: () => unlocked && this.game.breakThen('map-level', () => this.game.goPlay(i), i),
         },
         unlocked ? [el('strong', { text: String(i + 1) })] : [icon('lock')],
@@ -83,7 +87,7 @@ export class LevelsScene implements Scene {
             testId: 'map-play',
             onClick: () => this.game.breakThen('map-level', () => this.game.goPlay(next), next),
           },
-          [icon('play'), el('span', { text: `Play level ${next + 1}` })],
+          [icon('play'), el('span', { text: t('Play level {n}', { n: next + 1 }) })],
         ),
         78,
         416,
@@ -91,7 +95,7 @@ export class LevelsScene implements Scene {
         60,
       ),
       place(
-        iconButton('back', 'Menu', () => this.game.goMenu(), 'back'),
+        iconButton('back', t('Menu'), () => this.game.goMenu(), 'back'),
         6,
         415,
         64,
@@ -104,7 +108,12 @@ export class LevelsScene implements Scene {
       if (this.chapter > 0) {
         ui.append(
           place(
-            iconButton('back', 'Prev', () => this.game.goLevels(this.chapter - 1), 'chapter-prev'),
+            iconButton(
+              'back',
+              t('Prev'),
+              () => this.game.goLevels(this.chapter - 1),
+              'chapter-prev',
+            ),
             4,
             4,
             60,
@@ -115,7 +124,12 @@ export class LevelsScene implements Scene {
       if (this.chapter < chapters - 1) {
         ui.append(
           place(
-            iconButton('next', 'Next', () => this.game.goLevels(this.chapter + 1), 'chapter-next'),
+            iconButton(
+              'next',
+              t('Next'),
+              () => this.game.goLevels(this.chapter + 1),
+              'chapter-next',
+            ),
             276,
             4,
             60,
@@ -147,10 +161,10 @@ export class LevelsScene implements Scene {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = C.text;
     ctx.font = '800 20px system-ui, sans-serif';
-    ctx.fillText(`Chapter ${this.chapter + 1}`, 170, 26);
+    ctx.fillText(t('Chapter {n}', { n: this.chapter + 1 }), 170, 26);
     ctx.fillStyle = C.textDim;
     ctx.font = '12px system-ui, sans-serif';
-    ctx.fillText(CHAPTER_NAMES[this.chapter] ?? '', 170, 46);
+    ctx.fillText(t(CHAPTER_NAMES[this.chapter] ?? ''), 170, 46);
     // Star total for the whole campaign.
     drawStar(ctx, 146, 70, 8, true);
     ctx.fillStyle = C.gold;
@@ -192,7 +206,7 @@ export class LevelsScene implements Scene {
         ctx.fillStyle = '#10240f';
         ctx.font = 'bold 9px system-ui, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('NEW', p.x - 23, p.y - NODE / 2 + 1.5);
+        ctx.fillText(t('NEW'), p.x - 23, p.y - NODE / 2 + 1.5, 26);
       }
       const floors = this.game.gauntlets.get(levels[i]!.id);
       if (floors) {

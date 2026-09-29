@@ -10,6 +10,7 @@ import { C } from '../view/palette';
 import { HOW_TO_PLAY } from '../how-to-play';
 import { muteButton } from './common';
 import type { Scene } from './scene';
+import { detectLang, LANGS, langName, t, tn } from '../../i18n';
 
 /** The logo die: the starting die in its home orientation. */
 const LOGO_DIE = {
@@ -24,7 +25,11 @@ export class MenuScene implements Scene {
   private sheet: HTMLElement | null = null;
   private ui: HTMLElement | null = null;
 
-  constructor(private readonly game: Game) {}
+  constructor(
+    private readonly game: Game,
+    /** Open with the settings up (after switching language). */
+    private readonly opts: { settings?: boolean } = {},
+  ) {}
 
   enter(ui: HTMLElement): void {
     this.ui = ui;
@@ -42,7 +47,10 @@ export class MenuScene implements Scene {
           this.game.breakThen('map-level', () => this.game.goPlay(i), i);
         },
       },
-      [icon('play'), el('span', { text: started ? `Continue: level ${next + 1}` : 'Play' })],
+      [
+        icon('play'),
+        el('span', { text: started ? t('Continue: level {n}', { n: next + 1 }) : t('Play') }),
+      ],
     );
     if (started) playBtn.classList.add('long');
     const small = (id: string, text: string, onClick: () => void) =>
@@ -50,14 +58,14 @@ export class MenuScene implements Scene {
     ui.append(
       place(playBtn, 60, 254, 220, 60),
       place(
-        this.modeButton('daily', 'Daily Roll', this.dailyLabel(), () => this.game.goDaily()),
+        this.modeButton('daily', t('Daily Roll'), this.dailyLabel(), () => this.game.goDaily()),
         60,
         320,
         107,
         60,
       ),
       place(
-        this.modeButton('depths', 'Depths', this.depthsLabel(), () => this.game.goDepths()),
+        this.modeButton('depths', t('Depths'), this.depthsLabel(), () => this.game.goDepths()),
         173,
         320,
         107,
@@ -65,14 +73,14 @@ export class MenuScene implements Scene {
       ),
       ...this.smallButtons(small),
       place(
-        iconButton('book', 'Story', () => this.game.goStorySoFar(), 'story'),
+        iconButton('book', t('Story'), () => this.game.goStorySoFar(), 'story'),
         4,
         4,
         64,
         62,
       ),
       place(
-        iconButton('gear', 'Settings', () => this.openSettings(), 'settings'),
+        iconButton('gear', t('Settings'), () => this.openSettings(), 'settings'),
         4,
         415,
         64,
@@ -80,15 +88,16 @@ export class MenuScene implements Scene {
       ),
       place(muteButton(this.game), 272, 415, 64, 62),
     );
+    if (this.opts.settings) this.openSettings();
     // Once, after an update that rebuilt the campaign.
-    if (this.game.save.data.campaignResetNotice) this.openCampaignNotice();
+    else if (this.game.save.data.campaignResetNotice) this.openCampaignNotice();
     // Once, after an update that changed levels the player had beaten.
     else if (this.game.save.data.changedLevelsNotice > 0) this.openChangedNotice();
     // A text reference for players who have finished the tutorial.
     if (this.game.tutorialDone) {
       ui.append(
         place(
-          iconButton('help', 'Help', () => this.openHowTo(), 'how-to'),
+          iconButton('help', t('Help'), () => this.openHowTo(), 'how-to'),
           272,
           34,
           64,
@@ -113,8 +122,8 @@ export class MenuScene implements Scene {
   private dailyLabel(): string {
     const today = utcDate(this.game.platform.now());
     const streak = currentStreak(this.game.save.data, today);
-    if (this.game.save.data.daily.results[today]) return `done · ${streak}-day streak`;
-    return streak > 0 ? `${streak}-day streak` : 'new every day';
+    if (this.game.save.data.daily.results[today]) return t('done · {n}-day streak', { n: streak });
+    return streak > 0 ? t('{n}-day streak', { n: streak }) : t('new every day');
   }
 
   /** Map, Smith, Stats, and the bonus chapter once the campaign is beaten. */
@@ -122,12 +131,12 @@ export class MenuScene implements Scene {
     small: (id: string, text: string, onClick: () => void) => HTMLButtonElement,
   ): HTMLElement[] {
     const buttons = [
-      small('levels', 'Map', () => this.game.goLevels()),
-      small('forge', 'Smith', () => this.game.goForge()),
-      small('stats', 'Stats', () => this.game.goStats()),
+      small('levels', t('Map'), () => this.game.goLevels()),
+      small('forge', t('Smith'), () => this.game.goForge()),
+      small('stats', t('Stats'), () => this.game.goStats()),
     ];
     if (this.game.bonusUnlocked) {
-      const b = small('bonus', 'Bonus', () => this.game.goRangerMap());
+      const b = small('bonus', t('Bonus'), () => this.game.goRangerMap());
       b.classList.add('bonus-btn');
       buttons.push(b);
     }
@@ -138,8 +147,8 @@ export class MenuScene implements Scene {
   private depthsLabel(): string {
     const best = this.game.save.data.depths.bestFloor;
     const run = this.game.save.data.depths.inProgress;
-    if (run) return `on floor ${run.floor}`;
-    return best > 0 ? `best ${best} floors` : 'one life, endless';
+    if (run) return t('on floor {n}', { n: run.floor });
+    return best > 0 ? t('best {n} floors', { n: best }) : t('one life, endless');
   }
 
   private openSettings(): void {
@@ -167,45 +176,49 @@ export class MenuScene implements Scene {
     this.sheet = place(
       el('div', { className: 'sheet settings', testId: 'settings-sheet' }, [
         el('div', { className: 'sheet-title' }, [
-          el('h2', { text: 'Settings' }),
+          el('h2', { text: t('Settings') }),
           el('small', { className: 'fine', text: VERSION_LABEL }),
         ]),
-        toggle('setting-sound', 'Sound', 'Sound effects and music', !this.game.muted, () =>
-          this.game.toggleMute(),
-        ),
-        this.musicSlider(),
-        toggle(
-          'setting-contrast',
-          'High contrast',
-          'Brighter text, edges and danger lanes',
-          set.highContrast,
-          (on) => this.game.setDisplay({ highContrast: on }),
-        ),
-        toggle(
-          'setting-labels',
-          'Larger labels',
-          'Bigger move labels and hints',
-          set.largeLabels,
-          (on) => this.game.setDisplay({ largeLabels: on }),
-        ),
-        toggle(
-          'setting-motion',
-          'Reduce motion',
-          'No shaking, bobbing or pulsing',
-          this.game.reducedMotion,
-          (on) => this.game.setDisplay({ reduceMotion: on }),
-        ),
-        toggle(
-          'setting-analytics',
-          'Play statistics',
-          'On this device only; nothing is sent',
-          this.game.analyticsEnabled,
-          (on) => this.game.setAnalyticsEnabled(on),
-        ),
+        // Scrolls if it doesn't fit (long languages, large text); Done stays in view.
+        el('div', { className: 'settings-body' }, [
+          toggle('setting-sound', t('Sound'), t('Sound effects and music'), !this.game.muted, () =>
+            this.game.toggleMute(),
+          ),
+          this.musicSlider(),
+          this.languagePicker(),
+          toggle(
+            'setting-contrast',
+            t('High contrast'),
+            t('Brighter text, edges and danger lanes'),
+            set.highContrast,
+            (on) => this.game.setDisplay({ highContrast: on }),
+          ),
+          toggle(
+            'setting-labels',
+            t('Larger labels'),
+            t('Bigger move labels and hints'),
+            set.largeLabels,
+            (on) => this.game.setDisplay({ largeLabels: on }),
+          ),
+          toggle(
+            'setting-motion',
+            t('Reduce motion'),
+            t('No shaking, bobbing or pulsing'),
+            this.game.reducedMotion,
+            (on) => this.game.setDisplay({ reduceMotion: on }),
+          ),
+          toggle(
+            'setting-analytics',
+            t('Play statistics'),
+            t('On this device only; nothing is sent'),
+            this.game.analyticsEnabled,
+            (on) => this.game.setAnalyticsEnabled(on),
+          ),
+        ]),
         el('button', {
           className: 'btn',
           testId: 'settings-close',
-          text: 'Done',
+          text: t('Done'),
           onClick: () => this.closeSettings(),
         }),
       ]),
@@ -224,15 +237,19 @@ export class MenuScene implements Scene {
     this.game.save.update((d) => (d.changedLevelsNotice = 0));
     this.sheet = place(
       el('div', { className: 'sheet', testId: 'changed-notice' }, [
-        el('h2', { text: n === 1 ? 'A level has changed' : `${n} levels have changed` }),
+        el('h2', { text: tn(n, 'A level has changed', '{n} levels have changed') }),
         el('p', {
-          text: `${n === 1 ? 'One level you beat has' : `${n} levels you beat have`} been redesigned. ${n === 1 ? "It's" : "They're"} marked NEW on the map: solve ${n === 1 ? 'it' : 'them'} again to earn the stars back.`,
+          text: tn(
+            n,
+            "One level you beat has been redesigned. It's marked NEW on the map: solve it again to earn the stars back.",
+            "{n} levels you beat have been redesigned. They're marked NEW on the map: solve them again to earn the stars back.",
+          ),
         }),
-        el('p', { text: 'Every level after them stays open, and your skins stay unlocked.' }),
+        el('p', { text: t('Every level after them stays open, and your skins stay unlocked.') }),
         el('button', {
           className: 'btn primary',
           testId: 'changed-notice-ok',
-          text: "Let's roll",
+          text: t("Let's roll"),
           onClick: () => this.closeSettings(),
         }),
       ]),
@@ -256,17 +273,21 @@ export class MenuScene implements Scene {
     const ok = () => this.closeSettings();
     this.sheet = place(
       el('div', { className: 'sheet', testId: 'campaign-notice' }, [
-        el('h2', { text: 'A new campaign' }),
+        el('h2', { text: t('A new campaign') }),
         el('p', {
-          text: 'Every level has been rebuilt: 3 HP, stars for moves, and each level about its own idea. So the campaign starts fresh.',
+          text: t(
+            'Every level has been rebuilt: 3 HP, stars for moves, and each level about its own idea. So the campaign starts fresh.',
+          ),
         }),
         el('p', {
-          text: 'Your crowns, faces, custom die, skins, Daily streak and Depths record are all kept.',
+          text: t(
+            'Your crowns, faces, custom die, skins, Daily streak and Depths record are all kept.',
+          ),
         }),
         el('button', {
           className: 'btn primary',
           testId: 'campaign-notice-ok',
-          text: "Let's roll",
+          text: t("Let's roll"),
           onClick: ok,
         }),
       ]),
@@ -289,20 +310,20 @@ export class MenuScene implements Scene {
       'div',
       { className: 'how-to-body' },
       HOW_TO_PLAY.flatMap((sec) => [
-        el('h3', { text: sec.heading }),
-        ...sec.lines.map((line) => el('p', { text: line })),
+        el('h3', { text: t(sec.heading) }),
+        ...sec.lines.map((line) => el('p', { text: t(line) })),
       ]),
     );
     body.tabIndex = 0;
-    body.setAttribute('aria-label', 'How to play');
+    body.setAttribute('aria-label', t('How to play'));
     this.sheet = place(
       el('div', { className: 'sheet how-to', testId: 'how-to-sheet' }, [
-        el('h2', { text: 'How to play' }),
+        el('h2', { text: t('How to play') }),
         body,
         el('button', {
           className: 'btn',
           testId: 'how-to-close',
-          text: 'Done',
+          text: t('Done'),
           onClick: () => this.closeSettings(),
         }),
       ]),
@@ -329,8 +350,8 @@ export class MenuScene implements Scene {
     const value = el('small', { className: 'slider-value' });
     const sync = () => {
       const v = Number(input.value);
-      value.textContent = v === 0 ? 'Off' : `${v}%`;
-      input.setAttribute('aria-valuetext', v === 0 ? 'Off' : `${v} percent`);
+      value.textContent = v === 0 ? t('Off') : `${v}%`;
+      input.setAttribute('aria-valuetext', v === 0 ? t('Off') : t('{n} percent', { n: v }));
     };
     sync();
     input.addEventListener('input', () => {
@@ -338,10 +359,35 @@ export class MenuScene implements Scene {
       this.game.setMusicVolume(Number(input.value) / 100);
     });
     const label = el('label', { className: 'slider' }, [
-      el('span', {}, [el('strong', { text: 'Music' }), value]),
+      el('span', {}, [el('strong', { text: t('Music') }), value]),
       input,
     ]);
     label.htmlFor = 'setting-music';
+    return label;
+  }
+
+  /** Language: a list of the languages, "Automatic" follows the browser. */
+  private languagePicker(): HTMLElement {
+    const select = el('select', { testId: 'setting-lang' });
+    select.id = 'setting-lang';
+    const saved = this.game.save.data.settings.lang ?? '';
+    const auto = el('option', { text: t('Automatic ({lang})', { lang: langName(detectLang()) }) });
+    auto.value = '';
+    select.append(
+      auto,
+      ...LANGS.map((l) => {
+        const o = el('option', { text: l.name });
+        o.value = l.id;
+        return o;
+      }),
+    );
+    select.value = saved;
+    select.addEventListener('change', () => this.game.setLanguage(select.value || null));
+    const label = el('label', { className: 'lang-row' }, [
+      el('strong', { text: t('Language') }),
+      select,
+    ]);
+    label.htmlFor = 'setting-lang';
     return label;
   }
 
@@ -369,7 +415,7 @@ export class MenuScene implements Scene {
     ctx.fillText('Knight', 170, 88);
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
-    ctx.fillText('You are the die. Every side is a tool.', 170, 116);
+    ctx.fillText(t('You are the die. Every side is a tool.'), 170, 116, 320);
 
     // The logo: a big 3D die (Shield on top, Sword and Key facing you), gently swaying.
     const still = this.game.reducedMotion;

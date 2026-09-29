@@ -33,7 +33,7 @@ describe('lessons', () => {
       'Enemies',
       'Stars and crowns',
       'Modes',
-      'Keys',
+      'Keyboard',
     ]);
   });
 });

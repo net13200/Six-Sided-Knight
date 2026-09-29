@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 /**
  * Installable app support: registers the service worker (production builds
  * only) and tells it which files this build uses, so the game works offline
@@ -61,13 +62,13 @@ function showUpdateToast(): void {
   bar.setAttribute('role', 'status');
   const reload = document.createElement('button');
   reload.type = 'button';
-  reload.textContent = 'New version ready · Reload';
+  reload.textContent = t('New version ready · Reload');
   reload.dataset.testid = 'update-reload';
   reload.addEventListener('click', () => location.reload());
   const close = document.createElement('button');
   close.type = 'button';
   close.textContent = '✕';
-  close.setAttribute('aria-label', 'Later');
+  close.setAttribute('aria-label', t('Later'));
   close.addEventListener('click', () => bar.remove());
   bar.append(reload, close);
   document.body.append(bar);

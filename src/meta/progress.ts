@@ -1,15 +1,16 @@
 /** Campaign progression rules. Pure functions over the save data. */
 import type { LevelData } from '../engine';
 import type { SaveData } from './save';
+import { tk } from '../i18n';
 
 export const CHAPTER_SIZE = 10;
 export const CHAPTER_NAMES = [
-  'First Steps',
-  'Deep Halls',
-  'The Vaults',
-  'Ember Keep',
-  'Frost Crypt',
-  'The Throne',
+  tk('First Steps'),
+  tk('Deep Halls'),
+  tk('The Vaults'),
+  tk('Ember Keep'),
+  tk('Frost Crypt'),
+  tk('The Throne'),
 ];
 
 export function chapterOf(index: number): number {

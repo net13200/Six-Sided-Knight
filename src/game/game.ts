@@ -63,6 +63,7 @@ import type { PlaySession } from './session';
 import type { StarResult } from './stars';
 import { C, displayPrefs, setHighContrast } from './view/palette';
 import type { Stage } from './view/stage';
+import { loadLang, setLang, t, tk } from '../i18n';
 
 /** A return after this long away starts a new session. */
 export const SESSION_GAP_MS = 30 * 60_000;
@@ -126,6 +127,7 @@ export class Game {
     this.analytics.startSession(SESSION_GAP_MS);
     this.applySkin();
     this.applyDisplay();
+    setLang(this.save.data.settings.lang);
   }
 
   /**
@@ -197,6 +199,12 @@ export class Game {
     setSkinMotion(!this.reducedMotion);
   }
 
+  /** Switches language (null = follow the browser) and rebuilds the title screen. */
+  setLanguage(lang: string | null): void {
+    this.save.update((d) => (d.settings.lang = lang));
+    void loadLang(lang).then(() => this.go(new MenuScene(this, { settings: true })));
+  }
+
   /** Background music volume, 0 (off) to 1. */
   setMusicVolume(v: number): void {
     this.save.update((d) => (d.settings.musicVolume = Math.max(0, Math.min(1, v))));
@@ -262,7 +270,7 @@ export class Game {
         isCompleted(this.save.data, level),
       );
       if (pages.length > 0) {
-        this.goStory(pages, () => this.goPlay(i, { ...opts, story: false }), keys, 'Begin');
+        this.goStory(pages, () => this.goPlay(i, { ...opts, story: false }), keys, tk('Begin'));
         return;
       }
     }
@@ -276,7 +284,7 @@ export class Game {
       mode: 'campaign',
       level,
       startHp: this.rules.config.maxHp,
-      title: `${i + 1}. ${level.name}`,
+      title: `${i + 1}. ${t(level.name)}`,
       campaignIndex: i,
       lesson,
       onStart: () => this.save.update((d) => (d.lastLevelId = level.id)),
@@ -324,7 +332,7 @@ export class Game {
       storySoFar((k) => this.storySeen(k), open),
       () => this.goMenu(),
       [],
-      'Done',
+      tk('Done'),
     );
   }
 
@@ -358,7 +366,7 @@ export class Game {
   goRangerPlay(index: number): void {
     const i = Math.max(0, Math.min(index, this.rangerLevels.length - 1));
     if (i === 0 && !this.storySeen(STORY_KEYS.rangerIntro)) {
-      this.goStory(RANGER_INTRO, () => this.goRangerPlay(0), [STORY_KEYS.rangerIntro], 'Begin');
+      this.goStory(RANGER_INTRO, () => this.goRangerPlay(0), [STORY_KEYS.rangerIntro], tk('Begin'));
       return;
     }
     this.go(new RangerPlayScene(this, i));
@@ -370,12 +378,12 @@ export class Game {
       RANGER_OUTRO,
       () => this.goRangerMap(),
       [STORY_KEYS.rangerOutro],
-      'Back to the Greenwood',
+      tk('Back to the Greenwood'),
     );
   }
 
   goEnding(): void {
-    this.goStory(ENDING, () => this.goMenu(), [STORY_KEYS.ending], 'The end');
+    this.goStory(ENDING, () => this.goMenu(), [STORY_KEYS.ending], tk('The end'));
   }
 
   goPlaySession(session: PlaySession): void {

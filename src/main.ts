@@ -3,6 +3,8 @@ import { openDebugPanel } from './game/debug-panel';
 import { Game } from './game/game';
 import { bindInput } from './game/input';
 import { Loop } from './game/loop';
+import { autoFitLabels } from './game/ui';
+import { loadLang } from './i18n';
 import { Stage } from './game/view/stage';
 import { runSplash } from './splash';
 import { createBrowserPlatform } from './platform/browser';
@@ -24,6 +26,8 @@ const debug = !IS_POKI && (params.has('debug') || location.hash === '#debug');
 
 const platform = IS_POKI ? createPokiPlatform() : createBrowserPlatform();
 const stage = new Stage(document.getElementById('app')!);
+// Long labels (some languages) shrink to fit their buttons.
+autoFitLabels(stage.ui);
 const game = new Game(stage, platform, { debug });
 
 bindInput(
@@ -70,6 +74,9 @@ platform.onVisibilityChange((visible) => {
 
 // Closing or reloading the page ends the session (a reload soon after resumes it).
 window.addEventListener('pagehide', () => game.visibilityChanged(false));
+
+// The player's language (its file downloads now, if it isn't English).
+await loadLang(game.save.data.settings.lang);
 
 // ?level=3 jumps straight into a level, skipping story and lessons (handy for testing and sharing).
 const levelParam = devTools ? Number(params.get('level')) : 0;

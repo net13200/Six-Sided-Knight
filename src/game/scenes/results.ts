@@ -7,6 +7,7 @@ import { drawCrownGain } from '../view/art';
 import { C } from '../view/palette';
 import { drawStar } from './common';
 import type { Scene } from './scene';
+import { t } from '../../i18n';
 
 export class ResultsScene implements Scene {
   readonly name = 'results';
@@ -28,22 +29,22 @@ export class ResultsScene implements Scene {
       'button',
       { className: 'btn primary', testId: 'next', onClick: () => this.next() },
       this.hasNext
-        ? [el('span', { text: 'Next level' }), icon('next')]
+        ? [el('span', { text: t('Next level') }), icon('next')]
         : this.game.endingPending
-          ? [el('span', { text: 'Epilogue' }), icon('next')]
-          : [el('span', { text: 'Back to the map' })],
+          ? [el('span', { text: t('Epilogue') }), icon('next')]
+          : [el('span', { text: t('Back to the map') })],
     );
     ui.append(
       place(primary, 50, 330, 240, 58),
       place(
-        iconButton('retry', 'Retry', () => this.retry(), 'results-retry'),
+        iconButton('retry', t('Retry'), () => this.retry(), 'results-retry'),
         70,
         404,
         90,
         62,
       ),
       place(
-        iconButton('menu', 'Map', () => this.game.goLevels(), 'results-levels'),
+        iconButton('menu', t('Map'), () => this.game.goLevels(), 'results-levels'),
         180,
         404,
         90,
@@ -82,10 +83,10 @@ export class ResultsScene implements Scene {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = C.gold;
     ctx.font = '800 26px system-ui, sans-serif';
-    ctx.fillText(stars.count === 3 ? 'Par!' : 'Level complete!', 170, 52);
+    ctx.fillText(t(stars.count === 3 ? 'Par!' : 'Level complete!'), 170, 52, 320);
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
-    ctx.fillText(`${this.index + 1}. ${level.name}`, 170, 80);
+    ctx.fillText(`${this.index + 1}. ${t(level.name)}`, 170, 80, 320);
 
     // Stars pop in one after another. A better result from an earlier attempt
     // shows too (faded, marked "best"): the best result is what's kept.
@@ -105,7 +106,7 @@ export class ResultsScene implements Scene {
         ctx.restore();
         ctx.fillStyle = C.textDim;
         ctx.font = '600 9px system-ui, sans-serif';
-        ctx.fillText('best', x, 157);
+        ctx.fillText(t('best'), x, 157, 56);
       } else {
         drawStar(ctx, x, 130, 22 * pop, false);
       }
@@ -113,21 +114,26 @@ export class ResultsScene implements Scene {
     if (this.summary.improved && !this.summary.firstClear) {
       ctx.fillStyle = C.heal;
       ctx.font = 'bold 12px system-ui, sans-serif';
-      ctx.fillText(`New best! ${this.summary.totalStars} of 3 on this level`, 170, 172);
+      ctx.fillText(
+        t('New best! {n} of 3 on this level', { n: this.summary.totalStars }),
+        170,
+        172,
+        320,
+      );
     } else if (this.summary.totalStars > stars.count) {
       ctx.fillStyle = C.textDim;
       ctx.font = '12px system-ui, sans-serif';
-      ctx.fillText(`Your best: ${this.summary.totalStars} of 3`, 170, 172);
+      ctx.fillText(t('Your best: {n} of 3', { n: this.summary.totalStars }), 170, 172, 320);
     }
 
     // Stars are about moves: the ladder shows how many each star allows.
     const par = stars.par ?? this.summary.par ?? level.par;
     const rows: Array<[string, string, boolean | null]> = [
-      ['Your moves', String(stars.moves), null],
+      [t('Your moves'), String(stars.moves), null],
       ...(par !== undefined
         ? ([
-            ['★★★', `par: ${par} moves`, stars.count >= 3],
-            ['★★', `${stars.twoStar ?? par} moves or fewer`, stars.count >= 2],
+            ['★★★', t('par: {n} moves', { n: par }), stars.count >= 3],
+            ['★★', t('{n} moves or fewer', { n: stars.twoStar ?? par }), stars.count >= 2],
           ] as Array<[string, string, boolean]>)
         : []),
     ];
@@ -140,7 +146,7 @@ export class ResultsScene implements Scene {
       ctx.textAlign = 'right';
       ctx.font = 'bold 14px system-ui, sans-serif';
       ctx.fillStyle = ok === null ? C.text : ok ? C.heal : C.textDim;
-      ctx.fillText(ok === null ? value : `${value} ${ok ? '✓' : '·'}`, 290, y);
+      ctx.fillText(ok === null ? value : `${value} ${ok ? '✓' : '·'}`, 290, y, 190);
     });
     ctx.textAlign = 'center';
     ctx.fillStyle = C.gold;
@@ -150,14 +156,17 @@ export class ResultsScene implements Scene {
       ctx.fillStyle = C.heal;
       ctx.font = 'bold 12px system-ui, sans-serif';
       ctx.fillText(
-        `New skin: ${this.summary.newSkins.map((s) => s.name).join(', ')}! (at the Smith)`,
+        t('New skin: {names}! (at the Smith)', {
+          names: this.summary.newSkins.map((s) => t(s.name)).join(', '),
+        }),
         170,
         310,
+        320,
       );
     } else if (this.summary.firstClear && this.hasNext) {
       ctx.fillStyle = C.textDim;
       ctx.font = '12px system-ui, sans-serif';
-      ctx.fillText(`Level ${this.index + 2} unlocked`, 170, 310);
+      ctx.fillText(t('Level {n} unlocked', { n: this.index + 2 }), 170, 310, 320);
     }
   }
 }

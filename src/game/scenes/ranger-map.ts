@@ -6,6 +6,7 @@ import { el, iconButton, place } from '../ui';
 import { C } from '../view/palette';
 import { drawStar } from './common';
 import type { Scene } from './scene';
+import { t } from '../../i18n';
 
 const NODE = 52;
 
@@ -43,8 +44,9 @@ export class RangerMapScene implements Scene {
         className: `node${this.done(i) ? ' done' : ''}${open ? '' : ' locked'}`,
         testId: `ranger-${i + 1}`,
         label: open
-          ? `Bonus stage ${i + 1}: ${lv.name}${this.done(i) ? `, ${stars} of 3 stars` : ''}`
-          : `Bonus stage ${i + 1}, locked`,
+          ? t('Bonus stage {n}: {name}', { n: i + 1, name: t(lv.name) }) +
+            (this.done(i) ? t(', {n} of 3 stars', { n: stars }) : '')
+          : t('Bonus stage {n}, locked', { n: i + 1 }),
         text: open ? String(i + 1) : '',
         onClick: () => open && this.game.goRangerPlay(i),
       });
@@ -53,7 +55,7 @@ export class RangerMapScene implements Scene {
     });
     ui.append(
       place(
-        iconButton('back', 'Menu', () => this.game.goMenu(), 'back'),
+        iconButton('back', t('Menu'), () => this.game.goMenu(), 'back'),
         4,
         415,
         64,
@@ -73,16 +75,16 @@ export class RangerMapScene implements Scene {
   render(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = '#12201a';
     ctx.fillRect(0, 0, 340, 480);
-    const t = this.game.reducedMotion ? 0 : this.t;
-    drawOctahedron(ctx, 170, 70, 30, t);
+    const time = this.game.reducedMotion ? 0 : this.t;
+    drawOctahedron(ctx, 170, 70, 30, time);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#9cc47a';
     ctx.font = '800 22px system-ui, sans-serif';
-    ctx.fillText('The Greenwood', 170, 126);
+    ctx.fillText(t('The Greenwood'), 170, 126, 320);
     ctx.fillStyle = C.textDim;
     ctx.font = '12px system-ui, sans-serif';
-    ctx.fillText('Bonus chapter · Eight-Sided Ranger', 170, 148);
+    ctx.fillText(t('Bonus chapter · Eight-Sided Ranger'), 170, 148, 320);
 
     const n = this.game.rangerLevels.length;
     // The trail between stages.

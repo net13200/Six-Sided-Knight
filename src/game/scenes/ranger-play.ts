@@ -37,6 +37,7 @@ import { C } from '../view/palette';
 import { muteButton } from './common';
 import { LessonCard } from './lesson-card';
 import type { Scene } from './scene';
+import { t, tk } from '../../i18n';
 
 const MOVE_TIME = 0.16;
 const BAR_Y = 415;
@@ -47,6 +48,13 @@ interface Flash {
   to: Pt;
   t: number;
 }
+
+const LEADS: Record<Dir, string> = {
+  W: tk('Leads left'),
+  E: tk('Leads right'),
+  N: tk('Leads up'),
+  S: tk('Leads down'),
+};
 
 export class RangerPlayScene implements Scene {
   readonly name = 'ranger';
@@ -82,28 +90,28 @@ export class RangerPlayScene implements Scene {
     const y = BAR_Y + 3;
     ui.append(
       place(
-        iconButton('undo', 'Undo', () => this.command({ type: 'undo' })),
+        iconButton('undo', t('Undo'), () => this.command({ type: 'undo' }), 'undo'),
         4,
         y,
         64,
         62,
       ),
       place(
-        iconButton('retry', 'Retry', () => this.command({ type: 'retry' })),
+        iconButton('retry', t('Retry'), () => this.command({ type: 'retry' }), 'retry'),
         70,
         y,
         64,
         62,
       ),
       place(
-        iconButton('die', 'Faces', () => this.command({ type: 'inspect' }), 'faces'),
+        iconButton('die', t('Faces'), () => this.command({ type: 'inspect' }), 'faces'),
         138,
         y,
         64,
         62,
       ),
       place(
-        iconButton('menu', 'Map', () => this.command({ type: 'back' })),
+        iconButton('menu', t('Map'), () => this.command({ type: 'back' }), 'menu'),
         206,
         y,
         64,
@@ -285,11 +293,11 @@ export class RangerPlayScene implements Scene {
     this.finished = won;
     const body = won
       ? [
-          el('h2', { text: `${this.level.name}: done!` }),
+          el('h2', { text: t('{name}: done!', { name: t(this.level.name) }) }),
           el('p', {
             text:
-              `${this.state.moves} moves (par ${this.level.par}).` +
-              (crowns > 0 ? ` +${crowns} crowns.` : ''),
+              t('{n} moves (par {par}).', { n: this.state.moves, par: this.level.par ?? 0 }) +
+              (crowns > 0 ? ` ${t('+{n} crowns.', { n: crowns })}` : ''),
           }),
           el('div', {
             className: 'stars-row',
@@ -300,7 +308,7 @@ export class RangerPlayScene implements Scene {
             el('button', {
               className: 'btn primary',
               testId: 'ranger-next',
-              text: this.isLast ? 'Onward' : 'Next stage',
+              text: t(this.isLast ? 'Onward' : 'Next stage'),
               onClick: () => this.next(),
             }),
           ]),
@@ -308,23 +316,23 @@ export class RangerPlayScene implements Scene {
             el('button', {
               className: 'btn small',
               testId: 'ranger-again',
-              text: 'Again',
+              text: t('Again'),
               onClick: () => this.game.goRangerPlay(this.index),
             }),
             el('button', {
               className: 'btn small',
               testId: 'ranger-map',
-              text: 'Map',
+              text: t('Map'),
               onClick: () => this.game.goRangerMap(),
             }),
           ]),
         ]
       : [
-          el('h2', { text: 'Knocked out!' }),
-          el('p', { text: 'Undo a move or try again.' }),
+          el('h2', { text: t('Knocked out!') }),
+          el('p', { text: t('Undo a move or try again.') }),
           el('div', { className: 'row' }, [
-            iconButton('undo', 'Undo', () => this.command({ type: 'undo' }), 'overlay-undo'),
-            iconButton('retry', 'Retry', () => this.command({ type: 'retry' }), 'overlay-retry'),
+            iconButton('undo', t('Undo'), () => this.command({ type: 'undo' }), 'overlay-undo'),
+            iconButton('retry', t('Retry'), () => this.command({ type: 'retry' }), 'overlay-retry'),
           ]),
         ];
     this.panel = place(
@@ -351,30 +359,26 @@ export class RangerPlayScene implements Scene {
     const lo = this.level.loadout;
     const s = this.state;
     const slots: Array<[string, string]> = [
-      ['On top', faceAt(lo, s.orient, SLOT.top)],
-      ['Face-down', faceAt(lo, s.orient, SLOT.bottom)],
+      [t('On top'), faceAt(lo, s.orient, SLOT.top)],
+      [t('Face-down'), faceAt(lo, s.orient, SLOT.bottom)],
       ...(['W', 'E', s.y >= 0 && (s.x + s.y) % 2 === 0 ? 'S' : 'N'] as Dir[]).map(
-        (d) =>
-          [
-            `Leads ${({ W: 'left', E: 'right', N: 'up', S: 'down' } as const)[d]}`,
-            leading(lo, s.orient, d),
-          ] as [string, string],
+        (d) => [t(LEADS[d]), leading(lo, s.orient, d)] as [string, string],
       ),
     ];
     const rows = slots.map(([where, face]) =>
       el('li', {}, [
-        el('strong', { text: `${where}: ${face}` }),
-        el('span', { text: ` ${RANGER_FACE_INFO[face] ?? ''}` }),
+        el('strong', { text: `${where}: ${t(face)}` }),
+        el('span', { text: ` ${t(RANGER_FACE_INFO[face] ?? '')}` }),
       ]),
     );
     this.info = place(
       el('div', { className: 'sheet', testId: 'ranger-faces' }, [
-        el('h2', { text: 'Your d8' }),
+        el('h2', { text: t('Your d8') }),
         el('ul', { className: 'faces-list' }, rows),
         el('button', {
           className: 'btn',
           testId: 'ranger-faces-close',
-          text: 'Close',
+          text: t('Close'),
           onClick: () => this.closeInfo(),
         }),
       ]),
@@ -398,14 +402,14 @@ export class RangerPlayScene implements Scene {
     ctx.save();
     ctx.translate(0, (h - cardH) / 2);
     if (side === 'left') {
-      let y = sideCard(ctx, w, cardH, 'Bonus · The Greenwood');
+      let y = sideCard(ctx, w, cardH, t('Bonus · The Greenwood'));
       ctx.fillStyle = C.text;
       ctx.font = '800 20px system-ui, sans-serif';
       ctx.textAlign = 'left';
-      y = wrap(ctx, this.level.name, 16, y + 4, w - 32, 24);
+      y = wrap(ctx, t(this.level.name), 16, y + 4, w - 32, 24);
       ctx.fillStyle = C.textDim;
       ctx.font = '13px system-ui, sans-serif';
-      ctx.fillText('Moves', 16, y + 14);
+      ctx.fillText(t('Moves'), 16, y + 14);
       ctx.fillStyle = C.text;
       ctx.font = '800 34px system-ui, sans-serif';
       ctx.fillText(String(this.state.moves), 16, y + 44);
@@ -413,26 +417,33 @@ export class RangerPlayScene implements Scene {
       const par = this.level.par ?? 0;
       ctx.font = '13px system-ui, sans-serif';
       ctx.fillStyle = C.textDim;
-      wrap(ctx, `★★★ in ${par} moves or fewer, ★★ in ${twoStarLimit(par)}.`, 16, y, w - 32, 17);
+      wrap(
+        ctx,
+        t('★★★ in {n} moves or fewer, ★★ in {m}.', { n: par, m: twoStarLimit(par) }),
+        16,
+        y,
+        w - 32,
+        17,
+      );
     } else {
-      const y = sideCard(ctx, w, cardH, 'How to play');
+      const y = sideCard(ctx, w, cardH, t('How to play'));
       drawControls(
         ctx,
         w,
         y + 4,
         touchFirst()
           ? [
-              ['Swipe', 'Roll across an edge'],
-              ['Tap', 'Roll to a neighbouring triangle'],
-              ['Die', 'Tap it to see your faces'],
+              [t('Swipe'), t('Roll across an edge')],
+              [t('Tap'), t('Roll to a neighbouring triangle')],
+              [t('Die'), t('Tap it to see your faces')],
             ]
           : [
-              ['← →', 'Roll along the row'],
-              ['↑ ↓', 'Roll through the flat edge'],
-              ['Z', 'Undo a move'],
-              ['R', 'Retry the stage'],
-              ['I', 'Your faces'],
-              ['Esc', 'Back to the map'],
+              ['← →', t('Roll along the row')],
+              ['↑ ↓', t('Roll through the flat edge')],
+              ['Z', t('Undo a move')],
+              ['R', t('Retry the stage')],
+              ['I', t('Your faces')],
+              ['Esc', t('Back to the map')],
             ],
       );
     }
@@ -527,13 +538,16 @@ function drawHud(ctx: CanvasRenderingContext2D, index: number, s: RState): void 
   ctx.textAlign = 'left';
   ctx.fillStyle = C.text;
   ctx.font = 'bold 15px system-ui, sans-serif';
-  ctx.fillText(`Bonus ${index + 1}. ${s.level.name}`, 12, 16);
+  ctx.fillText(t('Bonus {n}. {name}', { n: index + 1, name: t(s.level.name) }), 12, 16, 268);
   ctx.font = '12px system-ui, sans-serif';
   ctx.fillStyle = C.textDim;
   ctx.fillText(
-    `Moves ${s.moves}${s.level.par !== undefined ? ` / par ${s.level.par}` : ''}`,
+    s.level.par !== undefined
+      ? t('Moves {n} / par {par}', { n: s.moves, par: s.level.par })
+      : t('Moves {n}', { n: s.moves }),
     12,
     35,
+    200,
   );
   for (let i = 0; i < 3; i++) {
     ctx.globalAlpha = i < s.hp ? 1 : 0.2;
@@ -544,14 +558,15 @@ function drawHud(ctx: CanvasRenderingContext2D, index: number, s: RState): void 
   ctx.textAlign = 'right';
   ctx.fillStyle = '#9cc47a';
   ctx.font = 'bold 11px system-ui, sans-serif';
-  ctx.fillText('Greenwood', 308, 35);
+  ctx.fillText(t('Greenwood'), 308, 35, 100);
 }
 
-function drawHint(ctx: CanvasRenderingContext2D, hint: string, moves: number): void {
+function drawHint(ctx: CanvasRenderingContext2D, en: string, moves: number): void {
+  const hint = t(en);
   ctx.save();
   ctx.globalAlpha = 1 - moves / 3;
   ctx.font = '600 12px system-ui, sans-serif';
-  const w = ctx.measureText(hint).width + 20;
+  const w = Math.min(ctx.measureText(hint).width + 20, 330);
   ctx.fillStyle = 'rgba(10,20,14,0.88)';
   ctx.beginPath();
   ctx.roundRect(170 - w / 2, 388, w, 22, 11);
@@ -559,6 +574,6 @@ function drawHint(ctx: CanvasRenderingContext2D, hint: string, moves: number): v
   ctx.fillStyle = C.text;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(hint, 170, 399);
+  ctx.fillText(hint, 170, 399, w - 16);
   ctx.restore();
 }

@@ -6,6 +6,7 @@ import { el, icon, iconButton, place } from '../ui';
 import { drawDieBody, drawFace } from '../view/art';
 import { C } from '../view/palette';
 import type { Scene } from './scene';
+import { t, tn } from '../../i18n';
 
 export class DepthsScene implements Scene {
   readonly name = 'depths';
@@ -18,7 +19,9 @@ export class DepthsScene implements Scene {
     const progress = this.game.save.data.depths.inProgress;
     const primary = el('button', { className: 'btn primary', testId: 'depths-start' }, [
       icon('play'),
-      el('span', { text: progress ? `Continue floor ${progress.floor}` : 'Descend' }),
+      el('span', {
+        text: progress ? t('Continue floor {n}', { n: progress.floor }) : t('Descend'),
+      }),
     ]);
     const go = () => {
       if (this.busy) return;
@@ -32,7 +35,7 @@ export class DepthsScene implements Scene {
       }
       this.busy = true;
       primary.disabled = true;
-      primary.replaceChildren(el('span', { text: 'Carving the dungeon…' }));
+      primary.replaceChildren(el('span', { text: t('Carving the dungeon…') }));
       void run.play();
     };
     // A new run may start with an ad break; a run in progress never has one.
@@ -46,12 +49,12 @@ export class DepthsScene implements Scene {
       const surface = el('button', {
         className: 'btn',
         testId: 'depths-surface',
-        text: 'End this run',
+        text: t('End this run'),
       });
       surface.addEventListener('click', () => {
         if (!armed) {
           armed = true;
-          surface.textContent = `Tap again to end with ${progress.floor - 1} cleared`;
+          surface.textContent = t('Tap again to end with {n} cleared', { n: progress.floor - 1 });
           return;
         }
         new Run(this.game, 'depths', progress).abandon();
@@ -61,7 +64,7 @@ export class DepthsScene implements Scene {
     }
     ui.append(
       place(
-        iconButton('back', 'Menu', () => this.game.goMenu(), 'back'),
+        iconButton('back', t('Menu'), () => this.game.goMenu(), 'back'),
         4,
         415,
         64,
@@ -70,7 +73,7 @@ export class DepthsScene implements Scene {
       place(
         iconButton(
           'die',
-          'Your die',
+          t('Your die'),
           () => this.game.goForge(() => this.game.goDepths()),
           'your-die',
         ),
@@ -92,10 +95,10 @@ export class DepthsScene implements Scene {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = C.text;
     ctx.font = '800 28px system-ui, sans-serif';
-    ctx.fillText('The Depths', 170, 52);
+    ctx.fillText(t('The Depths'), 170, 52);
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
-    ctx.fillText('Endless floors, each one harder. One life.', 170, 80);
+    ctx.fillText(t('Endless floors, each one harder. One life.'), 170, 80, 320);
 
     // Stairs descending into the dark.
     for (let i = 0; i < 5; i++) {
@@ -110,17 +113,26 @@ export class DepthsScene implements Scene {
     ctx.fillText(String(depths.bestFloor), 170, 232);
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
-    const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-    ctx.fillText(`best run (floors cleared) · ${plural(depths.runs, 'run', 'runs')}`, 170, 258);
-    const rules = 'No Undo · no Retry · HP carries over';
+    ctx.fillText(
+      t('best run (floors cleared) · {runs}', { runs: tn(depths.runs, '{n} run', '{n} runs') }),
+      170,
+      258,
+      320,
+    );
+    const rules = t('No Undo · no Retry · HP carries over');
     ctx.fillStyle = C.text;
     ctx.font = '13px system-ui, sans-serif';
-    if (depths.lastFloor === null) ctx.fillText(rules, 170, 288);
+    if (depths.lastFloor === null) ctx.fillText(rules, 170, 288, 320);
     else {
-      ctx.fillText(`Last run: ${plural(depths.lastFloor, 'floor', 'floors')}`, 170, 280);
+      ctx.fillText(
+        t('Last run: {floors}', { floors: tn(depths.lastFloor, '{n} floor', '{n} floors') }),
+        170,
+        280,
+        320,
+      );
       ctx.fillStyle = C.textDim;
       ctx.font = '12px system-ui, sans-serif';
-      ctx.fillText(rules, 170, 298);
+      ctx.fillText(rules, 170, 298, 320);
     }
   }
 }

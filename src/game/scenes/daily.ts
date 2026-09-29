@@ -7,6 +7,7 @@ import { el, icon, iconButton, place } from '../ui';
 import { C } from '../view/palette';
 import { drawStar } from './common';
 import type { Scene } from './scene';
+import { t } from '../../i18n';
 
 export class DailyScene implements Scene {
   readonly name = 'daily';
@@ -25,7 +26,7 @@ export class DailyScene implements Scene {
 
     const primary = el('button', { className: 'btn primary', testId: 'daily-start' });
     if (result) {
-      primary.append(icon('next'), el('span', { text: 'Share result' }));
+      primary.append(icon('next'), el('span', { text: t('Share result') }));
       primary.dataset.testid = 'daily-share';
       primary.addEventListener('click', () => void this.share(primary));
     } else {
@@ -33,8 +34,8 @@ export class DailyScene implements Scene {
         icon('play'),
         el('span', {
           text: progress
-            ? `Continue floor ${progress.floor}/${DAILY_FLOORS}`
-            : 'Start today’s roll',
+            ? t('Continue floor {n}/{max}', { n: progress.floor, max: DAILY_FLOORS })
+            : t('Start today’s roll'),
         }),
       );
       primary.addEventListener('click', () => {
@@ -53,7 +54,7 @@ export class DailyScene implements Scene {
       const practice = el('button', {
         className: 'btn',
         testId: 'daily-practice',
-        text: 'Practice run',
+        text: t('Practice run'),
         onClick: () =>
           this.game.breakThen(
             'daily-start',
@@ -64,7 +65,7 @@ export class DailyScene implements Scene {
     }
     ui.append(
       place(
-        iconButton('back', 'Menu', () => this.game.goMenu(), 'back'),
+        iconButton('back', t('Menu'), () => this.game.goMenu(), 'back'),
         4,
         415,
         64,
@@ -73,7 +74,7 @@ export class DailyScene implements Scene {
       place(
         iconButton(
           'die',
-          'Your die',
+          t('Your die'),
           () => this.game.goForge(() => this.game.goDaily()),
           'your-die',
         ),
@@ -89,7 +90,7 @@ export class DailyScene implements Scene {
     if (this.busy) return;
     this.busy = true;
     button.disabled = true;
-    button.replaceChildren(el('span', { text: 'Carving the dungeon…' }));
+    button.replaceChildren(el('span', { text: t('Carving the dungeon…') }));
     await run.play();
   }
 
@@ -104,10 +105,10 @@ export class DailyScene implements Scene {
     if (label)
       label.textContent =
         outcome === 'copied'
-          ? 'Copied to clipboard'
+          ? t('Copied to clipboard')
           : outcome === 'shared'
-            ? 'Shared!'
-            : 'Could not share';
+            ? t('Shared!')
+            : t('Could not share');
   }
 
   command(cmd: Command): void {
@@ -122,12 +123,17 @@ export class DailyScene implements Scene {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = C.gold;
     ctx.font = '800 28px system-ui, sans-serif';
-    ctx.fillText('Daily Roll', 170, 52);
+    ctx.fillText(t('Daily Roll'), 170, 52);
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
-    ctx.fillText(`${this.date} (UTC) · the same dungeon for everyone`, 170, 80);
+    ctx.fillText(
+      t('{date} (UTC) · the same dungeon for everyone', { date: this.date }),
+      170,
+      80,
+      320,
+    );
     ctx.font = 'italic 12px system-ui, sans-serif';
-    ctx.fillText('The Well reshuffles three rooms every dawn, out of habit.', 170, 99);
+    ctx.fillText(t('The Well reshuffles three rooms every dawn, out of habit.'), 170, 99, 320);
 
     drawFlame(ctx, 170, 142, streak > 0);
     ctx.fillStyle = C.text;
@@ -135,17 +141,26 @@ export class DailyScene implements Scene {
     ctx.fillText(String(streak), 170, 196);
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
-    ctx.fillText(`day streak · best ${save.daily.bestStreak}`, 170, 222);
+    ctx.fillText(t('day streak · best {n}', { n: save.daily.bestStreak }), 170, 222, 320);
 
     ctx.font = '14px system-ui, sans-serif';
     if (result) {
       for (let i = 0; i < DAILY_FLOORS * 3; i++)
         drawStar(ctx, 114 + i * 14, 262, 6, i < result.stars);
       ctx.fillStyle = C.heal;
-      ctx.fillText(`Done today: ${result.moves} moves · ${result.hp}/${START_HP} HP`, 170, 288);
+      ctx.fillText(
+        t('Done today: {moves} moves · {hp}/{max} HP', {
+          moves: result.moves,
+          hp: result.hp,
+          max: START_HP,
+        }),
+        170,
+        288,
+        320,
+      );
     } else {
       ctx.fillStyle = C.text;
-      ctx.fillText('3 floors · HP carries over · no healing', 170, 270);
+      ctx.fillText(t('3 floors · HP carries over · no healing'), 170, 270, 320);
     }
   }
 }

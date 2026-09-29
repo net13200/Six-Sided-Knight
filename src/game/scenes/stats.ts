@@ -9,6 +9,7 @@ import { drawCrown, drawFace } from '../view/art';
 import { C } from '../view/palette';
 import { roleColor } from '../view/roles';
 import type { Scene } from './scene';
+import { t } from '../../i18n';
 
 export class StatsScene implements Scene {
   readonly name = 'stats';
@@ -18,7 +19,7 @@ export class StatsScene implements Scene {
   enter(ui: HTMLElement): void {
     ui.append(
       place(
-        iconButton('back', 'Menu', () => this.game.goMenu(), 'back'),
+        iconButton('back', t('Menu'), () => this.game.goMenu(), 'back'),
         4,
         415,
         64,
@@ -39,15 +40,15 @@ export class StatsScene implements Scene {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = C.gold;
     ctx.font = '800 26px system-ui, sans-serif';
-    ctx.fillText('Stats', 170, 30);
+    ctx.fillText(t('Stats'), 170, 30);
 
     // Campaign: stars per chapter
     const cleared = levels.filter((l) => (save.levels[l.id]?.completions ?? 0) > 0).length;
-    heading(ctx, 'Campaign', 58);
+    heading(ctx, t('Campaign'), 58);
     ctx.textAlign = 'right';
     ctx.fillStyle = C.textDim;
     ctx.font = '11px system-ui, sans-serif';
-    ctx.fillText(`${cleared}/${levels.length} levels`, 324, 58);
+    ctx.fillText(t('{n}/{max} levels', { n: cleared, max: levels.length }), 324, 58);
     const chapters = chapterCount(levels);
     for (let c = 0; c < chapters; c++) {
       const ids = levels.slice(c * CHAPTER_SIZE, (c + 1) * CHAPTER_SIZE).map((l) => l.id);
@@ -57,7 +58,7 @@ export class StatsScene implements Scene {
       ctx.textAlign = 'left';
       ctx.fillStyle = C.text;
       ctx.font = '11px system-ui, sans-serif';
-      ctx.fillText(CHAPTER_NAMES[c] ?? `Chapter ${c + 1}`, 16, y);
+      ctx.fillText(t(CHAPTER_NAMES[c] ?? ''), 16, y, 84);
       bar(ctx, 104, y, 176, got / max, C.gold);
       ctx.textAlign = 'right';
       ctx.fillStyle = C.textDim;
@@ -66,16 +67,21 @@ export class StatsScene implements Scene {
 
     // Totals
     let y = 90 + chapters * 17;
-    heading(ctx, 'Totals', y);
+    heading(ctx, t('Totals'), y);
     const mins = Math.round(st.playTimeMs / 60_000);
     const totals: Array<[string, string]> = [
-      ['Stars', String(totalStars(save))],
-      ['Moves', String(st.moves)],
-      ['Enemies beaten', String(st.kills)],
-      ['Knocked out', String(st.deaths)],
-      ['Undos', String(st.undos)],
-      ['Play time', mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : `${mins} min`],
-      ['Levels played', String(st.levelsStarted)],
+      [t('Stars'), String(totalStars(save))],
+      [t('Moves'), String(st.moves)],
+      [t('Enemies beaten'), String(st.kills)],
+      [t('Knocked out'), String(st.deaths)],
+      [t('Undos'), String(st.undos)],
+      [
+        t('Play time'),
+        mins >= 60
+          ? t('{h} h {m} min', { h: Math.floor(mins / 60), m: mins % 60 })
+          : t('{m} min', { m: mins }),
+      ],
+      [t('Levels played'), String(st.levelsStarted)],
     ];
     y += 18;
     totals.forEach(([k, v], i) => {
@@ -86,16 +92,22 @@ export class StatsScene implements Scene {
     y += Math.ceil(totals.length / 2) * 16 + 10;
 
     // Runs and crowns
-    heading(ctx, 'Runs & crowns', y);
+    heading(ctx, t('Runs & crowns'), y);
     y += 18;
     const today = utcDate(this.game.platform.now());
     const runs: Array<[string, string]> = [
-      ['Daily streak', `${currentStreak(save, today)} (best ${save.daily.bestStreak})`],
-      ['Dailies done', String(Object.keys(save.daily.results).length)],
-      ['Depths best', save.depths.bestFloor > 0 ? `${save.depths.bestFloor} floors` : '-'],
-      ['Depths runs', String(save.depths.runs)],
-      ['Crowns earned', String(save.wallet.earned)],
-      ['Crowns spent', String(save.wallet.spent)],
+      [
+        t('Daily streak'),
+        t('{n} (best {best})', { n: currentStreak(save, today), best: save.daily.bestStreak }),
+      ],
+      [t('Dailies done'), String(Object.keys(save.daily.results).length)],
+      [
+        t('Depths best'),
+        save.depths.bestFloor > 0 ? t('{n} floors', { n: save.depths.bestFloor }) : '-',
+      ],
+      [t('Depths runs'), String(save.depths.runs)],
+      [t('Crowns earned'), String(save.wallet.earned)],
+      [t('Crowns spent'), String(save.wallet.spent)],
     ];
     runs.forEach(([k, v], i) => {
       const x = i % 2 ? 176 : 16;
@@ -105,7 +117,7 @@ export class StatsScene implements Scene {
 
     // Faces
     const owned = ownedFaces(save);
-    heading(ctx, `Faces used · ${owned.length}/${6 + STORE.length} owned`, y);
+    heading(ctx, t('Faces used · {n}/{max} owned', { n: owned.length, max: 6 + STORE.length }), y);
     y += 22;
     const counts = owned.map((f) => [f, st.faceMoves[f] ?? 0] as const);
     const most = Math.max(1, ...counts.map(([, n]) => n));
@@ -137,7 +149,7 @@ function heading(ctx: CanvasRenderingContext2D, text: string, y: number): void {
   ctx.textAlign = 'left';
   ctx.fillStyle = C.text;
   ctx.font = 'bold 13px system-ui, sans-serif';
-  ctx.fillText(text, 16, y);
+  ctx.fillText(text, 16, y, 308);
 }
 
 function pair(
@@ -148,14 +160,15 @@ function pair(
   y: number,
   w: number,
 ): void {
-  ctx.textAlign = 'left';
-  ctx.fillStyle = C.textDim;
-  ctx.font = '11px system-ui, sans-serif';
-  ctx.fillText(label, x, y);
   ctx.textAlign = 'right';
   ctx.fillStyle = C.text;
   ctx.font = 'bold 11px system-ui, sans-serif';
   ctx.fillText(value, x + w, y);
+  const vw = ctx.measureText(value).width;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = C.textDim;
+  ctx.font = '11px system-ui, sans-serif';
+  ctx.fillText(label, x, y, Math.max(20, w - vw - 6));
 }
 
 function bar(

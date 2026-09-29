@@ -20,7 +20,7 @@ export type SceneName =
 /** Allowed transitions of the scene state machine. */
 export const TRANSITIONS: Readonly<Record<SceneName, readonly SceneName[]>> = {
   boot: ['menu', 'play', 'story'],
-  menu: ['levels', 'play', 'daily', 'depths', 'forge', 'stats', 'story', 'ranger-map'],
+  menu: ['menu', 'levels', 'play', 'daily', 'depths', 'forge', 'stats', 'story', 'ranger-map'],
   levels: ['menu', 'play', 'levels', 'story'], // levels -> levels: changing chapter
   play: ['results', 'menu', 'levels', 'play', 'floor', 'daily', 'depths', 'story'],
   results: ['play', 'levels', 'menu', 'story'],

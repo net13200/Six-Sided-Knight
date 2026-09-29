@@ -37,6 +37,7 @@ import { LessonCard } from './lesson-card';
 import { SolutionWatch } from './watch';
 import { lessonKey } from '../lessons';
 import type { Scene } from './scene';
+import { t } from '../../i18n';
 
 export class PlayScene implements Scene {
   readonly name = 'play';
@@ -101,7 +102,9 @@ export class PlayScene implements Scene {
     this.announcer.setAttribute('role', 'status');
     this.announcer.setAttribute('aria-live', 'polite');
     ui.append(this.announcer);
-    this.announce(`${this.session.title}. ${this.level.hint ?? ''} Press H to hear the board.`);
+    this.announce(
+      `${this.session.title}. ${this.level.hint ? t(this.level.hint) : ''} ${t('Press H to hear the board.')}`,
+    );
     this.refreshDescription();
     this.game.analytics.track('level_start', { level: this.level.id, mode: this.session.mode });
     this.game.save.update((d) => d.stats.levelsStarted++);
@@ -112,14 +115,14 @@ export class PlayScene implements Scene {
     if (!this.session.permadeath) {
       ui.append(
         place(
-          iconButton('undo', 'Undo', () => this.command({ type: 'undo' })),
+          iconButton('undo', t('Undo'), () => this.command({ type: 'undo' }), 'undo'),
           4,
           y,
           64,
           62,
         ),
         place(
-          iconButton('retry', 'Retry', () => this.command({ type: 'retry' })),
+          iconButton('retry', t('Retry'), () => this.command({ type: 'retry' }), 'retry'),
           70,
           y,
           64,
@@ -129,7 +132,7 @@ export class PlayScene implements Scene {
     }
     ui.append(
       place(
-        iconButton('menu', 'Menu', () => this.command({ type: 'back' })),
+        iconButton('menu', t('Menu'), () => this.command({ type: 'back' }), 'menu'),
         206,
         y,
         64,
@@ -141,7 +144,7 @@ export class PlayScene implements Scene {
         el('button', {
           className: 'compass-btn',
           testId: 'compass',
-          label: 'Inspect your die',
+          label: t('Inspect your die'),
           onClick: () => this.openInspect(),
         }),
         138,
@@ -176,10 +179,10 @@ export class PlayScene implements Scene {
             {
               className: 'btn small ad-btn',
               testId: 'solution-ad',
-              label: 'Show the solution (watch an ad)',
+              label: t('Show the solution (watch an ad)'),
               onClick: () => this.askSolutionAd(),
             },
-            [icon('video'), el('span', { text: 'Solve' })],
+            [icon('video'), el('span', { text: t('Solve') })],
           ),
           204,
           8,
@@ -235,14 +238,14 @@ export class PlayScene implements Scene {
     this.hideOverlay();
     const sheet = place(
       el('div', { className: 'sheet', testId: 'solution-ad-sheet' }, [
-        el('h2', { text: 'Show the solution?' }),
-        el('p', { text: 'Watch a short ad, then see the best solution play out.' }),
+        el('h2', { text: t('Show the solution?') }),
+        el('p', { text: t('Watch a short ad, then see the best solution play out.') }),
         // Poki's rules: the plain choice comes first and is at least as big.
         el('div', { className: 'row reward-row' }, [
           el('button', {
             className: 'btn',
             testId: 'solution-ad-cancel',
-            text: 'Not now',
+            text: t('Not now'),
             onClick: () => sheet.remove(),
           }),
           el(
@@ -250,19 +253,19 @@ export class PlayScene implements Scene {
             {
               className: 'btn reward-btn',
               testId: 'solution-ad-watch',
-              label: 'Watch an ad to see the solution',
+              label: t('Watch an ad to see the solution'),
               onClick: () => {
                 sheet.remove();
                 void this.game.rewardedAd().then((ok) => {
                   // No ad (or an ad blocker): no reward and no message; Poki handles that.
                   if (!ok) return;
                   this.game.audio.play('unlock');
-                  this.flashNotice('Solution unlocked!');
+                  this.flashNotice(t('Solution unlocked!'));
                   this.openWatch('reward');
                 });
               },
             },
-            [icon('video'), el('span', { text: 'Watch ad' })],
+            [icon('video'), el('span', { text: t('Watch ad') })],
           ),
         ]),
       ]),
@@ -390,7 +393,12 @@ export class PlayScene implements Scene {
         this.fx.finishAll();
         this.history = undo(this.history);
         this.recorder.record('u');
-        this.announce(`Move undone. HP ${this.state.player.hp} of ${this.state.player.maxHp}.`);
+        this.announce(
+          t('Move undone. HP {hp} of {max}.', {
+            hp: this.state.player.hp,
+            max: this.state.player.maxHp,
+          }),
+        );
         this.refreshDescription();
         this.game.audio.play('undo');
         this.hideOverlay();
@@ -402,7 +410,7 @@ export class PlayScene implements Scene {
         this.fx.finishAll();
         this.history = retry(this.history);
         this.recorder.record('r');
-        this.announce('Level restarted.');
+        this.announce(t('Level restarted.'));
         this.refreshDescription();
         this.game.audio.play('undo');
         this.hideOverlay();
@@ -468,11 +476,11 @@ export class PlayScene implements Scene {
     if (this.overlay || !this.ui) return;
     this.overlay = place(
       el('div', { className: 'overlay', testId: 'fail-overlay' }, [
-        el('h2', { text: 'Knocked out!' }),
-        el('p', { text: 'Undo a move or try again.' }),
+        el('h2', { text: t('Knocked out!') }),
+        el('p', { text: t('Undo a move or try again.') }),
         el('div', { className: 'row' }, [
-          iconButton('undo', 'Undo', () => this.command({ type: 'undo' }), 'overlay-undo'),
-          iconButton('retry', 'Retry', () => this.command({ type: 'retry' }), 'overlay-retry'),
+          iconButton('undo', t('Undo'), () => this.command({ type: 'undo' }), 'overlay-undo'),
+          iconButton('retry', t('Retry'), () => this.command({ type: 'retry' }), 'overlay-retry'),
         ]),
       ]),
       BOARD_X + 30,
@@ -501,7 +509,7 @@ export class PlayScene implements Scene {
   exit(): void {
     this.lesson?.close();
     this.watch?.stop();
-    this.game.stage.canvas.setAttribute('aria-label', 'Game board');
+    this.game.stage.canvas.setAttribute('aria-label', t('Game board'));
     if (!this.won) {
       this.game.analytics.track('level_quit', {
         level: this.level.id,
@@ -541,10 +549,10 @@ export class PlayScene implements Scene {
     }
     const levelHintShowing = this.level.hint !== undefined && s.stats.moves < 3;
     if (!levelHintShowing && this.showInspectHint()) {
-      const text = 'Tap the die to inspect it';
+      const text = t('Tap the die to inspect it');
       ctx.save();
       ctx.font = '600 11px system-ui, sans-serif';
-      const w = ctx.measureText(text).width + 18;
+      const w = Math.min(ctx.measureText(text).width + 18, 250);
       const pulse = this.game.reducedMotion ? 1 : 0.75 + 0.25 * Math.sin(this.fx.time * 4);
       ctx.globalAlpha = pulse;
       ctx.fillStyle = 'rgba(255,215,94,0.95)';
@@ -554,7 +562,7 @@ export class PlayScene implements Scene {
       ctx.fillStyle = '#231a05';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(text, 170, BAR_Y - 13);
+      ctx.fillText(text, 170, BAR_Y - 13, w - 14);
       ctx.restore();
     }
 
@@ -562,7 +570,7 @@ export class PlayScene implements Scene {
     if (this.session.notice && s.stats.moves === 0) {
       ctx.save();
       ctx.font = 'bold 11px system-ui, sans-serif';
-      const w = ctx.measureText(this.session.notice).width + 20;
+      const w = Math.min(ctx.measureText(this.session.notice).width + 20, 330);
       ctx.fillStyle = 'rgba(80,14,24,0.92)';
       ctx.beginPath();
       ctx.roundRect(170 - w / 2, BOARD_Y + 6, w, 22, 11);
@@ -573,16 +581,17 @@ export class PlayScene implements Scene {
       ctx.fillStyle = '#ffd9dd';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(this.session.notice, 170, BOARD_Y + 17);
+      ctx.fillText(this.session.notice, 170, BOARD_Y + 17, w - 16);
       ctx.restore();
     }
 
     // One-line hint that fades once the player gets going.
     if (this.level.hint && s.stats.moves < 3) {
+      const hint = t(this.level.hint);
       ctx.save();
       ctx.globalAlpha = 1 - s.stats.moves / 3;
       ctx.font = `600 ${displayPrefs.largeLabels ? 14 : 12}px system-ui, sans-serif`;
-      const w = ctx.measureText(this.level.hint).width + 20;
+      const w = Math.min(ctx.measureText(hint).width + 20, 330);
       ctx.fillStyle = 'rgba(20,18,28,0.85)';
       ctx.beginPath();
       // Kept away from the die: at the bottom of the board, or the top if the die is low.
@@ -592,7 +601,7 @@ export class PlayScene implements Scene {
       ctx.fillStyle = C.text;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(this.level.hint, 170, hy + 11);
+      ctx.fillText(hint, 170, hy + 11, w - 16);
       ctx.restore();
     }
   }
@@ -615,16 +624,19 @@ export class PlayScene implements Scene {
       w,
       h,
       i !== null
-        ? `Chapter ${Math.floor(i / CHAPTER_SIZE) + 1} · ${CHAPTER_NAMES[Math.floor(i / CHAPTER_SIZE)] ?? ''}`
+        ? t('Chapter {n} · {name}', {
+            n: Math.floor(i / CHAPTER_SIZE) + 1,
+            name: t(CHAPTER_NAMES[Math.floor(i / CHAPTER_SIZE)] ?? ''),
+          })
         : this.session.title,
     );
     ctx.fillStyle = C.text;
     ctx.font = '800 20px system-ui, sans-serif';
     ctx.textAlign = 'left';
-    y = wrap(ctx, i !== null ? this.level.name : this.level.name, 16, y + 4, w - 32, 24);
+    if (i !== null) y = wrap(ctx, t(this.level.name), 16, y + 4, w - 32, 24);
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
-    ctx.fillText('Moves', 16, y + 14);
+    ctx.fillText(t('Moves'), 16, y + 14);
     ctx.fillStyle = C.text;
     ctx.font = '800 34px system-ui, sans-serif';
     ctx.fillText(String(s.stats.moves), 16, y + 44);
@@ -632,9 +644,9 @@ export class PlayScene implements Scene {
     const par = this.level.par;
     if (par !== undefined) {
       const tiers: Array<[number, string]> = [
-        [3, `${par} moves or fewer`],
-        [2, `${twoStarLimit(par)} or fewer`],
-        [1, 'Reach the stairs'],
+        [3, t('{n} moves or fewer', { n: par })],
+        [2, t('{n} or fewer', { n: twoStarLimit(par) })],
+        [1, t('Reach the stairs')],
       ];
       const now = s.stats.moves <= par ? 3 : s.stats.moves <= twoStarLimit(par) ? 2 : 1;
       for (const [n, text] of tiers) {
@@ -642,7 +654,7 @@ export class PlayScene implements Scene {
         ctx.fillStyle = n === now ? C.text : C.textDim;
         ctx.font = `${n === now ? 'bold ' : ''}13px system-ui, sans-serif`;
         ctx.textAlign = 'left';
-        ctx.fillText(text, 76, y + 1);
+        ctx.fillText(text, 76, y + 1, w - 90);
         y += 28;
       }
     }
@@ -655,26 +667,33 @@ export class PlayScene implements Scene {
   }
 
   private controlsCard(ctx: CanvasRenderingContext2D, w: number, h: number): void {
-    const y = sideCard(ctx, w, h, 'How to play');
+    const y = sideCard(ctx, w, h, t('How to play'));
     const rows: ReadonlyArray<readonly [string, string]> = touchFirst()
       ? [
-          ['Swipe', 'Roll the die one tile'],
-          ['Tap', 'Roll toward a tile'],
-          ['Die', 'Tap it to see all six faces'],
+          [t('Swipe'), t('Roll the die one tile')],
+          [t('Tap'), t('Roll toward a tile')],
+          [t('Die'), t('Tap it to see all six faces')],
         ]
       : [
-          ['← ↑ → ↓', 'Roll the die one tile (or W A S D)'],
-          ['Z', 'Undo a move'],
-          ['R', 'Retry the level'],
-          ['I', 'Look at all six faces'],
-          ['H', 'Hear the board described'],
-          ['M', 'Sound on or off'],
-          ['Esc', 'Back to the menu'],
+          ['← ↑ → ↓', t('Roll the die one tile (or W A S D)')],
+          ['Z', t('Undo a move')],
+          ['R', t('Retry the level')],
+          ['I', t('Look at all six faces')],
+          ['H', t('Hear the board described')],
+          ['M', t('Sound on or off')],
+          ['Esc', t('Back to the menu')],
         ];
     const end = drawControls(ctx, w, y + 4, rows);
     ctx.fillStyle = C.textDim;
     ctx.font = '12px system-ui, sans-serif';
-    wrap(ctx, 'The labels next to the die show what each roll would do.', 16, end + 6, w - 32, 16);
+    wrap(
+      ctx,
+      t('The labels next to the die show what each roll would do.'),
+      16,
+      end + 6,
+      w - 32,
+      16,
+    );
   }
 
   private announce(text: string): void {
@@ -687,7 +706,7 @@ export class PlayScene implements Scene {
   /** The canvas's accessible name describes the board (screen readers read it on focus). */
   private refreshDescription(): void {
     const text = describeBoard(this.game.rules, this.state, this.moveOutcomes(this.state));
-    this.game.stage.canvas.setAttribute('aria-label', `Game board. ${text}`);
+    this.game.stage.canvas.setAttribute('aria-label', `${t('Game board.')} ${text}`);
   }
 
   private moveOutcomes(s: GameState): Array<readonly [Dir, Outcome]> {
@@ -725,11 +744,16 @@ function drawHud(
   ctx.textAlign = 'left';
   ctx.fillStyle = C.text;
   ctx.font = 'bold 15px system-ui, sans-serif';
-  ctx.fillText(title, 12, 16);
+  ctx.fillText(title, 12, 16, 268);
   ctx.font = '12px system-ui, sans-serif';
   ctx.fillStyle = C.textDim;
-  const par = level.par !== undefined ? ` / par ${level.par}` : '';
-  ctx.fillText(`Moves ${s.stats.moves}${par}`, 12, 35);
+  ctx.fillText(
+    level.par !== undefined
+      ? t('Moves {n} / par {par}', { n: s.stats.moves, par: level.par })
+      : t('Moves {n}', { n: s.stats.moves }),
+    12,
+    35,
+  );
 
   // HP hearts
   for (let i = 0; i < s.player.maxHp; i++) {

@@ -1,5 +1,6 @@
 import type { Game } from '../game';
 import { icon } from '../ui';
+import { t } from '../../i18n';
 
 /** A sound toggle that keeps its icon in sync with the setting. */
 export function muteButton(game: Game): HTMLButtonElement {
@@ -15,8 +16,8 @@ export function muteButton(game: Game): HTMLButtonElement {
     }
     b.dataset.mounted = '1';
     b.replaceChildren(icon(game.muted ? 'muted' : 'sound'), label);
-    label.textContent = game.muted ? 'Muted' : 'Sound';
-    b.setAttribute('aria-label', game.muted ? 'Unmute sound' : 'Mute sound');
+    label.textContent = t(game.muted ? 'Muted' : 'Sound');
+    b.setAttribute('aria-label', t(game.muted ? 'Unmute sound' : 'Mute sound'));
     b.setAttribute('aria-pressed', String(game.muted));
   };
   b.addEventListener('click', (e) => {

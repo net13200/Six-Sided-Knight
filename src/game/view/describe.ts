@@ -13,15 +13,16 @@ import {
   type Rules,
 } from '../../engine';
 import type { Outcome } from './outcome';
+import { t, tk } from '../../i18n';
 
-const DIR_WORD: Record<Dir, string> = { N: 'Up', E: 'Right', S: 'Down', W: 'Left' };
+const DIR_WORD: Record<Dir, string> = { N: tk('Up'), E: tk('Right'), S: tk('Down'), W: tk('Left') };
 
 /** "2 up, 3 right" style offset from the die. */
 function offset(dx: number, dy: number): string {
   const parts: string[] = [];
-  if (dy) parts.push(`${Math.abs(dy)} ${dy < 0 ? 'up' : 'down'}`);
-  if (dx) parts.push(`${Math.abs(dx)} ${dx < 0 ? 'left' : 'right'}`);
-  return parts.join(', ') || 'here';
+  if (dy) parts.push(t(dy < 0 ? '{n} up' : '{n} down', { n: Math.abs(dy) }));
+  if (dx) parts.push(t(dx < 0 ? '{n} left' : '{n} right', { n: Math.abs(dx) }));
+  return parts.join(', ') || t('here');
 }
 
 export function describeBoard(
@@ -31,13 +32,16 @@ export function describeBoard(
 ): string {
   const die = s.player.die;
   const lines: string[] = [
-    `HP ${s.player.hp} of ${s.player.maxHp}. Move ${s.stats.moves}.`,
-    `Top face ${topFace(die)}, bottom ${bottomFace(die) ?? 'none'}.`,
+    t('HP {hp} of {max}. Move {n}.', { hp: s.player.hp, max: s.player.maxHp, n: s.stats.moves }),
+    t('Top face {top}, bottom {bottom}.', {
+      top: t(topFace(die)),
+      bottom: t(bottomFace(die) ?? 'none'),
+    }),
   ];
   for (const dir of DIRS) {
     const o = outcomes.find(([d]) => d === dir)?.[1];
     lines.push(
-      `${DIR_WORD[dir]}: ${leadingFace(die, dir)} leads. ${o ? o.text : ''}${o?.then ? `. ${o.then}` : ''}.`,
+      `${t('{dir}: {face} leads.', { dir: t(DIR_WORD[dir]), face: t(leadingFace(die, dir)) })} ${o ? o.text : ''}${o?.then ? `. ${o.then}` : ''}.`,
     );
   }
   // Nearest exit.
@@ -52,7 +56,7 @@ export function describeBoard(
       exit = { dx, dy };
     }
   }
-  if (exit) lines.push(`Exit: ${offset(exit.dx, exit.dy)}.`);
+  if (exit) lines.push(t('Exit: {where}.', { where: offset(exit.dx, exit.dy) }));
   // Enemies, nearest first.
   const enemies = [...s.enemies]
     .map((e) => ({ e, d: Math.abs(e.x - s.player.x) + Math.abs(e.y - s.player.y) }))
@@ -60,11 +64,16 @@ export function describeBoard(
     .slice(0, 4);
   for (const { e } of enemies) {
     const def = rules.enemies.get(e.kind);
-    const frozen = e.effects.length ? ', frozen' : '';
-    lines.push(`${def.name}, ${e.hp} HP${frozen}: ${offset(e.x - s.player.x, e.y - s.player.y)}.`);
+    const where = offset(e.x - s.player.x, e.y - s.player.y);
+    const vars = { name: t(def.name), hp: e.hp, where };
+    lines.push(
+      e.effects.length
+        ? t('{name}, {hp} HP, frozen: {where}.', vars)
+        : t('{name}, {hp} HP: {where}.', vars),
+    );
   }
   if (s.enemies.length > enemies.length)
-    lines.push(`${s.enemies.length - enemies.length} more enemies.`);
+    lines.push(t('{n} more enemies.', { n: s.enemies.length - enemies.length }));
   return lines.join(' ');
 }
 
@@ -72,9 +81,9 @@ export function describeBoard(
 export function describeTurn(before: GameState, after: GameState, outcome: Outcome): string {
   const parts = [outcome.text];
   if (outcome.then) parts.push(outcome.then);
-  if (after.status === 'won') parts.push('Level complete');
-  else if (after.status === 'lost') parts.push('Knocked out. Undo or retry');
+  if (after.status === 'won') parts.push(t('Level complete'));
+  else if (after.status === 'lost') parts.push(t('Knocked out. Undo or retry'));
   else if (after.player.hp !== before.player.hp)
-    parts.push(`HP ${after.player.hp} of ${after.player.maxHp}`);
+    parts.push(t('HP {hp} of {max}', { hp: after.player.hp, max: after.player.maxHp }));
   return parts.join('. ') + '.';
 }

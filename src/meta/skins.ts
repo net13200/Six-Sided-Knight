@@ -6,6 +6,7 @@
  */
 import { totalStars } from './progress';
 import type { SaveData } from './save';
+import { t, tk } from '../i18n';
 
 export type SkinPattern = 'none' | 'dots' | 'stripes' | 'stars' | 'frost' | 'cracks' | 'shine';
 
@@ -26,7 +27,7 @@ export interface SkinDef {
 export const SKINS: readonly SkinDef[] = [
   {
     id: 'classic',
-    name: 'Classic',
+    name: tk('Classic'),
     rim: '#1a1622',
     glow: null,
     pattern: 'none',
@@ -35,7 +36,7 @@ export const SKINS: readonly SkinDef[] = [
   },
   {
     id: 'bone',
-    name: 'Bone',
+    name: tk('Bone'),
     rim: '#e8e3d3',
     glow: null,
     pattern: 'cracks',
@@ -44,7 +45,7 @@ export const SKINS: readonly SkinDef[] = [
   },
   {
     id: 'moss',
-    name: 'Moss',
+    name: tk('Moss'),
     rim: '#4f7a3a',
     glow: null,
     pattern: 'dots',
@@ -53,7 +54,7 @@ export const SKINS: readonly SkinDef[] = [
   },
   {
     id: 'frost',
-    name: 'Frost',
+    name: tk('Frost'),
     rim: '#9fe0ff',
     glow: 'rgba(159,224,255,0.35)',
     pattern: 'frost',
@@ -62,7 +63,7 @@ export const SKINS: readonly SkinDef[] = [
   },
   {
     id: 'ember',
-    name: 'Ember',
+    name: tk('Ember'),
     rim: '#ff9d3a',
     glow: 'rgba(255,157,58,0.35)',
     pattern: 'stripes',
@@ -71,7 +72,7 @@ export const SKINS: readonly SkinDef[] = [
   },
   {
     id: 'gilded',
-    name: 'Gilded',
+    name: tk('Gilded'),
     rim: '#ffd75e',
     glow: 'rgba(255,215,94,0.4)',
     pattern: 'shine',
@@ -80,7 +81,7 @@ export const SKINS: readonly SkinDef[] = [
   },
   {
     id: 'flame',
-    name: 'Flame',
+    name: tk('Flame'),
     rim: '#ff5a6a',
     glow: 'rgba(255,90,106,0.35)',
     pattern: 'none',
@@ -89,7 +90,7 @@ export const SKINS: readonly SkinDef[] = [
   },
   {
     id: 'night',
-    name: 'Night Sky',
+    name: tk('Night Sky'),
     rim: '#6f5bd6',
     glow: 'rgba(111,91,214,0.4)',
     pattern: 'stars',
@@ -98,7 +99,7 @@ export const SKINS: readonly SkinDef[] = [
   },
   {
     id: 'royal',
-    name: 'Royal',
+    name: tk('Royal'),
     rim: '#b05bd6',
     glow: 'rgba(255,215,94,0.45)',
     pattern: 'shine',
@@ -131,9 +132,9 @@ export function activeSkin(save: SaveData): SkinDef {
 }
 
 export function unlockText(skin: SkinDef): string {
-  if (skin.unlock.stars !== undefined) return `${skin.unlock.stars} stars`;
-  if (skin.unlock.streak !== undefined) return `${skin.unlock.streak}-day streak`;
-  return 'Always yours';
+  if (skin.unlock.stars !== undefined) return t('{n} stars', { n: skin.unlock.stars });
+  if (skin.unlock.streak !== undefined) return t('{n}-day streak', { n: skin.unlock.streak });
+  return t('Always yours');
 }
 
 /** Skins in `after` that weren't in `before` (for "new skin!" messages). */

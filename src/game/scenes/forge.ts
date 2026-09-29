@@ -23,6 +23,7 @@ import { faceInfo } from '../view/face-info';
 import { C } from '../view/palette';
 import { roleColor } from '../view/roles';
 import type { Scene } from './scene';
+import { t, tk } from '../../i18n';
 
 /** Where each home slot sits in the cross-shaped net (cell centres). */
 /** Tap targets are 60 logical px so they stay 44+ CSS px when the stage is scaled down. */
@@ -36,12 +37,12 @@ const NET: Readonly<Record<string, readonly [number, number]>> = {
   bottom: [150, 282],
 };
 const SLOT_LABEL: Readonly<Record<string, string>> = {
-  top: 'Top',
-  bottom: 'Bottom',
-  north: 'North',
-  south: 'South',
-  east: 'East',
-  west: 'West',
+  top: tk('Top'),
+  bottom: tk('Bottom'),
+  north: tk('North'),
+  south: tk('South'),
+  east: tk('East'),
+  west: tk('West'),
 };
 const SHELF_Y = 358;
 
@@ -95,14 +96,14 @@ export class ForgeScene implements Scene {
     });
     ui.append(
       place(
-        iconButton('back', 'Back', () => this.back(), 'back'),
+        iconButton('back', t('Back'), () => this.back(), 'back'),
         4,
         4,
         60,
         60,
       ),
       place(
-        iconButton('crown', 'Skins', () => this.game.goSkins(), 'forge-skins'),
+        iconButton('crown', t('Skins'), () => this.game.goSkins(), 'forge-skins'),
         276,
         4,
         60,
@@ -112,7 +113,7 @@ export class ForgeScene implements Scene {
         el('button', {
           className: 'btn small',
           testId: 'forge-reset',
-          text: 'Reset',
+          text: t('Reset'),
           onClick: () => this.setDie([...STARTING_FACES]),
         }),
         252,
@@ -152,7 +153,7 @@ export class ForgeScene implements Scene {
     const die = this.loadout;
     this.slots.forEach((slot, i) => {
       const b = this.slotButtons[i]!;
-      b.setAttribute('aria-label', `${SLOT_LABEL[slot] ?? slot}: ${die[i]}`);
+      b.setAttribute('aria-label', `${t(SLOT_LABEL[slot] ?? slot)}: ${t(die[i] ?? '')}`);
       b.setAttribute('aria-pressed', String(i === this.selected));
     });
     const save = this.game.save.data;
@@ -161,8 +162,11 @@ export class ForgeScene implements Scene {
       b.setAttribute(
         'aria-label',
         ownsFace(save, face)
-          ? `Put ${face} on the ${SLOT_LABEL[this.slots[this.selected]!] ?? ''} side`
-          : `${face}: buy for ${price} crowns`,
+          ? t('Put {face} on the {side} side', {
+              face: t(face),
+              side: t(SLOT_LABEL[this.slots[this.selected]!] ?? ''),
+            })
+          : t('{face}: buy for {n} crowns', { face: t(face), n: price ?? 0 }),
       );
     }
   }
@@ -187,25 +191,27 @@ export class ForgeScene implements Scene {
     const buy = el('button', {
       className: 'btn primary',
       testId: 'buy-confirm',
-      text: afford ? `Buy for ${price}` : `Need ${price - crowns} more`,
+      text: afford ? t('Buy for {n}', { n: price }) : t('Need {n} more', { n: price - crowns }),
       onClick: () => this.buy(face),
     });
     buy.disabled = !afford;
     this.sheet = place(
       el('div', { className: 'sheet', testId: 'buy-sheet' }, [
-        el('div', { className: 'sheet-head' }, [art, el('h2', { text: face })]),
+        el('div', { className: 'sheet-head' }, [art, el('h2', { text: t(face) })]),
         el('p', { text: faceInfo(face) }),
         el('p', {
           className: 'fine',
           text: afford
-            ? `You have ${crowns} crowns. Faces go on your die for Daily Roll and Depths.`
-            : `You have ${crowns} crowns. Every new star pays 10.`,
+            ? t('You have {n} crowns. Faces go on your die for Daily Roll and Depths.', {
+                n: crowns,
+              })
+            : t('You have {n} crowns. Every new star pays 10.', { n: crowns }),
         }),
         el('div', { className: 'row' }, [
           el('button', {
             className: 'btn',
             testId: 'buy-cancel',
-            text: 'Not now',
+            text: t('Not now'),
             onClick: () => this.closeBuy(),
           }),
           buy,
@@ -256,11 +262,11 @@ export class ForgeScene implements Scene {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = C.gold;
     ctx.font = '800 24px system-ui, sans-serif';
-    ctx.fillText('Smith', 170, 20);
+    ctx.fillText(t('Smith'), 170, 20);
     drawCrowns(ctx, save.wallet.crowns, 196, 44);
     ctx.fillStyle = C.textDim;
     ctx.font = '11px system-ui, sans-serif';
-    ctx.fillText('Your die for Daily Roll & Depths', 170, 62);
+    ctx.fillText(t('Your die for Daily Roll & Depths'), 170, 62, 320);
 
     // The net
     this.slots.forEach((slot, i) => {
@@ -277,7 +283,7 @@ export class ForgeScene implements Scene {
       drawFace(ctx, face, x, y + 3, 30);
       ctx.fillStyle = 'rgba(26,22,34,0.8)';
       ctx.font = 'bold 8px system-ui, sans-serif';
-      ctx.fillText((SLOT_LABEL[slot] ?? slot).toUpperCase(), x, y - CELL / 2 + 11);
+      ctx.fillText(t(SLOT_LABEL[slot] ?? slot).toUpperCase(), x, y - CELL / 2 + 11, CELL - 10);
     });
 
     // A slowly turning 3D preview
@@ -290,7 +296,7 @@ export class ForgeScene implements Scene {
     const face = die[this.selected] ?? '';
     ctx.fillStyle = C.text;
     ctx.font = 'bold 13px system-ui, sans-serif';
-    ctx.fillText(`${SLOT_LABEL[slot]}: ${face}`, 170, 322);
+    ctx.fillText(`${t(SLOT_LABEL[slot] ?? slot)}: ${t(face)}`, 170, 322, 320);
     ctx.fillStyle = C.textDim;
     ctx.font = '11px system-ui, sans-serif';
     wrap(ctx, faceInfo(face), 170, 337, 310, 12);
@@ -318,7 +324,7 @@ export class ForgeScene implements Scene {
       ctx.textAlign = 'left';
       ctx.fillStyle = owned ? C.text : C.textDim;
       ctx.font = 'bold 11px system-ui, sans-serif';
-      ctx.fillText(f, x + 38, owned ? y + 30 : y + 23);
+      ctx.fillText(t(f), x + 38, owned ? y + 30 : y + 23, 36);
       if (!owned) {
         drawCrown(ctx, x + 44, y + 38, 11);
         ctx.fillStyle = C.gold;
@@ -327,7 +333,7 @@ export class ForgeScene implements Scene {
       } else if (onDie) {
         ctx.fillStyle = C.textDim;
         ctx.font = '9px system-ui, sans-serif';
-        ctx.fillText('on die', x + 38, y + 43);
+        ctx.fillText(t('on die'), x + 38, y + 43, 36);
       }
       ctx.textAlign = 'center';
     });

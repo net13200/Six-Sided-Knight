@@ -181,6 +181,15 @@ How often ads actually show is up to Poki: its rules forbid internal ad timers, 
 
 Thumbnails for Poki's game page are in `poki/`: `thumbnail-1080.png` (and a 628 copy) and `thumbnail-animated.mp4` (1080x1080, three 2-second scenes). `node tools/thumbnails/make.mjs` redraws them from the game itself. It needs an ffmpeg with H.264 (`pip install imageio-ffmpeg` is enough).
 
+## Languages
+
+English, Spanish, Portuguese (Brazil), French, German, Italian, Dutch and Turkish. The game follows the browser's language; Settings → Language overrides it (saved with the progress).
+
+- Text is written in English in the code and looked up by that text when shown: `t('Retry')`, `t('Level {n} unlocked', { n })`, `tn(n, '{n} floor', '{n} floors')`. Text defined ahead of time (lessons, the story, level names in the `.txt` files) is marked with `tk()` or picked up from the level files, and translated where it's drawn.
+- Translations live in `src/i18n/<lang>.ts`, keyed by the English text. A missing one falls back to English.
+- `tests/unit/i18n.test.ts` fails if any language misses a string, has a leftover one, or changes a `{placeholder}`. `npx tsx tools/i18n-keys.ts de` lists what German is missing.
+- Long labels shrink to fit their buttons, and canvas text is squeezed to its space, so longer languages don't overflow.
+
 ## Solver, difficulty and generator
 
 - **Solver** (`src/solver/solve.ts`): breadth-first search or IDA* over full game states, with a node budget. States are de-duplicated with compact keys: position, orientation, HP, enemies, and only the tiles that changed. IDA* uses the distance to the nearest exit as its heuristic (never an overestimate, so solutions stay optimal).
