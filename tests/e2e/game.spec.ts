@@ -180,34 +180,50 @@ test.describe('Six Sided Knight', () => {
     await waitForMoves(page, 0);
   });
 
-  test('the map opens a level and shows stars after completion', async ({ page }) => {
+  test('the map: pick a level, play it, and the road to the next one opens', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('levels').click();
     await expect(page.getByTestId('level-2')).toBeDisabled();
-    await page.getByTestId('level-1').click();
+    // The die starts on level 1: Play starts it.
+    await expect(page.getByTestId('map-play')).toBeEnabled();
+    await page.getByTestId('map-play').click();
     await skipStory(page);
     for (const dir of solutionFor(0)) await page.keyboard.press(KEY[dir]);
     await expect.poll(() => scene(page), { timeout: 5000 }).toBe('results');
     await page.getByTestId('results-levels').click();
     await expect(page.getByTestId('level-1')).toHaveAttribute('aria-label', /3 of 3 stars/);
     await expect(page.getByTestId('level-2')).toBeEnabled();
+    // The road flips in and the die rolls on to level 2 by itself.
+    await expect(page.getByTestId('map-announcer')).toContainText('Level 2', { timeout: 8000 });
+    await page.getByTestId('map-play').click();
+    await expect.poll(() => scene(page)).toBe('play');
+    expect(await levelIndex(page)).toBe(1);
   });
 
-  test('the map pages between chapters with Prev/Next and the arrow keys', async ({ page }) => {
+  test('the map scrolls through the districts, and the die rolls to landmarks', async ({
+    page,
+  }) => {
     await page.goto('/');
     await page.getByTestId('levels').click();
     await expect(page.getByTestId('level-1')).toBeVisible();
-    await expect(page.getByTestId('chapter-prev')).toHaveCount(0);
     await page.getByTestId('chapter-next').click();
     await expect(page.getByTestId('level-11')).toBeVisible();
     await expect(page.getByTestId('level-11')).toBeDisabled();
-    await page.keyboard.press('ArrowRight');
-    await expect(page.getByTestId('level-21')).toBeVisible();
-    await page.keyboard.press('ArrowLeft');
-    await expect(page.getByTestId('level-11')).toBeVisible();
     await page.getByTestId('chapter-prev').click();
     await expect(page.getByTestId('level-1')).toBeVisible();
-    expect(await scene(page)).toBe('levels');
+    // Roll by hand: down from level 1, then right along the side road to the Smith.
+    for (const k of ['ArrowDown', 'ArrowRight', 'ArrowRight', 'ArrowRight', 'ArrowRight']) {
+      await page.keyboard.press(k);
+      await page.waitForTimeout(220);
+    }
+    await expect(page.getByTestId('map-announcer')).toContainText('Smith');
+    await page.getByTestId('map-play').click();
+    await expect.poll(() => scene(page)).toBe('forge');
+    // The Smith's Back returns to the map; tapping the notice board rolls there and opens it.
+    await page.getByTestId('back').click();
+    await expect.poll(() => scene(page)).toBe('levels');
+    await page.getByTestId('landmark-daily').click();
+    await expect.poll(() => scene(page), { timeout: 5000 }).toBe('daily');
   });
 
   test('progress survives a reload and Play continues where you left off', async ({ page }) => {

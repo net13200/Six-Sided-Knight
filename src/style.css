@@ -179,6 +179,19 @@ button:focus-visible {
     transform: none;
   }
 }
+.map-spot {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  opacity: 1;
+  cursor: pointer;
+}
+.map-spot:focus-visible {
+  outline: 2px solid #ffd75e;
+  outline-offset: 1px;
+}
 .node {
   display: flex;
   align-items: center;

@@ -224,7 +224,6 @@ const dict: Dict = {
   ', {n} of 3 stars': ', 3 üzerinden {n} yıldız',
   ', changed: solve it again': ', değişti: tekrar çöz',
   'Level {n}, locked': 'Bölüm {n}, kilitli',
-  'Play level {n}': 'Bölüm {n} oyna',
   Prev: 'Önceki',
   Next: 'Sonraki',
   'Chapter {n}': 'Kısım {n}',
@@ -679,6 +678,20 @@ const dict: Dict = {
   Herb: 'Ot',
   Leaf: 'Yaprak',
   Plain: 'Boş',
+  'Buy faces and build your own die.': 'Yüz satın al ve kendi zarını yap.',
+  'Three new floors every day, the same for everyone.': 'Her gün üç yeni kat, herkes için aynı.',
+  'Endless floors down the Well. One life.': 'Kuyunun dibinde sonsuz katlar. Tek can.',
+  'The bonus chapter: the Eight-Sided Ranger.': 'Bonus kısım: Eight-Sided Ranger.',
+  Enter: 'Gir',
+  'Par {n}': 'Par {n}',
+  'Changed: solve it again': 'Değişti: tekrar çöz',
+  'your best {n} moves': 'rekorun {n} hamle',
+  'Gauntlet: {n} floors in a row': 'Sınav: art arda {n} kat',
+  'Not played yet': 'Henüz oynanmadı',
+  'Roll to a level, or tap one': 'Bir bölüme yuvarlan ya da dokun',
+  'Roll along the road': 'Yol boyunca yuvarlan',
+  'Roll to that level': 'O bölüme yuvarlan',
+  'Play the level you are on': 'Üzerinde durduğun bölümü oyna',
 };
 
 export default dict;

@@ -225,7 +225,6 @@ const dict: Dict = {
   ', {n} of 3 stars': ', {n} de 3 estrelas',
   ', changed: solve it again': ', mudou: resolva de novo',
   'Level {n}, locked': 'Fase {n}, bloqueada',
-  'Play level {n}': 'Jogar fase {n}',
   Prev: 'Anterior',
   Next: 'Próximo',
   'Chapter {n}': 'Capítulo {n}',
@@ -680,6 +679,21 @@ const dict: Dict = {
   Herb: 'Erva',
   Leaf: 'Folha',
   Plain: 'Lisa',
+  'Buy faces and build your own die.': 'Compre faces e monte seu próprio dado.',
+  'Three new floors every day, the same for everyone.':
+    'Três andares novos todo dia, iguais para todos.',
+  'Endless floors down the Well. One life.': 'Andares sem fim no fundo do Poço. Uma vida.',
+  'The bonus chapter: the Eight-Sided Ranger.': 'O capítulo bônus: o Eight-Sided Ranger.',
+  Enter: 'Entrar',
+  'Par {n}': 'Par {n}',
+  'Changed: solve it again': 'Mudou: resolva de novo',
+  'your best {n} moves': 'seu recorde {n} movimentos',
+  'Gauntlet: {n} floors in a row': 'Desafio: {n} andares seguidos',
+  'Not played yet': 'Ainda não jogada',
+  'Roll to a level, or tap one': 'Role até uma fase ou toque nela',
+  'Roll along the road': 'Rolar pela estrada',
+  'Roll to that level': 'Rolar até essa fase',
+  'Play the level you are on': 'Jogar a fase onde você está',
 };
 
 export default dict;

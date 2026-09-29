@@ -229,7 +229,6 @@ const dict: Dict = {
   ', {n} of 3 stars': ', {n} van 3 sterren',
   ', changed: solve it again': ', veranderd: los het opnieuw op',
   'Level {n}, locked': 'Level {n}, op slot',
-  'Play level {n}': 'Speel level {n}',
   Prev: 'Vorige',
   Next: 'Volgende',
   'Chapter {n}': 'Hoofdstuk {n}',
@@ -685,6 +684,21 @@ const dict: Dict = {
   Herb: 'Kruid',
   Leaf: 'Blad',
   Plain: 'Leeg',
+  'Buy faces and build your own die.': 'Koop kanten en bouw je eigen dobbelsteen.',
+  'Three new floors every day, the same for everyone.':
+    'Elke dag drie nieuwe verdiepingen, voor iedereen hetzelfde.',
+  'Endless floors down the Well. One life.': 'Eindeloze verdiepingen diep in de Put. Eén leven.',
+  'The bonus chapter: the Eight-Sided Ranger.': 'Het bonushoofdstuk: de Eight-Sided Ranger.',
+  Enter: 'Binnengaan',
+  'Par {n}': 'Par {n}',
+  'Changed: solve it again': 'Veranderd: los het opnieuw op',
+  'your best {n} moves': 'jouw record {n} zetten',
+  'Gauntlet: {n} floors in a row': 'Beproeving: {n} verdiepingen op rij',
+  'Not played yet': 'Nog niet gespeeld',
+  'Roll to a level, or tap one': 'Rol naar een level of tik erop',
+  'Roll along the road': 'Rol over de weg',
+  'Roll to that level': 'Rol naar dat level',
+  'Play the level you are on': 'Speel het level waar je op staat',
 };
 
 export default dict;

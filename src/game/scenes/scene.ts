@@ -21,13 +21,13 @@ export type SceneName =
 export const TRANSITIONS: Readonly<Record<SceneName, readonly SceneName[]>> = {
   boot: ['menu', 'play', 'story'],
   menu: ['menu', 'levels', 'play', 'daily', 'depths', 'forge', 'stats', 'story', 'ranger-map'],
-  levels: ['menu', 'play', 'levels', 'story'], // levels -> levels: changing chapter
+  levels: ['menu', 'play', 'levels', 'story', 'daily', 'depths', 'forge', 'ranger-map'], // the map's landmarks
   play: ['results', 'menu', 'levels', 'play', 'floor', 'daily', 'depths', 'story'],
   results: ['play', 'levels', 'menu', 'story'],
   daily: ['menu', 'play', 'forge'],
   depths: ['menu', 'play', 'depths', 'forge'],
   floor: ['play', 'daily', 'depths', 'menu', 'levels', 'forge'],
-  forge: ['menu', 'daily', 'depths', 'skins', 'floor'],
+  forge: ['menu', 'daily', 'depths', 'skins', 'floor', 'levels'],
   stats: ['menu'],
   skins: ['forge'],
   story: ['play', 'menu', 'levels', 'ranger', 'ranger-map'],
