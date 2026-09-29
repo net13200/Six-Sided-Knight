@@ -119,6 +119,16 @@ describe('levels changed in an update', () => {
     for (const l of campaign) recordWin(save, l.id, win);
     const changed = refreshChangedLevels(save, campaign, byLevel, FINGERPRINTS_0_9_0);
     expect(changed).toEqual([
+      // 0.13.0: the tutorial's dice show only the faces taught so far.
+      'c1-01',
+      'c1-02',
+      'c1-03',
+      'c1-04',
+      'c1-05',
+      'c1-06',
+      'c1-07',
+      'c1-08',
+      'c1-09',
       'c4-04',
       'c5-01',
       'c5-02',

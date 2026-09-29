@@ -3,6 +3,7 @@ name: Spring
 par: 22
 hint: Hurt? Roll Heart-down into pools
 teaches: heal
+loadout: Shield Heart Pip2 Key Sword Coin
 ---
 ########
 #@..^^.#

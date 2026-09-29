@@ -1,8 +1,9 @@
 id: c1-09
 name: Slow Slime
-par: 11
+par: 12
 hint: Slimes only move every other turn
 teaches: slime
+loadout: Shield Heart Pip2 Key Sword Coin
 ---
 ########
 #......#

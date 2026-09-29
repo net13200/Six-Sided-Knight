@@ -8,11 +8,17 @@ import {
   type GameState,
   type LevelData,
 } from '../../src/engine';
+import { levelFingerprint } from '../../src/meta/progress';
 import { solve } from '../../src/solver/solve';
 import { levelFiles, loadLevelFile } from '../../tools/lib/files';
 
 export const rules = defaultRules();
 export const campaign: LevelData[] = levelFiles(['src/levels/data']).map(loadLevelFile);
+
+/** The tutorial levels' current fingerprints, for seeding saves of players who beat them. */
+export function tutorialFingerprints(): string[] {
+  return campaign.slice(0, 10).map((l) => levelFingerprint(l));
+}
 
 export function solutionFor(index: number): Dir[] {
   const r = solve(rules, createState(rules, campaign[index]!));

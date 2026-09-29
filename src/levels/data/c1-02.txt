@@ -3,6 +3,7 @@ name: Leading Edge
 par: 5
 hint: The side you roll into strikes
 teaches: strike
+loadout: Pip1 Pip6 Pip2 Pip5 Sword Pip4
 ---
 ########
 ########

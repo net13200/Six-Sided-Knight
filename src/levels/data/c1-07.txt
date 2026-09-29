@@ -3,6 +3,7 @@ name: Spike Hall
 par: 10
 hint: Land Shield-down on spikes
 teaches: guard
+loadout: Shield Pip6 Pip2 Key Sword Coin
 ---
 ########
 #@.....#

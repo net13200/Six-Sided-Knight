@@ -11,6 +11,7 @@ import { Shield } from './faces/shield';
 import { Sword } from './faces/sword';
 import { Freeze } from './faces/freeze';
 import { Hook } from './faces/hook';
+import { PLAIN_FACES } from './faces/plain';
 import { Floor, Wall } from './tiles/basic';
 import { Chest } from './tiles/chest';
 import { Door } from './tiles/door';
@@ -34,7 +35,7 @@ export const CORE_CONFIG: RulesConfig = {
   maxHp: 3,
 };
 
-export const FACES = [Sword, Shield, Bomb, Heart, Key, Coin, Freeze, Hook];
+export const FACES = [Sword, Shield, Bomb, Heart, Key, Coin, Freeze, Hook, ...PLAIN_FACES];
 export const TILES = [Floor, Wall, Spikes, Pool, Door, Chest, Gem, Exit, Ice];
 export const ENEMIES = [Skeleton, Slime, Archer, Golem];
 export const EFFECTS: EffectDef[] = [Frozen];

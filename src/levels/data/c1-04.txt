@@ -1,8 +1,9 @@
 id: c1-04
 name: Shield Up
-par: 12
+par: 14
 hint: Shield on top blocks hits
 teaches: block
+loadout: Shield Pip6 Pip2 Pip5 Sword Pip4
 ---
 ########
 #.k.k.>#

@@ -1,5 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { KEY, campaign, playCurrentLevel, scene, solutionFor } from '../e2e/helpers';
+import {
+  KEY,
+  campaign,
+  playCurrentLevel,
+  scene,
+  solutionFor,
+  tutorialFingerprints,
+} from '../e2e/helpers';
 
 /** A stand-in Poki SDK that records every call; each ad "plays" for 100 ms. */
 const STUB = `
@@ -25,7 +32,7 @@ const breaks = async (page: Page) => (await calls(page)).filter((c) => c === 'br
 /** A player who has finished the tutorial (levels 1-10). */
 async function tutorialDone(page: Page): Promise<void> {
   await page.addInitScript(
-    (ids) => {
+    ({ ids, fps }) => {
       if (localStorage.getItem('ssk.save')) return;
       localStorage.setItem(
         'ssk.save',
@@ -34,12 +41,15 @@ async function tutorialDone(page: Page): Promise<void> {
           createdAt: 1,
           campaign: 2,
           levels: Object.fromEntries(
-            ids.map((id) => [id, { stars: 3, bestMoves: 9, completions: 1, bestTimeMs: 9000 }]),
+            ids.map((id, i) => [
+              id,
+              { stars: 3, bestMoves: 9, completions: 1, bestTimeMs: 9000, fp: fps[i] },
+            ]),
           ),
         }),
       );
     },
-    campaign.slice(0, 10).map((l) => l.id),
+    { ids: campaign.slice(0, 10).map((l) => l.id), fps: tutorialFingerprints() },
   );
 }
 

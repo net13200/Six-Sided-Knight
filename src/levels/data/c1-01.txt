@@ -3,6 +3,7 @@ name: First Roll
 par: 5
 hint: Swipe to roll to the stairs
 teaches: move
+loadout: Pip1 Pip6 Pip2 Pip5 Pip3 Pip4
 ---
 ########
 ########

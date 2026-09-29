@@ -680,6 +680,7 @@ const dict: Dict = {
   Boots: 'Stivali',
   Herb: 'Erba',
   Leaf: 'Foglia',
+  Plain: 'Vuota',
 };
 
 export default dict;

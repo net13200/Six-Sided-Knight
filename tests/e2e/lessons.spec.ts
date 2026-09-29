@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { gameState, scene, trackErrors } from './helpers';
+import { gameState, scene, trackErrors, tutorialFingerprints } from './helpers';
 
 test.describe('lessons and how to play', () => {
   let errors: string[];
@@ -40,7 +40,7 @@ test.describe('lessons and how to play', () => {
     await page.goto('/');
     await expect.poll(() => scene(page)).toBe('menu');
     await expect(page.getByTestId('how-to')).toHaveCount(0);
-    await page.evaluate(() => {
+    await page.evaluate((fps) => {
       const s = JSON.parse(localStorage.getItem('ssk.save')!);
       for (let i = 1; i <= 10; i++)
         s.levels[`c1-${String(i).padStart(2, '0')}`] = {
@@ -48,9 +48,10 @@ test.describe('lessons and how to play', () => {
           bestMoves: 9,
           completions: 1,
           bestTimeMs: 9000,
+          fp: fps[i - 1],
         };
       localStorage.setItem('ssk.save', JSON.stringify(s));
-    });
+    }, tutorialFingerprints());
     await page.reload();
     await page.getByTestId('how-to').click();
     const sheet = page.getByTestId('how-to-sheet');

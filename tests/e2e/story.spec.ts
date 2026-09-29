@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { gameState, playCurrentLevel, scene, trackErrors } from './helpers';
+import { gameState, playCurrentLevel, scene, trackErrors, tutorialFingerprints } from './helpers';
 
 test.describe('story', () => {
   let errors: string[];
@@ -39,7 +39,7 @@ test.describe('story', () => {
   });
 
   test('a chapter card shows before the first level of a new chapter', async ({ page }) => {
-    await page.addInitScript(() => {
+    await page.addInitScript((fps) => {
       if (sessionStorage.getItem('seeded')) return;
       sessionStorage.setItem('seeded', '1');
       const levels: Record<string, unknown> = {};
@@ -49,12 +49,13 @@ test.describe('story', () => {
           bestMoves: 9,
           completions: 1,
           bestTimeMs: 9000,
+          fp: fps[i - 1],
         };
       localStorage.setItem(
         'ssk.save',
         JSON.stringify({ version: 3, campaign: 2, createdAt: 1, levels }),
       );
-    });
+    }, tutorialFingerprints());
     await page.goto('/');
     await expect(page.getByTestId('play')).toContainText('level 11');
     await page.getByTestId('play').click();

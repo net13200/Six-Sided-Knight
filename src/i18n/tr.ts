@@ -678,6 +678,7 @@ const dict: Dict = {
   Boots: 'Çizmeler',
   Herb: 'Ot',
   Leaf: 'Yaprak',
+  Plain: 'Boş',
 };
 
 export default dict;

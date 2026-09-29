@@ -13,12 +13,14 @@ test('an update that changes beaten levels: they are solved again, the rest stay
       for (const id of ids)
         save.levels[id] = { stars: 3, bestMoves: 9, completions: 1, bestTimeMs: 9000 };
       save.lastLevelId = 'c3-10';
+      // They've seen the story (so replaying level 1 goes straight to the board).
+      save.hints = { ...save.hints, 'story:intro': true, 'story:ch1': true };
       localStorage.setItem('ssk.save', JSON.stringify(save));
     },
     campaign.map((l) => l.id),
   );
   await page.reload();
-  await expect(page.getByTestId('changed-notice')).toContainText('13 levels have changed');
+  await expect(page.getByTestId('changed-notice')).toContainText('22 levels have changed');
   await page.getByTestId('changed-notice-ok').click();
 
   const save = await page.evaluate(() => JSON.parse(localStorage.getItem('ssk.save')!));
@@ -26,17 +28,20 @@ test('an update that changes beaten levels: they are solved again, the rest stay
   expect(save.levels['c4-04']).toMatchObject({ stars: 0, redo: true });
   expect(save.levels['c5-11']).toBeUndefined();
   expect(save.levels['c6-09']).toMatchObject({ stars: 3, completions: 1 });
+  // 0.13.0: the tutorial's dice changed (only faces taught so far); the Bomb lesson didn't.
+  expect(save.levels['c1-01']).toMatchObject({ stars: 0, redo: true });
+  expect(save.levels['c1-10']).toMatchObject({ stars: 3, completions: 1 });
   expect(save.changedLevelsNotice).toBe(0);
 
-  // The map: chapter 5's stages are open and marked, and Play goes to the first changed one.
+  // The map: changed stages are open and marked, and Play goes to the first changed one.
   await page.getByTestId('levels').click();
   await expect.poll(() => scene(page)).toBe('levels');
-  await expect(page.getByTestId('level-34')).toHaveAttribute('aria-label', /solve it again/);
-  await expect(page.getByTestId('level-33')).not.toHaveAttribute('aria-label', /solve it again/);
-  await expect(page.getByTestId('level-35')).toBeEnabled();
+  await expect(page.getByTestId('level-1')).toHaveAttribute('aria-label', /solve it again/);
+  await expect(page.getByTestId('level-10')).not.toHaveAttribute('aria-label', /solve it again/);
+  await expect(page.getByTestId('level-10')).toBeEnabled();
   await page.getByTestId('map-play').click();
   await expect.poll(() => scene(page)).toBe('play');
-  expect(await levelIndex(page)).toBe(33);
+  expect(await levelIndex(page)).toBe(0);
   await page.reload();
   await expect(page.getByTestId('changed-notice')).toHaveCount(0);
   expect(errors).toEqual([]);

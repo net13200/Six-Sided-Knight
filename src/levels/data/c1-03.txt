@@ -1,8 +1,9 @@
 id: c1-03
 name: Turn the Blade
-par: 10
+par: 11
 hint: Turn the Sword to face them
 teaches: sword
+loadout: Pip1 Pip6 Pip2 Pip5 Sword Pip4
 ---
 ########
 #...k.>#

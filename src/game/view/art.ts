@@ -207,6 +207,51 @@ const FACE_ICONS: Record<string, IconFn> = {
   },
 };
 
+/** Where the pips sit on a plain face, 1 to 6 (like a real die). */
+const PIPS: Readonly<Record<number, ReadonlyArray<readonly [number, number]>>> = {
+  1: [[0, 0]],
+  2: [
+    [-0.45, -0.45],
+    [0.45, 0.45],
+  ],
+  3: [
+    [-0.5, -0.5],
+    [0, 0],
+    [0.5, 0.5],
+  ],
+  4: [
+    [-0.45, -0.45],
+    [0.45, -0.45],
+    [-0.45, 0.45],
+    [0.45, 0.45],
+  ],
+  5: [
+    [-0.5, -0.5],
+    [0.5, -0.5],
+    [0, 0],
+    [-0.5, 0.5],
+    [0.5, 0.5],
+  ],
+  6: [
+    [-0.45, -0.55],
+    [0.45, -0.55],
+    [-0.45, 0],
+    [0.45, 0],
+    [-0.45, 0.55],
+    [0.45, 0.55],
+  ],
+};
+for (let n = 1; n <= 6; n++) {
+  FACE_ICONS[`Pip${n}`] = (ctx) => {
+    for (const [x, y] of PIPS[n]!) {
+      ctx.beginPath();
+      ctx.arc(x, y, n === 1 ? 0.26 : 0.19, 0, Math.PI * 2);
+      ctx.fillStyle = C.outline;
+      ctx.fill();
+    }
+  };
+}
+
 export function drawFace(ctx: Ctx, face: string, cx: number, cy: number, size: number): void {
   ctx.save();
   ctx.translate(cx, cy);
