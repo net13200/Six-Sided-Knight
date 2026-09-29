@@ -2,7 +2,7 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
-## Unreleased
+## 0.10.0 — One life, cold hands
 
 - **The Depths: one life.** No Undo, no Retry, and no peeking at the solution. Being knocked out ends the run on the spot and shows how deep you got; your high score (most floors cleared in one run) and your last run are saved. Leaving mid-floor keeps every move you made, so coming back picks up exactly where you were.
 - **The Depths start hard.** Floor 1 is now medium (like a Daily Roll's second floor) and difficulty climbs every floor to the hardest band by floor 10 (was floor 13). Every floor is still winnable from 1 HP.
