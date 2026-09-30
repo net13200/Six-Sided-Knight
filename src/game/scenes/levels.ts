@@ -332,7 +332,8 @@ export class LevelsScene implements Scene {
       });
       b.disabled = !open;
       b.style.display = 'none';
-      place(b, 8, this.areaY(ch), 324, 58);
+      const g = this.region(ch);
+      place(b, g.cx - g.rx, g.cy - g.ry + 4, g.rx * 2, g.ry * 2 - 8);
       this.areaButtons.push(b);
       ui.append(b);
     });
@@ -440,10 +441,29 @@ export class LevelsScene implements Scene {
     };
   }
 
-  /** Where a district's card sits in the World view (the last district on top). */
-  private areaY(ch: number): number {
+  /**
+   * A district's island on the World view's map: they wind up the page,
+   * left and right in turn, from the village at the bottom to the Throne.
+   */
+  private region(ch: number): { cx: number; cy: number; rx: number; ry: number } {
     const n = this.world.bands.length;
-    return 102 + (n - 1 - ch) * 62;
+    const top = 124;
+    const bottom = 434;
+    const cy = n > 1 ? bottom - ((bottom - top) * ch) / (n - 1) : (top + bottom) / 2;
+    return { cx: ch % 2 ? 230 : 110, cy, rx: 94, ry: 39 };
+  }
+
+  /** Level k (0-9) of a district on the map: a U around the island, entering from below. */
+  private regionPoint(ch: number, k: number): { x: number; y: number } {
+    const g = this.region(ch);
+    const deg = ch % 2 ? 150 - (k * 300) / 9 : 30 + (k * 300) / 9;
+    const a = (deg * Math.PI) / 180;
+    return { x: g.cx + g.rx * 0.72 * Math.cos(a), y: g.cy + g.ry * 0.56 * Math.sin(a) };
+  }
+
+  /** The Well on the map, past the last district. */
+  private wellPoint(): { x: number; y: number } {
+    return { x: 80, y: 96 };
   }
 
   /** The chapter the die is in. */
@@ -637,10 +657,15 @@ export class LevelsScene implements Scene {
         if (this.chapterOpen(sel)) this.overviewSel = sel;
         this.areaButtons[this.overviewSel]?.focus();
       } else if (cmd.type === 'tap') {
+        // The island under the tap (the nearest centre where two overlap).
+        let best: number | null = null;
+        let bestD = 1;
         for (const b of this.world.bands) {
-          const y = this.areaY(b.chapter);
-          if (cmd.y >= y && cmd.y < y + 58 && this.chapterOpen(b.chapter)) this.tossTo(b.chapter);
+          const g = this.region(b.chapter);
+          const d = Math.hypot((cmd.x - g.cx) / g.rx, (cmd.y - g.cy) / g.ry);
+          if (d < bestD) [best, bestD] = [b.chapter, d];
         }
+        if (best !== null && this.chapterOpen(best)) this.tossTo(best);
       }
       return;
     }
@@ -1454,44 +1479,158 @@ export class LevelsScene implements Scene {
     }
   }
 
-  /** The World view: every district as a card, with its stars; the last on top. */
+  /** The World view: a map of Oddmere, the road winding through each district to the Throne. */
   private drawOverview(ctx: CanvasRenderingContext2D): void {
     const a = this.game.reducedMotion ? (this.overview ? 1 : 0) : this.overviewT;
+    const INK = '#5b4630';
+    const top = HUD_H;
+    const h = 480 - HUD_H;
     ctx.save();
     ctx.globalAlpha = a;
-    ctx.fillStyle = 'rgba(15,13,22,0.96)';
-    ctx.fillRect(0, HUD_H, 340, 480 - HUD_H);
-    ctx.translate(0, (1 - a) * 12);
-    // The Well, at the top of the world.
-    ctx.fillStyle = C.textDim;
-    ctx.font = 'bold 11px system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(t('The Well'), 170, 84, 300);
+    ctx.translate(0, (1 - a) * 10);
+    // Parchment, darker toward its edges, with a double ink border.
+    ctx.fillStyle = '#e6d5ae';
+    ctx.fillRect(0, top, 340, h);
+    const vg = ctx.createRadialGradient(170, top + h / 2, 120, 170, top + h / 2, 300);
+    vg.addColorStop(0, 'rgba(120,90,50,0)');
+    vg.addColorStop(1, 'rgba(120,90,50,0.35)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, top, 340, h);
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(5, top + 5, 330, h - 10);
+    ctx.lineWidth = 0.6;
+    ctx.strokeRect(9, top + 9, 322, h - 18);
+
+    const n = this.world.bands.length;
+    const inIsland = (x: number, y: number) =>
+      this.world.bands.some((b) => {
+        const g = this.region(b.chapter);
+        return Math.hypot((x - g.cx) / g.rx, (y - g.cy) / g.ry) < 1.15;
+      });
+    // The sea: little ink waves.
+    ctx.strokeStyle = 'rgba(91,70,48,0.35)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 40; i++) {
+      const x = 20 + hash(i, 3) * 300;
+      const y = top + 16 + hash(i, 9) * (h - 32);
+      if (inIsland(x, y)) continue;
+      ctx.beginPath();
+      ctx.moveTo(x - 6, y);
+      ctx.quadraticCurveTo(x - 3, y - 3, x, y);
+      ctx.quadraticCurveTo(x + 3, y + 3, x + 6, y);
+      ctx.stroke();
+    }
+
+    // The islands, back to front (the Throne first, so lower ones overlap it).
     const save = this.game.save.data;
     const dieCh = this.dieChapter();
-    for (const band of this.world.bands) {
-      const ch = band.chapter;
-      const y = this.areaY(ch);
-      const open = this.chapterOpen(ch);
-      const theme = THEMES[ch % THEMES.length]!;
-      const { got, max } = this.chapterStars(ch);
-      const sel = this.overview && ch === this.overviewSel;
-      ctx.fillStyle = open ? '#221f2f' : '#1a1724';
+    for (let ch = n - 1; ch >= 0; ch--) this.drawIsland(ctx, ch, INK);
+
+    // The road: through every level, district to district, up to the Well.
+    const pts: Array<{ x: number; y: number; i: number }> = [];
+    for (let ch = 0; ch < n; ch++) {
+      for (let k = 0; k < CHAPTER_SIZE; k++) {
+        const i = ch * CHAPTER_SIZE + k;
+        if (i >= this.game.levels.length) break;
+        pts.push({ ...this.regionPoint(ch, k), i });
+      }
+    }
+    const well = this.wellPoint();
+    ctx.lineCap = 'round';
+    for (let j = 0; j < pts.length; j++) {
+      const p = pts[j]!;
+      const q = j + 1 < pts.length ? pts[j + 1]! : null;
+      const to = q ?? well;
+      const walked = q ? this.unlocked[q.i] : this.game.bonusUnlocked;
+      ctx.strokeStyle = walked ? INK : 'rgba(91,70,48,0.35)';
+      ctx.lineWidth = walked ? 2 : 1.5;
+      ctx.setLineDash(walked ? [4, 3] : [2, 4]);
       ctx.beginPath();
-      ctx.roundRect(8, y, 324, 58, 12);
-      ctx.fill();
-      ctx.strokeStyle = sel ? C.gold : ch === dieCh ? '#8d86a0' : '#3a3550';
-      ctx.lineWidth = sel ? 2 : 1;
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(to.x, to.y);
       ctx.stroke();
-      // A window onto the district: its ground and a piece of its scenery.
-      ctx.save();
+    }
+    ctx.setLineDash([]);
+    // One dot per level: gold for ★★★, lilac beaten, white open, faint locked.
+    for (const p of pts) {
+      const level = this.game.levels[p.i]!;
+      const stars = save.levels[level.id]?.stars ?? 0;
+      const done = isCompleted(save, level) && !needsRedo(save, level);
+      const open = this.unlocked[p.i];
       ctx.beginPath();
-      ctx.roundRect(14, y + 6, 46, 46, 9);
-      ctx.clip();
-      ctx.fillStyle = theme.ground;
-      ctx.fillRect(14, y + 6, 46, 46);
-      ctx.translate(37, y + 30);
+      ctx.arc(p.x, p.y, 3.6, 0, Math.PI * 2);
+      ctx.fillStyle = !open
+        ? 'rgba(230,213,174,0.9)'
+        : done
+          ? stars === 3
+            ? '#e8ad1c'
+            : '#a58fce'
+          : '#fffaf0';
+      ctx.fill();
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = open ? INK : 'rgba(91,70,48,0.4)';
+      ctx.stroke();
+    }
+    this.drawMapWell(ctx, well.x, well.y, INK);
+
+    // You are here: the die, bobbing on its level.
+    const at = this.pedestalAt.get(key(this.pos));
+    const g0 = this.region(dieCh);
+    const here =
+      at !== undefined
+        ? this.regionPoint(Math.floor(at / CHAPTER_SIZE), at % CHAPTER_SIZE)
+        : { x: g0.cx, y: g0.cy + g0.ry * 0.6 };
+    const bob = this.game.reducedMotion ? 0 : Math.abs(Math.sin(this.time * 3)) * 3;
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(here.x, here.y + 2, 6, 2.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    drawCube3d(ctx, this.die, here.x, here.y - 9 - bob, 10, DIE_CAMERA);
+
+    this.drawCompass(ctx, 300, 448, INK);
+    ctx.restore();
+  }
+
+  /** One district on the map: its island, name, stars and a bit of its scenery. */
+  private drawIsland(ctx: CanvasRenderingContext2D, ch: number, ink: string): void {
+    const g = this.region(ch);
+    const open = this.chapterOpen(ch);
+    const theme = THEMES[ch % THEMES.length]!;
+    const shape = () => {
+      ctx.beginPath();
+      for (let i = 0; i <= 24; i++) {
+        const t2 = (i / 24) * Math.PI * 2;
+        const wob = 1 + 0.07 * Math.sin(3 * t2 + ch * 1.7) + 0.05 * Math.sin(5 * t2 + ch * 2.9);
+        const x = g.cx + Math.cos(t2) * g.rx * wob;
+        const y = g.cy + Math.sin(t2) * g.ry * wob;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+    };
+    // Shallows around the coast, then the land.
+    ctx.save();
+    ctx.translate(g.cx, g.cy);
+    ctx.scale(1.08, 1.12);
+    ctx.translate(-g.cx, -g.cy);
+    shape();
+    ctx.fillStyle = 'rgba(120,160,170,0.25)';
+    ctx.fill();
+    ctx.restore();
+    shape();
+    ctx.fillStyle = theme.ground;
+    ctx.fill();
+    ctx.save();
+    ctx.clip();
+    // A little of the district's scenery at either end.
+    for (const [dx, dy] of [
+      [-0.8, -0.2],
+      [0.8, 0.25],
+    ] as const) {
+      ctx.save();
+      ctx.translate(g.cx + dx * g.rx, g.cy + dy * g.ry);
+      ctx.scale(0.62, 0.62);
       if (ch === 0) this.bush(ctx, '#3d6b35', '#2e5429');
       else if (ch === 1) this.pine(ctx, '#3f6b58', true);
       else if (ch === 2) this.goldPile(ctx);
@@ -1499,70 +1638,125 @@ export class LevelsScene implements Scene {
       else if (ch === 4) this.grave(ctx);
       else this.pillar(ctx);
       ctx.restore();
-      if (!open) {
-        ctx.fillStyle = 'rgba(15,13,22,0.6)';
+    }
+    if (!open) {
+      // Not reached yet: fog and hatching.
+      ctx.fillStyle = 'rgba(230,213,174,0.55)';
+      ctx.fillRect(g.cx - g.rx - 10, g.cy - g.ry - 10, g.rx * 2 + 20, g.ry * 2 + 20);
+      ctx.strokeStyle = 'rgba(91,70,48,0.22)';
+      ctx.lineWidth = 1;
+      for (let x = -g.ry * 2; x < g.rx * 2 + g.ry * 2; x += 7) {
         ctx.beginPath();
-        ctx.roundRect(14, y + 6, 46, 46, 9);
-        ctx.fill();
-      }
-      ctx.textAlign = 'left';
-      ctx.fillStyle = C.textDim;
-      ctx.font = 'bold 9px system-ui, sans-serif';
-      ctx.fillText(t('Chapter {n}', { n: ch + 1 }).toUpperCase(), 70, y + 15, 150);
-      ctx.fillStyle = open ? C.text : '#6d6480';
-      ctx.font = '800 15px system-ui, sans-serif';
-      ctx.fillText(t(CHAPTER_NAMES[ch] ?? ''), 70, y + 30, 160);
-      // One mark per level: gold ★★★, lilac beaten, ivory open, dark locked.
-      const levels = this.game.levels.slice(ch * CHAPTER_SIZE, (ch + 1) * CHAPTER_SIZE);
-      levels.forEach((l, k) => {
-        const i = ch * CHAPTER_SIZE + k;
-        const stars = save.levels[l.id]?.stars ?? 0;
-        const done = isCompleted(save, l) && !needsRedo(save, l);
-        ctx.fillStyle = !this.unlocked[i]
-          ? '#3a3550'
-          : done
-            ? stars === 3
-              ? C.gold
-              : '#b3a8c9'
-            : '#ece6d6';
-        ctx.beginPath();
-        ctx.roundRect(70 + k * 11, y + 41, 8, 8, 2);
-        ctx.fill();
-      });
-      if (open) {
-        drawStar(ctx, 262, y + 29, 7, got > 0);
-        ctx.fillStyle = C.gold;
-        ctx.font = '800 14px system-ui, sans-serif';
-        ctx.fillText(`${got}/${max}`, 273, y + 30, 54);
-        if (this.districtGold(ch)) {
-          ctx.fillStyle = '#5e4726';
-          ctx.fillRect(312, y + 6, 2, 20);
-          ctx.fillStyle = C.gold;
-          ctx.beginPath();
-          ctx.moveTo(314, y + 6);
-          ctx.lineTo(326, y + 10);
-          ctx.lineTo(314, y + 14);
-          ctx.closePath();
-          ctx.fill();
-        }
-      } else {
-        ctx.save();
-        ctx.translate(288, y + 29);
-        ctx.strokeStyle = '#6d6480';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.roundRect(-7, -2, 14, 11, 2);
-        ctx.moveTo(-4, -2);
-        ctx.arc(0, -3, 4, Math.PI, 0);
-        ctx.lineTo(4, -2);
+        ctx.moveTo(g.cx - g.rx + x, g.cy - g.ry - 4);
+        ctx.lineTo(g.cx - g.rx + x - g.ry * 2, g.cy + g.ry + 4);
         ctx.stroke();
-        ctx.restore();
-      }
-      // You are here: a little die on the card.
-      if (ch === dieCh) {
-        drawCube3d(ctx, this.die, 226, y + 30, 9, DIE_CAMERA);
       }
     }
+    ctx.restore();
+    shape();
+    const sel = this.overview && ch === this.overviewSel;
+    ctx.strokeStyle = sel ? '#e8ad1c' : ink;
+    ctx.lineWidth = sel ? 3 : 1.6;
+    ctx.stroke();
+
+    // The label: a little banner with the name and the stars.
+    const { got, max } = this.chapterStars(ch);
+    const name = t(CHAPTER_NAMES[ch] ?? '');
+    ctx.font = '800 11px system-ui, sans-serif';
+    const w = Math.min(112, Math.max(64, ctx.measureText(name).width + 16));
+    ctx.fillStyle = open ? 'rgba(250,244,228,0.92)' : 'rgba(230,213,174,0.95)';
+    ctx.beginPath();
+    ctx.roundRect(g.cx - w / 2, g.cy - 15, w, 28, 6);
+    ctx.fill();
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = open ? ink : 'rgba(91,70,48,0.55)';
+    ctx.fillText(name, g.cx, g.cy - 6, w - 8);
+    if (open) {
+      ctx.font = 'bold 10px system-ui, sans-serif';
+      const text = `${got}/${max}`;
+      const tw = ctx.measureText(text).width;
+      drawStar(ctx, g.cx - tw / 2 - 5, g.cy + 6.5, 4, got > 0);
+      ctx.fillStyle = '#a0700c';
+      ctx.fillText(text, g.cx + 4, g.cy + 7);
+    } else {
+      // A padlock.
+      ctx.strokeStyle = 'rgba(91,70,48,0.7)';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.roundRect(g.cx - 4.5, g.cy + 3, 9, 7, 1.5);
+      ctx.moveTo(g.cx - 2.5, g.cy + 3);
+      ctx.arc(g.cx, g.cy + 2.5, 2.5, Math.PI, 0);
+      ctx.lineTo(g.cx + 2.5, g.cy + 3);
+      ctx.stroke();
+    }
+    if (open && this.districtGold(ch)) {
+      // Every level at ★★★: a gold pennant on the banner.
+      ctx.fillStyle = ink;
+      ctx.fillRect(g.cx + w / 2 - 3, g.cy - 27, 1.5, 14);
+      ctx.fillStyle = '#e8ad1c';
+      ctx.beginPath();
+      ctx.moveTo(g.cx + w / 2 - 1.5, g.cy - 27);
+      ctx.lineTo(g.cx + w / 2 + 9, g.cy - 23);
+      ctx.lineTo(g.cx + w / 2 - 1.5, g.cy - 19);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  private drawMapWell(ctx: CanvasRenderingContext2D, x: number, y: number, ink: string): void {
+    const open = this.game.bonusUnlocked;
+    if (open) {
+      const glow = ctx.createRadialGradient(x, y, 4, x, y, 26);
+      glow.addColorStop(0, 'rgba(150,110,240,0.45)');
+      glow.addColorStop(1, 'rgba(150,110,240,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(x - 26, y - 26, 52, 52);
+    }
+    ctx.fillStyle = '#8d86a0';
+    ctx.beginPath();
+    ctx.ellipse(x, y, 14, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    ctx.fillStyle = '#1a1424';
+    ctx.beginPath();
+    ctx.ellipse(x, y, 9, 5.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = ink;
+    ctx.font = 'bold 9px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(t('The Well'), x, y + 17, 90);
+  }
+
+  private drawCompass(ctx: CanvasRenderingContext2D, x: number, y: number, ink: string): void {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0, 0, 11, 0, Math.PI * 2);
+    ctx.stroke();
+    for (let i = 0; i < 4; i++) {
+      ctx.rotate(Math.PI / 2);
+      ctx.fillStyle = i % 2 ? ink : '#b08d57';
+      ctx.beginPath();
+      ctx.moveTo(0, -16);
+      ctx.lineTo(3.5, 0);
+      ctx.lineTo(-3.5, 0);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.fillStyle = ink;
+    ctx.font = 'bold 8px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('N', 0, -21);
     ctx.restore();
   }
 
