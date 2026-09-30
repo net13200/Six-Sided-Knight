@@ -190,7 +190,7 @@ npm run build:crazygames      # -> dist-crazygames/ and six-sided-knight-crazyga
 npm run test:e2e:crazygames   # browser tests of the CrazyGames build
 ```
 
-It's the Poki build without an SDK: no ads or "Solve" ad, no developer tools or secret combo, no installable-app bits, no link in shared results, and a first-time player goes straight into the story and level 1. CI builds and tests it on every push (artifact `six-sided-knight-crazygames`). For a Full Launch, CrazyGames' SDK (v3) gets wired into `src/platform/ads.ts` like Poki's.
+It's the Poki build without an SDK: no ads or "Solve" ad, no developer tools or secret combo, no installable-app bits, no link in shared results, and a first-time player goes straight into the story and level 1. CI builds and tests it on every push (artifact `six-sided-knight-crazygames`). The three game covers (landscape 1920x1080, portrait 800x1200, square 800x800) are in `crazygames/`; `node tools/thumbnails/covers.mjs` redraws them. For a Full Launch, CrazyGames' SDK (v3) gets wired into `src/platform/ads.ts` like Poki's.
 
 ## Languages
 
