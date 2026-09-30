@@ -125,7 +125,7 @@ export function drawBackdrop(
   ctx.drawImage(scenery(stage, theme), 0, 0, stage.view.w, stage.view.h);
   const b = stage.box;
   const s = stage.scale;
-  const sideW = b.x / s; // logical units
+  const sideW = stage.sideRoom / s; // logical units
   if (sideW < 20) return;
   const panels = sides && sideW >= MIN_SIDE;
   if (theme === 'dungeon' && !panels) {

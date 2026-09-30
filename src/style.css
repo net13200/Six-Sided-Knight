@@ -10,6 +10,8 @@ body {
   overscroll-behavior: none;
   -webkit-user-select: none;
   user-select: none;
+  /* No magnifier or "save image" menu on a long press (iOS). */
+  -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
   font-family:
     system-ui,
@@ -22,6 +24,13 @@ body {
 #app {
   position: fixed;
   inset: 0;
+}
+.safe-area-probe {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
 }
 .stage-backdrop {
   position: absolute;

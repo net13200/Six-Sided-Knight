@@ -4,7 +4,9 @@
  * high-DPI screens. DOM UI lives in a layer on top and scales with the same
  * transform. Around it, a full-window backdrop canvas covers the rest of the
  * screen (a wide 16:9 desktop window, a phone on its side), so there are no
- * empty bars: scenery, and side panels the scene may fill.
+ * empty bars: scenery, and side panels the scene may fill. The stage and the
+ * side panels keep out of the screen's safe-area insets (a notch, rounded
+ * corners, the home bar), which fullscreen apps and portals draw under.
  */
 export const LOGICAL_W = 340;
 export const LOGICAL_H = 480;
@@ -21,7 +23,11 @@ export class Stage {
   /** Window size, and the stage's box in it (CSS pixels). */
   view = { w: 0, h: 0 };
   box = { x: 0, y: 0, w: 0, h: 0 };
+  /** Safe-area insets (CSS pixels): nothing that matters is drawn inside them. */
+  safe = { l: 0, t: 0, r: 0, b: 0 };
   private dpr = 1;
+  /** Reads the safe-area insets through CSS (env() isn't readable from script). */
+  private readonly insetProbe: HTMLElement;
   private offsetX = 0;
   private offsetY = 0;
 
@@ -40,7 +46,9 @@ export class Stage {
     this.backdrop = document.createElement('canvas');
     this.backdrop.className = 'stage-backdrop';
     this.backdrop.setAttribute('aria-hidden', 'true');
-    container.append(this.backdrop, this.root);
+    this.insetProbe = document.createElement('div');
+    this.insetProbe.className = 'safe-area-probe';
+    container.append(this.backdrop, this.root, this.insetProbe);
     const bctx = this.backdrop.getContext('2d');
     if (!bctx) throw new Error('Canvas 2D is not supported');
     this.backdropCtx = bctx;
@@ -55,11 +63,21 @@ export class Stage {
   resize(): void {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    this.scale = Math.min(vw / LOGICAL_W, vh / LOGICAL_H);
+    const cs = getComputedStyle(this.insetProbe);
+    const px = (v: string) => parseFloat(v) || 0;
+    const safe = (this.safe = {
+      l: px(cs.paddingLeft),
+      t: px(cs.paddingTop),
+      r: px(cs.paddingRight),
+      b: px(cs.paddingBottom),
+    });
+    const aw = Math.max(1, vw - safe.l - safe.r);
+    const ah = Math.max(1, vh - safe.t - safe.b);
+    this.scale = Math.min(aw / LOGICAL_W, ah / LOGICAL_H);
     // Above 2x the extra sharpness is invisible on a phone but costs ~1.7x the pixels to paint.
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this.offsetX = Math.round((vw - LOGICAL_W * this.scale) / 2);
-    this.offsetY = Math.round((vh - LOGICAL_H * this.scale) / 2);
+    this.offsetX = Math.round(safe.l + (aw - LOGICAL_W * this.scale) / 2);
+    this.offsetY = Math.round(safe.t + (ah - LOGICAL_H * this.scale) / 2);
     this.root.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;
     this.canvas.width = Math.round(LOGICAL_W * this.scale * this.dpr);
     this.canvas.height = Math.round(LOGICAL_H * this.scale * this.dpr);
@@ -80,7 +98,13 @@ export class Stage {
 
   /** Whether there is room around the stage (anything wider than the stage's shape). */
   get hasSides(): boolean {
-    return this.box.x >= 8;
+    return this.sideRoom >= 8;
+  }
+
+  /** Room beside the stage on its narrower side, clear of the safe-area insets (CSS pixels). */
+  get sideRoom(): number {
+    const { box, view, safe } = this;
+    return Math.min(box.x - safe.l, view.w - safe.r - box.x - box.w);
   }
 
   /** The backdrop's context, in CSS pixels. */

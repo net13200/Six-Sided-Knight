@@ -45,3 +45,26 @@ test('no hidden tools and no ads: no secret combo, no debug mode, no "Solve" ad'
   await page.keyboard.press('Shift+P');
   await expect(page.getByTestId('watch-chooser')).toHaveCount(0);
 });
+
+test.describe('in the fullscreen app, on a phone on its side', () => {
+  test.use({ viewport: { width: 844, height: 390 }, hasTouch: true });
+  test('the game keeps clear of the notch and the home bar (safe-area insets)', async ({
+    page,
+  }) => {
+    await page.goto('/?level=1');
+    await expect.poll(() => scene(page)).toBe('play');
+    // The browser reports a notch on the left and a home bar at the bottom.
+    await page.addStyleTag({
+      content: '.safe-area-probe { padding: 0 0 21px 47px !important; }',
+    });
+    await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+    const box = (await page.locator('.stage-canvas').boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(47);
+    expect(box.y + box.height).toBeLessThanOrEqual(390 - 21 + 0.5);
+    expect(box.x + box.width).toBeLessThanOrEqual(844);
+    // Taps still land where they're aimed.
+    const menu = page.getByTestId('menu');
+    await menu.click();
+    await expect.poll(() => scene(page)).not.toBe('play');
+  });
+});
