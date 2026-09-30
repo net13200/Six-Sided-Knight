@@ -2,6 +2,14 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.15.0 — A winding road
+
+- **The road zigzags up the island.** Each district's road climbs across the board and the next one climbs back, with just one stone between levels, so it's much shorter to get around. The road to levels you haven't reached shows faintly, so you can see where it goes.
+- **Tap to travel.** On the map, tap a level (or anywhere) and the die rolls there; the arrow keys hop to the next or previous level. Swipes no longer roll the die one tile at a time.
+- **Back where you left off.** Leaving a level returns you to that level on the map, not to the next one to play.
+- **Gauntlets have one par.** A Gauntlet's par is for all its floors together: the map, the move counter and the star targets all count the whole run.
+- The Daily Roll board and the Smith now sit right by level 1.
+
 ## 0.14.0 — Toss the die
 
 - **A map of Oddmere.** The World button on the level map opens a hand-drawn map: the six districts as islands along the road to the Throne, each with its stars and a dot for every level (gold for ★★★). Districts you haven't reached are fogged and locked, and your die shows where you are.
