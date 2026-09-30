@@ -18,10 +18,12 @@
     "test:coverage": "vitest run --coverage",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "build:poki": "tsc --noEmit && vite build --mode poki && node tools/package-poki.mjs",
+    "build:poki": "tsc --noEmit && vite build --mode poki && node tools/package-portal.mjs poki",
+    "build:crazygames": "tsc --noEmit && vite build --mode crazygames && node tools/package-portal.mjs crazygames",
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "test:e2e:poki": "playwright test -c playwright.poki.config.ts",
+    "test:e2e:crazygames": "playwright test -c playwright.crazygames.config.ts",
     "replay": "tsx tools/replay.ts",
     "size": "node tools/check-size.mjs"
   },

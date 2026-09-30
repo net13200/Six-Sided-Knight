@@ -6,4 +6,6 @@ playwright-report
 *.log
 dist-poki
 six-sided-knight-poki.zip
+dist-crazygames
+six-sided-knight-crazygames.zip
 tools/thumbnails/out/

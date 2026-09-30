@@ -29,6 +29,14 @@ jobs:
         with:
           name: six-sided-knight-poki
           path: six-sided-knight-poki.zip
+      # The CrazyGames build (Basic Launch: no SDK), likewise.
+      - run: npm run build:crazygames
+      - run: npm run size -- dist-crazygames
+      - run: npm run test:e2e:crazygames
+      - uses: actions/upload-artifact@v4
+        with:
+          name: six-sided-knight-crazygames
+          path: six-sided-knight-crazygames.zip
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

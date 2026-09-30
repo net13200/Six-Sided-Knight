@@ -19,7 +19,7 @@ import type { Command } from '../input';
 import { tapDirection } from '../input';
 import { computeStars, twoStarLimit } from '../stars';
 import { el, icon, iconButton, place } from '../ui';
-import { IS_POKI } from '../../platform/target';
+import { IS_PORTAL } from '../../platform/target';
 import { animateBump, animateTurn } from '../view/animate';
 import { drawFace } from '../view/art';
 import { drawControls, sideCard, touchFirst, wrap } from '../view/backdrop';
@@ -192,9 +192,9 @@ export class PlayScene implements Scene {
       );
     }
     // The secret combo for everyone: 5 quick taps on the level title (see
-    // secretTap). Invisible, and kept out of the tab order. Not on Poki, where
-    // the solution is a rewarded ad and hidden tools aren't allowed.
-    if (!IS_POKI) {
+    // secretTap). Invisible, and kept out of the tab order. Not on portals,
+    // where hidden tools aren't allowed (on Poki the solution is a rewarded ad).
+    if (!IS_PORTAL) {
       const secret = el('button', {
         className: 'compass-btn',
         testId: 'secret',
@@ -296,7 +296,7 @@ export class PlayScene implements Scene {
    */
   private openWatch(how: 'dev' | 'secret' | 'reward' = 'dev'): void {
     const allowed =
-      how === 'reward' || (how === 'dev' && this.game.debug) || (how === 'secret' && !IS_POKI);
+      how === 'reward' || (how === 'dev' && this.game.debug) || (how === 'secret' && !IS_PORTAL);
     if (!allowed || this.watch || this.lesson || this.inspect || !this.ui) return;
     // No peeking where there are no second chances.
     if (this.session.permadeath) return;

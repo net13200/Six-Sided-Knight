@@ -162,7 +162,7 @@ npm run test:e2e:poki   # browser tests of the Poki build, with a stand-in SDK
 
 CI builds and tests it on every push; the zip is attached to each CI run as the `six-sided-knight-poki` artifact.
 
-What differs from the web build (`src/platform/target.ts`, `src/platform/poki.ts`, the `ssk-poki` plugin in `vite.config.ts`):
+What differs from the web build (`src/platform/target.ts`, `src/platform/portal.ts`, the `ssk-portal` plugin in `vite.config.ts`):
 
 - Poki's SDK is loaded by `index.html`; `src/platform/ads.ts` wraps it. Without the SDK (blocked by an ad blocker, or offline) every call is a no-op and the game runs normally.
 - Events: loading finished when the title screen is up; gameplay start on the player's first move in a level (or bonus stage), gameplay stop when the level ends or play is interrupted (a menu, the die view, a card, leaving the level, before an ad). Never the same event twice in a row, and none while an ad plays.
@@ -180,6 +180,17 @@ What differs from the web build (`src/platform/target.ts`, `src/platform/poki.ts
 How often ads actually show is up to Poki: its rules forbid internal ad timers, so the game has no spacing of its own. Never before the tutorial (levels 1-10) is finished, never when heading into a tutorial level, and never in the middle of a run (between Daily Roll, Depths or Gauntlet floors). While an ad plays, the game is silent and ignores input.
 
 Thumbnails for Poki's game page are in `poki/`: `thumbnail-1080.png` (and a 628 copy) and `thumbnail-animated.mp4` (1080x1080, three 2-second scenes). `node tools/thumbnails/make.mjs` redraws them from the game itself. It needs an ffmpeg with H.264 (`pip install imageio-ffmpeg` is enough).
+
+## CrazyGames build
+
+The same game, packaged for [CrazyGames](https://developer.crazygames.com) at the **Basic Launch** stage: a limited test launch where their SDK is optional and there are no ads. Submit it through the developer portal.
+
+```bash
+npm run build:crazygames      # -> dist-crazygames/ and six-sided-knight-crazygames.zip
+npm run test:e2e:crazygames   # browser tests of the CrazyGames build
+```
+
+It's the Poki build without an SDK: no ads or "Solve" ad, no developer tools or secret combo, no installable-app bits, no link in shared results, and a first-time player goes straight into the story and level 1. CI builds and tests it on every push (artifact `six-sided-knight-crazygames`). For a Full Launch, CrazyGames' SDK (v3) gets wired into `src/platform/ads.ts` like Poki's.
 
 ## Languages
 

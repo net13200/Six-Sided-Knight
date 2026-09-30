@@ -21,20 +21,30 @@ function gitSha(): string {
 /** Poki's SDK: their page serves it, and it must load before the game. */
 const POKI_SDK = 'https://game-cdn.poki.com/scripts/v2/poki-sdk.js';
 
+/** The portal builds (`vite build --mode poki` / `--mode crazygames`), each in its own folder. */
+const PORTALS: Record<string, { outDir: string; sdk: string | null }> = {
+  poki: { outDir: 'dist-poki', sdk: POKI_SDK },
+  // Basic Launch: no SDK needed (and no ads).
+  crazygames: { outDir: 'dist-crazygames', sdk: null },
+};
+
 /**
- * The Poki build (`vite build --mode poki`): adds the SDK, and drops what a
- * portal doesn't want: the installable-app manifest and service worker, and
- * (with VITE_POKI_SPLASH=0) the SugiGames splash.
+ * A portal build: adds the portal's SDK (if any), and drops what a portal
+ * doesn't want: the installable-app manifest and service worker, and (with
+ * VITE_POKI_SPLASH=0) the SugiGames splash.
  */
-function poki(outDir: string): Plugin {
+function portal(outDir: string, sdk: string | null): Plugin {
   return {
-    name: 'ssk-poki',
+    name: 'ssk-portal',
     transformIndexHtml(html) {
       let out = html
         .replace(/\s*<link rel="manifest"[^>]*>/, '')
         .replace(/\s*<link rel="apple-touch-icon"[^>]*>/, '')
-        .replace(/\s*<meta name="(mobile-web-app-capable|apple-mobile-web-app-[a-z-]+)"[^>]*>/g, '')
-        .replace('</head>', `  <script src="${POKI_SDK}"></script>\n  </head>`);
+        .replace(
+          /\s*<meta name="(mobile-web-app-capable|apple-mobile-web-app-[a-z-]+)"[^>]*>/g,
+          '',
+        );
+      if (sdk) out = out.replace('</head>', `  <script src="${sdk}"></script>\n  </head>`);
       if (process.env.VITE_POKI_SPLASH === '0')
         out = out.replace(
           /\s*<div id="splash"[\s\S]*?<\/svg>\s*<div id="splash-word">[\s\S]*?<\/div>\s*<\/div>/,
@@ -51,7 +61,7 @@ function poki(outDir: string): Plugin {
 
 export default defineConfig(({ mode }) => ({
   base: './',
-  plugins: mode === 'poki' ? [poki('dist-poki')] : [],
+  plugins: PORTALS[mode] ? [portal(PORTALS[mode].outDir, PORTALS[mode].sdk)] : [],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_SHA__: JSON.stringify(gitSha()),
@@ -60,6 +70,6 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: 'es2022',
     sourcemap: true,
-    ...(mode === 'poki' ? { outDir: 'dist-poki' } : {}),
+    ...(PORTALS[mode] ? { outDir: PORTALS[mode].outDir } : {}),
   },
 }));
