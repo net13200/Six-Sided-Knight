@@ -1174,21 +1174,12 @@ export class LevelsScene implements Scene {
         ctx.textAlign = 'center';
         ctx.fillText(t('NEW'), x, y - 20, 26);
       }
-      // A district all at ★★★: its gold flag flies at the last level.
+      // A district all at ★★★: a gold medal with a check by its last level.
       if (
         i % CHAPTER_SIZE === CHAPTER_SIZE - 1 &&
         this.districtGold(Math.floor(i / CHAPTER_SIZE))
       ) {
-        const wave = this.game.reducedMotion ? 0 : Math.sin(this.time * 5) * 2;
-        ctx.fillStyle = '#5e4726';
-        ctx.fillRect(x + 16, y - 30, 3, 36);
-        ctx.fillStyle = C.gold;
-        ctx.beginPath();
-        ctx.moveTo(x + 19, y - 30);
-        ctx.lineTo(x + 36, y - 24 + wave);
-        ctx.lineTo(x + 19, y - 18);
-        ctx.closePath();
-        ctx.fill();
+        drawCompleteMedal(ctx, x + 26, y - 14, 9, this.game.reducedMotion ? 0 : this.time);
       }
     });
   }
@@ -1662,14 +1653,19 @@ export class LevelsScene implements Scene {
     // The label: a little banner with the name and the stars.
     const { got, max } = this.chapterStars(ch);
     const name = t(CHAPTER_NAMES[ch] ?? '');
+    const complete = open && this.districtGold(ch);
     ctx.font = '800 11px system-ui, sans-serif';
     const w = Math.min(112, Math.max(64, ctx.measureText(name).width + 16));
-    ctx.fillStyle = open ? 'rgba(250,244,228,0.92)' : 'rgba(230,213,174,0.95)';
+    ctx.fillStyle = complete
+      ? '#f6cf5a'
+      : open
+        ? 'rgba(250,244,228,0.92)'
+        : 'rgba(230,213,174,0.95)';
     ctx.beginPath();
     ctx.roundRect(g.cx - w / 2, g.cy - 15, w, 28, 6);
     ctx.fill();
-    ctx.strokeStyle = ink;
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = complete ? '#8a5a08' : ink;
+    ctx.lineWidth = complete ? 1.8 : 1;
     ctx.stroke();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -1680,7 +1676,7 @@ export class LevelsScene implements Scene {
       const text = `${got}/${max}`;
       const tw = ctx.measureText(text).width;
       drawStar(ctx, g.cx - tw / 2 - 5, g.cy + 6.5, 4, got > 0);
-      ctx.fillStyle = '#a0700c';
+      ctx.fillStyle = complete ? '#6b4404' : '#a0700c';
       ctx.fillText(text, g.cx + 4, g.cy + 7);
     } else {
       // A padlock.
@@ -1693,17 +1689,15 @@ export class LevelsScene implements Scene {
       ctx.lineTo(g.cx + 2.5, g.cy + 3);
       ctx.stroke();
     }
-    if (open && this.districtGold(ch)) {
-      // Every level at ★★★: a gold pennant on the banner.
-      ctx.fillStyle = ink;
-      ctx.fillRect(g.cx + w / 2 - 3, g.cy - 27, 1.5, 14);
-      ctx.fillStyle = '#e8ad1c';
-      ctx.beginPath();
-      ctx.moveTo(g.cx + w / 2 - 1.5, g.cy - 27);
-      ctx.lineTo(g.cx + w / 2 + 9, g.cy - 23);
-      ctx.lineTo(g.cx + w / 2 - 1.5, g.cy - 19);
-      ctx.closePath();
-      ctx.fill();
+    if (complete) {
+      // Every level at ★★★: the banner turns gold and gets a medal with a check.
+      drawCompleteMedal(
+        ctx,
+        g.cx + w / 2 + 2,
+        g.cy - 14,
+        9,
+        this.game.reducedMotion ? 0 : this.time,
+      );
     }
   }
 
@@ -1780,7 +1774,10 @@ export class LevelsScene implements Scene {
     drawStar(ctx, 156, 51, 4, true);
     ctx.font = 'bold 10px system-ui, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(`${got} / ${levels.length * 3}`, 163, 51.5);
+    const stars = `${got} / ${levels.length * 3}`;
+    ctx.fillText(stars, 163, 51.5);
+    if (this.districtGold(ch))
+      drawCompleteMedal(ctx, 172 + ctx.measureText(stars).width, 50, 5.5, 0);
   }
 
   private drawCard(ctx: CanvasRenderingContext2D): void {
@@ -1883,4 +1880,63 @@ export class LevelsScene implements Scene {
     }
     ctx.restore();
   }
+}
+
+/**
+ * A district's "all done" mark: a round gold medal with a big check and two
+ * ribbon tails. A slow shine runs across it (`time` 0 holds it still).
+ */
+function drawCompleteMedal(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  r: number,
+  time: number,
+): void {
+  ctx.save();
+  // Ribbon tails.
+  ctx.fillStyle = '#c0392b';
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(x + side * r * 0.2, y + r * 0.3);
+    ctx.lineTo(x + side * r * 0.85, y + r * 1.55);
+    ctx.lineTo(x + side * r * 0.45, y + r * 1.35);
+    ctx.lineTo(x + side * r * 0.2, y + r * 1.7);
+    ctx.lineTo(x - side * r * 0.1, y + r * 0.5);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // The medal.
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = '#8a5a08';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x, y, r * 0.84, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffd75e';
+  ctx.fill();
+  if (time) {
+    // A shine sweeping across now and then.
+    const k = (time * 0.5) % 2;
+    if (k < 1) {
+      ctx.save();
+      ctx.clip();
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.translate(x - r * 2 + k * r * 4, y);
+      ctx.rotate(0.5);
+      ctx.fillRect(-r * 0.2, -r * 2, r * 0.4, r * 4);
+      ctx.restore();
+    }
+  }
+  // The check.
+  ctx.strokeStyle = '#6b4404';
+  ctx.lineWidth = Math.max(1.4, r * 0.28);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x - r * 0.45, y + r * 0.02);
+  ctx.lineTo(x - r * 0.1, y + r * 0.38);
+  ctx.lineTo(x + r * 0.5, y - r * 0.35);
+  ctx.stroke();
+  ctx.restore();
 }
