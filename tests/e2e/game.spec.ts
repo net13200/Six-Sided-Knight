@@ -237,6 +237,31 @@ test.describe('Six Sided Knight', () => {
     await expect.poll(() => scene(page), { timeout: 5000 }).toBe('daily');
   });
 
+  test('the map scrolls by dragging (even from a level) and with the wheel', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('levels').click();
+    const spot = page.getByTestId('level-1');
+    await expect(spot).toBeVisible();
+    const box = (await spot.boundingBox())!;
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    // Drag down from level 1: the map scrolls up the road, and level 1 isn't pressed.
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    for (let k = 1; k <= 10; k++) await page.mouse.move(x, y + k * 30);
+    await page.mouse.up();
+    await expect(spot).toBeHidden();
+    expect(await scene(page)).toBe('levels');
+    // The wheel scrolls back down to it.
+    await page.mouse.move(x, y);
+    for (let k = 0; k < 6; k++) await page.mouse.wheel(0, 200);
+    await expect(spot).toBeVisible();
+    // Play still plays the level the die is on.
+    await page.getByTestId('map-play').click();
+    await skipStory(page);
+    expect(await levelIndex(page)).toBe(0);
+  });
+
   test('picking a district in the World view tosses the die there', async ({ page }) => {
     await page.addInitScript((fps) => {
       if (sessionStorage.getItem('seeded')) return;

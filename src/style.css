@@ -181,6 +181,8 @@ button:focus-visible {
 }
 .map-spot {
   position: absolute;
+  /* A drag that starts on a level scrolls the map, not the page. */
+  touch-action: none;
   padding: 0;
   border: 0;
   border-radius: 8px;

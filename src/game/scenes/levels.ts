@@ -118,6 +118,20 @@ export class LevelsScene implements Scene {
   private goal: LandmarkId | null = null;
   private camY = 0;
   private camTarget: number | null = null;
+  /** A finger (or mouse) dragging the map up or down; `moved`: it's a scroll, not a tap. */
+  private drag: {
+    id: number;
+    y: number;
+    cam: number;
+    moved: boolean;
+    v: number;
+    t: number;
+  } | null = null;
+  /** The last gesture scrolled the map: its tap and click are not a tap. */
+  private dragged = false;
+  /** A flicked map keeps scrolling for a moment (logical px per second). */
+  private fling = 0;
+  private unbindScroll: (() => void) | null = null;
   private reveal: { segment: number; t: number; sounded: number } | null = null;
   private time = 0;
   private ui: HTMLElement | null = null;
@@ -228,6 +242,88 @@ export class LevelsScene implements Scene {
     this.camY = this.followY();
   }
 
+  exit(): void {
+    this.unbindScroll?.();
+  }
+
+  /**
+   * Dragging the map scrolls it (from anywhere in the view, a level button
+   * included), and so does the mouse wheel. The die stays put; the camera
+   * follows it again when it next moves.
+   */
+  private bindScroll(): void {
+    const stage = this.game.stage;
+    const inView = (e: PointerEvent | WheelEvent) => {
+      const p = stage.toLogical(e.clientX, e.clientY);
+      return p.x >= 0 && p.x <= 340 && p.y >= HUD_H && p.y < CARD_Y;
+    };
+    const down = (e: PointerEvent) => {
+      this.dragged = false;
+      if (this.drag || this.overview || this.toss || !inView(e)) return;
+      this.fling = 0;
+      this.drag = {
+        id: e.pointerId,
+        y: e.clientY,
+        cam: this.camY,
+        moved: false,
+        v: 0,
+        t: e.timeStamp,
+      };
+    };
+    const move = (e: PointerEvent) => {
+      const d = this.drag;
+      if (!d || e.pointerId !== d.id) return;
+      const dy = (e.clientY - d.y) / stage.scale;
+      if (!d.moved && Math.abs(dy) < 8) return;
+      d.moved = true;
+      const cam = this.clampCam(d.cam - dy);
+      const dt = Math.max(1, e.timeStamp - d.t) / 1000;
+      d.v = d.v * 0.5 + ((cam - this.camY) / dt) * 0.5;
+      d.t = e.timeStamp;
+      this.camY = cam;
+      this.camTarget = cam;
+      this.syncButtons();
+    };
+    const up = (e: PointerEvent) => {
+      const d = this.drag;
+      if (!d || e.pointerId !== d.id) return;
+      this.drag = null;
+      if (!d.moved) return;
+      this.dragged = true;
+      if (!this.game.reducedMotion && e.timeStamp - d.t < 80) this.fling = d.v;
+    };
+    // A scroll that ended on a level button doesn't press it.
+    const click = (e: MouseEvent) => {
+      if (!this.dragged) return;
+      this.dragged = false;
+      e.stopPropagation();
+      e.preventDefault();
+    };
+    const wheel = (e: WheelEvent) => {
+      if (this.overview || this.toss || !inView(e)) return;
+      e.preventDefault();
+      const px =
+        e.deltaMode === 1 ? e.deltaY * 34 : e.deltaMode === 2 ? e.deltaY * VIEW_H : e.deltaY;
+      this.fling = 0;
+      this.camTarget = this.clampCam((this.camTarget ?? this.camY) + px / stage.scale);
+    };
+    const opts = { capture: true };
+    window.addEventListener('pointerdown', down, opts);
+    window.addEventListener('pointermove', move, opts);
+    window.addEventListener('pointerup', up, opts);
+    window.addEventListener('pointercancel', up, opts);
+    window.addEventListener('click', click, opts);
+    window.addEventListener('wheel', wheel, { capture: true, passive: false });
+    this.unbindScroll = () => {
+      window.removeEventListener('pointerdown', down, opts);
+      window.removeEventListener('pointermove', move, opts);
+      window.removeEventListener('pointerup', up, opts);
+      window.removeEventListener('pointercancel', up, opts);
+      window.removeEventListener('click', click, opts);
+      window.removeEventListener('wheel', wheel, opts);
+    };
+  }
+
   private landmarkOpen(l: Landmark): boolean {
     return l.when === 'always' || this.game.bonusUnlocked;
   }
@@ -283,6 +379,7 @@ export class LevelsScene implements Scene {
 
   enter(ui: HTMLElement): void {
     this.ui = ui;
+    this.bindScroll();
     const levels = this.game.levels;
     const save = this.game.save.data;
     this.announcer = el('div', { className: 'sr-only', testId: 'map-announcer' });
@@ -392,6 +489,7 @@ export class LevelsScene implements Scene {
     this.queue = path;
     this.goal = goal;
     this.camTarget = null;
+    this.fling = 0;
     if (!this.roll) this.nextStep();
     if (!path.length && !this.roll) this.arrive();
   }
@@ -697,7 +795,7 @@ export class LevelsScene implements Scene {
         this.game.audio.play('bump');
       }
     } else if (cmd.type === 'tap') {
-      if (cmd.y < HUD_H || cmd.y >= CARD_Y) return;
+      if (cmd.y < HUD_H || cmd.y >= CARD_Y || this.dragged) return;
       const c = Math.floor((cmd.x - XOFF) / TILE);
       const r = Math.floor((cmd.y - HUD_H + this.camY) / TILE);
       const k = key({ c, r });
@@ -738,10 +836,18 @@ export class LevelsScene implements Scene {
         else this.arrive();
       }
     }
+    if (this.fling && this.camTarget !== null) {
+      this.camTarget = this.clampCam(this.camTarget + this.fling * dt);
+      this.fling *= Math.exp(-dt * 4);
+      if (Math.abs(this.fling) < 20 || this.camTarget <= 0 || this.camTarget >= this.maxCam) {
+        this.fling = 0;
+      }
+    }
     const target = this.toss
       ? this.clampCam(this.tossXY().y - VIEW_H * 0.58 - this.tossXY().h * 0.4)
       : (this.camTarget ?? this.followY());
-    const k = this.game.reducedMotion ? 1 : Math.min(1, dt * (this.toss ? 9 : 7));
+    const k =
+      this.game.reducedMotion || this.drag?.moved ? 1 : Math.min(1, dt * (this.toss ? 9 : 7));
     this.camY += (target - this.camY) * k;
     if (Math.abs(target - this.camY) < 0.3) this.camY = target;
     this.syncButtons();

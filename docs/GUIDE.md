@@ -52,7 +52,7 @@ Stars are about moves. Finish at **par** (the fewest moves possible) or better f
 
 ## The world map
 
-Levels sit on a road zigzagging up Oddmere, one district per chapter. Tap a level (or any spot) and your die rolls there; the arrow keys hop to the next or previous level. Land on a level and press Play. Beating a level opens the road to the next one, and leaving a level brings you back to it on the map. The Smith and the Daily Roll board are by level 1; the Well is at the top. The **World** button shows a map of every district and its stars: pick one and your die is tossed there. A gold medal marks a district where every level has ★★★.
+Levels sit on a road zigzagging up Oddmere, one district per chapter. Tap a level (or any spot) and your die rolls there; the arrow keys hop to the next or previous level. Drag the map (or use the mouse wheel) to look up and down the road. Land on a level and press Play. Beating a level opens the road to the next one, and leaving a level brings you back to it on the map. The Smith and the Daily Roll board are by level 1; the Well is at the top. The **World** button shows a map of every district and its stars: pick one and your die is tossed there. A gold medal marks a district where every level has ★★★.
 
 ## Languages
 
