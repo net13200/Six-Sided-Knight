@@ -536,7 +536,8 @@ export class PlayScene implements Scene {
   render(ctx: CanvasRenderingContext2D): void {
     const s = this.state;
     const v = this.fx.compute();
-    drawHud(ctx, this.session.title, this.level, s);
+    const { moves, par } = this.movesAndPar();
+    drawHud(ctx, this.session.title, moves, par, s);
     drawBoard(ctx, this.game.rules, s, v, this.fx, this.fx.busy ? undefined : this.moveOutcomes(s));
     drawCompass(ctx, s.player.die, 170, BAR_Y + 34);
 
@@ -616,8 +617,16 @@ export class PlayScene implements Scene {
     ctx.restore();
   }
 
+  /** Moves and par shown: the level's own, or a gauntlet's whole run. */
+  private movesAndPar(): { moves: number; par: number | undefined } {
+    const run = this.session.run;
+    const moves = this.state.stats.moves;
+    return run ? { moves: run.movesBefore + moves, par: run.par } : { moves, par: this.level.par };
+  }
+
   private levelCard(ctx: CanvasRenderingContext2D, w: number, h: number): void {
     const s = this.state;
+    const { moves, par } = this.movesAndPar();
     const i = this.session.campaignIndex;
     let y = sideCard(
       ctx,
@@ -639,16 +648,15 @@ export class PlayScene implements Scene {
     ctx.fillText(t('Moves'), 16, y + 14);
     ctx.fillStyle = C.text;
     ctx.font = '800 34px system-ui, sans-serif';
-    ctx.fillText(String(s.stats.moves), 16, y + 44);
+    ctx.fillText(String(moves), 16, y + 44);
     y += 78;
-    const par = this.level.par;
     if (par !== undefined) {
       const tiers: Array<[number, string]> = [
         [3, t('{n} moves or fewer', { n: par })],
         [2, t('{n} or fewer', { n: twoStarLimit(par) })],
         [1, t('Reach the stairs')],
       ];
-      const now = s.stats.moves <= par ? 3 : s.stats.moves <= twoStarLimit(par) ? 2 : 1;
+      const now = moves <= par ? 3 : moves <= twoStarLimit(par) ? 2 : 1;
       for (const [n, text] of tiers) {
         for (let k = 0; k < 3; k++) drawStar(ctx, 24 + k * 15, y, 6, k < n);
         ctx.fillStyle = n === now ? C.text : C.textDim;
@@ -735,7 +743,8 @@ export class PlayScene implements Scene {
 function drawHud(
   ctx: CanvasRenderingContext2D,
   title: string,
-  level: LevelData,
+  moves: number,
+  par: number | undefined,
   s: GameState,
 ): void {
   ctx.fillStyle = C.hud;
@@ -748,9 +757,9 @@ function drawHud(
   ctx.font = '12px system-ui, sans-serif';
   ctx.fillStyle = C.textDim;
   ctx.fillText(
-    level.par !== undefined
-      ? t('Moves {n} / par {par}', { n: s.stats.moves, par: level.par })
-      : t('Moves {n}', { n: s.stats.moves }),
+    par !== undefined
+      ? t('Moves {n} / par {par}', { n: moves, par })
+      : t('Moves {n}', { n: moves }),
     12,
     35,
   );

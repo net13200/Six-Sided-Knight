@@ -7,13 +7,13 @@
  */
 import type { Dir } from '../../engine';
 
-/** World width in tiles (the stage is 340 wide: 10 tiles of 34). */
+/** World width in tiles (the stage is 340 wide: 10 tiles of 34; the road uses 1..9). */
 export const COLS = 10;
 export const TILE = 34;
-/** Rows per district. */
-export const BAND_ROWS = 22;
+/** Rows per district: a wall, then the road climbing ten rows. */
+export const BAND_ROWS = 12;
 /** Rows above the last district: the Well and the Greenwood. */
-export const TOP_ROWS = 7;
+export const TOP_ROWS = 4;
 
 export interface Pos {
   readonly c: number;
@@ -47,57 +47,79 @@ export interface WorldLayout {
   readonly landmarks: readonly Landmark[];
 }
 
-/**
- * Columns of a district's ten pedestals, bottom to top (odd districts are
- * mirrored): a gentle S, so one or two road tiles lead from level to level.
- */
-const PATTERN = [3, 4, 5, 6, 6, 5, 4, 3, 3, 4];
-
 export const key = (p: Pos): string => `${p.c},${p.r}`;
 
-/** Tiles strictly between a and b: along a's row first, then along b's column. */
-function between(a: Pos, b: Pos): Pos[] {
+/** Tiles strictly between a and b, going along a's row first (or its column first). */
+function between(a: Pos, b: Pos, columnFirst = false): Pos[] {
   const out: Pos[] = [];
   let c = a.c;
   let r = a.r;
-  while (c !== b.c) {
-    c += c < b.c ? 1 : -1;
-    out.push({ c, r });
-  }
-  while (r !== b.r) {
-    r += r < b.r ? 1 : -1;
-    out.push({ c, r });
+  const across = () => {
+    while (c !== b.c) {
+      c += c < b.c ? 1 : -1;
+      out.push({ c, r });
+    }
+  };
+  const down = () => {
+    while (r !== b.r) {
+      r += r < b.r ? 1 : -1;
+      out.push({ c, r });
+    }
+  };
+  if (columnFirst) {
+    down();
+    across();
+  } else {
+    across();
+    down();
   }
   out.pop(); // b itself
   return out;
 }
 
+/**
+ * Each district's road is a switchback climbing across the board: from level
+ * to level it goes one stone up (N) or one stone across (h), four times across
+ * and five times up, so the ten levels cross from one side to the other. The
+ * next district starts right above, through a gap in the wall, and crosses
+ * back (odd districts are mirrored), so the whole road zigzags up the island.
+ * It only ever goes up or across, so no two levels are ever next to each
+ * other except along the road.
+ */
+const PATTERNS = ['NhNhNhNhN', 'NNhNhhNhN', 'NhhNNhNhN'];
+
 export function buildWorld(levelCount: number, chapterSize = 10): WorldLayout {
   const chapters = Math.max(1, Math.ceil(levelCount / chapterSize));
-  const rows = TOP_ROWS + chapters * BAND_ROWS;
+  // Three more rows at the bottom: the village, below the first district.
+  const rows = TOP_ROWS + chapters * BAND_ROWS + 3;
   const bandTop = (ch: number) => TOP_ROWS + (chapters - 1 - ch) * BAND_ROWS;
   const bands = Array.from({ length: chapters }, (_, ch) => ({ chapter: ch, top: bandTop(ch) }));
   const pedestals: Pos[] = [];
+  let c = 1;
+  let r = 0;
   for (let i = 0; i < levelCount; i++) {
     const ch = Math.floor(i / chapterSize);
     const j = i % chapterSize;
-    const col = PATTERN[j % PATTERN.length]!;
-    pedestals.push({ c: ch % 2 ? COLS - 1 - col : col, r: bandTop(ch) + 20 - 2 * j });
+    const across = ch % 2 ? -2 : 2;
+    if (j === 0) r = bandTop(ch) + BAND_ROWS - 1;
+    else if (PATTERNS[ch % PATTERNS.length]![j - 1] === 'h') c += across;
+    else r -= 2;
+    pedestals.push({ c, r });
   }
   const segments: Pos[][] = pedestals.map((p, i) => (i === 0 ? [] : between(pedestals[i - 1]!, p)));
 
-  // Side roads. The Smith and the notice board sit below level 1.
-  const first = pedestals[0] ?? { c: 4, r: rows - 2 };
-  const low = first.r + 1;
-  const smithAt = { c: Math.min(COLS - 2, first.c + 3), r: low };
-  const dailyAt = { c: Math.max(1, first.c - 2), r: low };
-  const smithRoad = [{ c: first.c, r: low }, ...between({ c: first.c, r: low }, smithAt)];
-  const dailyRoad = [{ c: first.c, r: low }, ...between({ c: first.c, r: low }, dailyAt)];
+  // Side roads from level 1 (both open from the start): the notice board
+  // beside it, the Smith below, in the village.
+  const first = pedestals[0] ?? { c: 1, r: rows - 4 };
+  const dailyAt = { c: first.c + 2, r: first.r };
+  const dailyRoad = [{ c: first.c + 1, r: first.r }];
+  const smithAt = { c: first.c, r: first.r + 2 };
+  const smithRoad = [{ c: first.c, r: first.r + 1 }];
   // The Well crowns the world, past the last level; the Greenwood beyond it.
   const last = pedestals[pedestals.length - 1] ?? first;
-  const well = { c: 4, r: TOP_ROWS - 2 };
-  const wellRoad = between(last, well);
-  const greenwood = { c: 7, r: TOP_ROWS - 4 };
+  const well = { c: 5, r: TOP_ROWS - 1 };
+  const wellRoad = between(last, well, true);
+  const greenwood = { c: 8, r: TOP_ROWS - 3 };
   const greenRoad = between(well, greenwood);
   const landmarks: Landmark[] = [
     { id: 'smith', pos: smithAt, road: smithRoad, when: 'always' },

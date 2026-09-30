@@ -30,6 +30,16 @@ describe('the world map layout', () => {
     }
   });
 
+  it('one stone between levels, and the road only touches itself where it runs on', () => {
+    for (let i = 1; i < 60; i++) expect(world.segments[i]!.length).toBe(1);
+    const line = world.pedestals.flatMap((p, i) => [...world.segments[i]!, p]);
+    for (let a = 0; a < line.length; a++) {
+      for (let b = a + 2; b < line.length; b++) {
+        expect(adjacent(line[a]!, line[b]!), `${key(line[a]!)} ${key(line[b]!)}`).toBe(false);
+      }
+    }
+  });
+
   it('no two roads or pedestals share a tile', () => {
     const seen = new Set<string>();
     const add = (p: Pos) => {
@@ -49,6 +59,7 @@ describe('the world map layout', () => {
     }
     const byId = Object.fromEntries(world.landmarks.map((l) => [l.id, l]));
     expect(adjacent(byId.smith!.road[0]!, world.pedestals[0]!)).toBe(true);
+    expect(adjacent(byId.daily!.road[0]!, world.pedestals[0]!)).toBe(true);
     expect(adjacent(byId.well!.road[0]!, world.pedestals[59]!)).toBe(true);
   });
 

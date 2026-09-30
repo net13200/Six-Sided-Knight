@@ -20,6 +20,7 @@ import {
   needsRedo,
 } from '../../meta/progress';
 import type { Game } from '../game';
+import { gauntletPar } from '../gauntlet';
 import type { Command } from '../input';
 import { el, icon, iconButton, place } from '../ui';
 import { drawFace } from '../view/art';
@@ -48,6 +49,8 @@ import type { Scene } from './scene';
 const HUD_H = 62;
 const CARD_Y = 358;
 const VIEW_H = CARD_Y - HUD_H;
+/** The road uses columns 1..9: shift the board half a tile left to centre it. */
+const XOFF = -TILE / 2;
 /** Seconds per tile: a step you make, and the die travelling by itself. */
 const STEP_S = 0.16;
 const TRAVEL_S = 0.085;
@@ -101,6 +104,8 @@ export class LevelsScene implements Scene {
   private readonly open = new Set<string>();
   /** Tiles kept free of scenery (roads, pedestals, landmarks and next to them). */
   private readonly reserved = new Set<string>();
+  /** Every road tile, landmark roads included (walls open there). */
+  private readonly paved = new Set<string>();
   private readonly pedestalAt = new Map<string, number>();
   private readonly landmarkAt = new Map<string, Landmark>();
   private readonly roadSegment = new Map<string, number>();
@@ -152,8 +157,8 @@ export class LevelsScene implements Scene {
 
   constructor(
     private readonly game: Game,
-    /** Look at this chapter's district first (the die stays where it is). */
-    private readonly chapter?: number,
+    /** The campaign level just left: the die stands on it. */
+    at?: number,
   ) {
     const levels = game.levels;
     const save = game.save.data;
@@ -163,6 +168,10 @@ export class LevelsScene implements Scene {
     w.pedestals.forEach((p, i) => this.pedestalAt.set(key(p), i));
     w.segments.forEach((s, i) => s.forEach((p) => this.roadSegment.set(key(p), i)));
     for (const l of w.landmarks) this.landmarkAt.set(key(l.pos), l);
+    const pave = (p: Pos) => {
+      this.paved.add(key(p));
+      this.reserved.add(key(p));
+    };
     const reserve = (p: Pos) => {
       for (const [dc, dr] of [
         [0, 0],
@@ -173,9 +182,13 @@ export class LevelsScene implements Scene {
       ] as const)
         this.reserved.add(key({ c: p.c + dc, r: p.r + dr }));
     };
-    w.pedestals.forEach(reserve);
-    w.segments.forEach((s) => s.forEach(reserve));
-    w.landmarks.forEach((l) => [l.pos, ...l.road].forEach(reserve));
+    // Scenery may stand right beside the road, just not on it (or around landmarks).
+    w.pedestals.forEach(pave);
+    w.segments.forEach((s) => s.forEach(pave));
+    w.landmarks.forEach((l) => {
+      l.road.forEach(pave);
+      reserve(l.pos);
+    });
 
     // The road to a newly opened level flips in once; others are already there.
     const pending = levels
@@ -187,7 +200,10 @@ export class LevelsScene implements Scene {
     // Only the road into the level to play next flips in (after beating the one
     // before it); the rest, on a first visit after an update, is simply there.
     const next = game.continueIndex();
-    const reveal = pending.includes(next) ? next : null;
+    const here = at !== undefined && at >= 0 && this.unlocked[at] ? at : undefined;
+    // (Coming back from somewhere else than the level before it: no show, it's just there.)
+    const reveal =
+      pending.includes(next) && (here === undefined || here === next - 1) ? next : null;
     for (let i = 0; i < levels.length; i++) {
       if (!this.unlocked[i]) continue;
       this.open.add(key(w.pedestals[i]!));
@@ -198,8 +214,9 @@ export class LevelsScene implements Scene {
       if (this.landmarkOpen(l)) [...l.road, l.pos].forEach((p) => this.open.add(key(p)));
     }
 
-    // The die: on the level to play next (or, while its road appears, the one before).
-    const start = reveal !== null ? reveal - 1 : next;
+    // The die: on the level just left, else on the level to play next (or,
+    // while its road appears, the one before).
+    const start = here ?? (reveal !== null ? reveal - 1 : next);
     this.pos = w.pedestals[Math.max(0, start)] ?? { c: 4, r: w.rows - 2 };
     const level = levels[Math.max(0, start)];
     this.die = {
@@ -209,10 +226,6 @@ export class LevelsScene implements Scene {
     };
     if (reveal !== null) this.reveal = { segment: reveal, t: -0.35, sounded: 0 };
     this.camY = this.followY();
-    if (chapter !== undefined) {
-      this.camY = this.bandY(chapter);
-      this.camTarget = this.camY;
-    }
   }
 
   private landmarkOpen(l: Landmark): boolean {
@@ -233,14 +246,6 @@ export class LevelsScene implements Scene {
   private followY(): number {
     const y = this.dieXY().y;
     return this.clampCam(y - VIEW_H * 0.58);
-  }
-
-  /** Camera showing a district from its start (past the last one: the Well). */
-  private bandY(chapter: number): number {
-    if (chapter >= this.world.bands.length) return 0;
-    const band = this.world.bands[chapter];
-    if (!band) return this.camY;
-    return this.clampCam((band.top + BAND_ROWS) * TILE - VIEW_H);
   }
 
   private dieXY(): { x: number; y: number; lift: number } {
@@ -693,7 +698,7 @@ export class LevelsScene implements Scene {
       }
     } else if (cmd.type === 'tap') {
       if (cmd.y < HUD_H || cmd.y >= CARD_Y) return;
-      const c = Math.floor(cmd.x / TILE);
+      const c = Math.floor((cmd.x - XOFF) / TILE);
       const r = Math.floor((cmd.y - HUD_H + this.camY) / TILE);
       const k = key({ c, r });
       const l = this.landmarkAt.get(k);
@@ -768,7 +773,7 @@ export class LevelsScene implements Scene {
     for (const { pos, el: b } of this.buttons) {
       // A bit bigger than the tile: touch targets stay at least 44 px on small phones.
       const y = HUD_H + pos.r * TILE - this.camY;
-      place(b, pos.c * TILE - 13, y - 13, TILE + 26, TILE + 26);
+      place(b, pos.c * TILE + XOFF - 13, y - 13, TILE + 26, TILE + 26);
       b.style.display = !this.overview && y > HUD_H - 6 && y + TILE < CARD_Y + 6 ? '' : 'none';
     }
   }
@@ -791,7 +796,7 @@ export class LevelsScene implements Scene {
     ctx.beginPath();
     ctx.rect(0, HUD_H, 340, VIEW_H);
     ctx.clip();
-    ctx.translate(0, HUD_H - Math.round(this.camY));
+    ctx.translate(XOFF, HUD_H - Math.round(this.camY));
     const r0 = Math.max(0, Math.floor(this.camY / TILE) - 1);
     const r1 = Math.min(this.world.rows - 1, Math.ceil((this.camY + VIEW_H) / TILE) + 1);
     this.drawGround(ctx, r0, r1);
@@ -817,8 +822,8 @@ export class LevelsScene implements Scene {
       const th = this.themeOf(r);
       const theme = th < 0 ? { ground: '#221c33', dot: '#2d2542' } : THEMES[th % THEMES.length]!;
       ctx.fillStyle = theme.ground;
-      ctx.fillRect(0, r * TILE, 340, TILE + 1);
-      for (let c = 0; c < COLS; c++) {
+      ctx.fillRect(-TILE, r * TILE, 340 + 2 * TILE, TILE + 1);
+      for (let c = 0; c <= COLS; c++) {
         const h = hash(c, r);
         const x = c * TILE;
         const y = r * TILE;
@@ -831,8 +836,8 @@ export class LevelsScene implements Scene {
     for (const b of this.world.bands) {
       const r = b.top;
       if (r < r0 || r > r1) continue;
-      for (let c = 0; c < COLS; c++) {
-        if (this.roadSegment.has(key({ c, r }))) continue;
+      for (let c = 0; c <= COLS; c++) {
+        if (this.paved.has(key({ c, r }))) continue;
         const x = c * TILE;
         const y = r * TILE;
         ctx.fillStyle = '#5a5268';
@@ -1095,6 +1100,7 @@ export class LevelsScene implements Scene {
           }
         } else if (this.unlocked[i]) this.stone(ctx, x, y);
         else if (i === frontier + 1) this.dashed(ctx, x, y, 'rgba(236,230,214,0.28)');
+        else this.track(ctx, x, y);
       });
     });
     for (const l of this.world.landmarks) {
@@ -1102,6 +1108,14 @@ export class LevelsScene implements Scene {
       for (const p of l.road)
         if (visible(p) && !this.pedestalAt.has(key(p))) this.stone(ctx, p.c * TILE, p.r * TILE);
     }
+  }
+
+  /** A faint stone on the road ahead, so its way can be seen. */
+  private track(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+    ctx.fillStyle = 'rgba(0,0,0,0.13)';
+    ctx.beginPath();
+    ctx.roundRect(x + 8, y + 9, TILE - 16, TILE - 18, 5);
+    ctx.fill();
   }
 
   private dashed(ctx: CanvasRenderingContext2D, x: number, y: number, color: string): void {
@@ -1815,13 +1829,15 @@ export class LevelsScene implements Scene {
       ctx.fillStyle = C.textDim;
       ctx.font = '11px system-ui, sans-serif';
       const floors = this.game.gauntlets.get(level.id);
-      const par = level.par !== undefined ? t('Par {n}', { n: level.par }) : '';
+      // A gauntlet's par is for the whole run, never one floor's.
+      const parN = floors ? gauntletPar([level, ...floors]) : level.par;
+      const par = parN !== undefined ? t('Par {n}', { n: parN }) : '';
       const sub = needsRedo(this.game.save.data, level)
         ? t('Changed: solve it again')
         : done && rec
           ? `${par} · ${t('your best {n} moves', { n: rec.bestMoves })}`
           : floors
-            ? t('Gauntlet: {n} floors in a row', { n: floors.length + 1 })
+            ? `${par} · ${t('Gauntlet: {n} floors in a row', { n: floors.length + 1 })}`
             : `${par} · ${t('Not played yet')}`;
       ctx.fillText(sub, 52, CARD_Y + 34, 206);
       const stars = done ? (rec?.stars ?? 0) : 0;

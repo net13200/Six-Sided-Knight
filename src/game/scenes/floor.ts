@@ -24,7 +24,7 @@ export class FloorScene implements Scene {
   private back(): void {
     if (this.summary.mode === 'daily') this.game.goDaily();
     else if (this.summary.mode === 'depths') this.game.goDepths();
-    else this.game.goLevels();
+    else this.game.goLevels(this.game.levels.findIndex((l) => l.id === this.run.key));
   }
 
   enter(ui: HTMLElement): void {

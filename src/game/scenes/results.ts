@@ -44,7 +44,7 @@ export class ResultsScene implements Scene {
         62,
       ),
       place(
-        iconButton('menu', t('Map'), () => this.game.goLevels(), 'results-levels'),
+        iconButton('menu', t('Map'), () => this.game.goLevels(this.index), 'results-levels'),
         180,
         404,
         90,
@@ -63,13 +63,13 @@ export class ResultsScene implements Scene {
       const i = this.index + 1;
       this.game.breakThen('next-level', () => this.game.goPlay(i), i);
     } else if (this.game.endingPending) this.game.goEnding();
-    else this.game.goLevels();
+    else this.game.goLevels(this.index);
   }
 
   command(cmd: Command): void {
     if (cmd.type === 'confirm' || cmd.type === 'move') this.next();
     else if (cmd.type === 'retry') this.retry();
-    else if (cmd.type === 'back') this.game.goLevels();
+    else if (cmd.type === 'back') this.game.goLevels(this.index);
   }
 
   update(dt: number): void {

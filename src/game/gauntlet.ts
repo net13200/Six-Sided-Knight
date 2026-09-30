@@ -12,6 +12,11 @@ import type { PlaySession } from './session';
 import { computeStars } from './stars';
 import { t } from '../i18n';
 
+/** ★★★ for a whole gauntlet: the fewest total moves with HP carried over. */
+export function gauntletPar(floors: readonly LevelData[]): number {
+  return floors[0]!.runPar ?? floors.reduce((n, f) => n + (f.par ?? 0), 0);
+}
+
 export class Gauntlet implements FloorRun {
   private floor = 0;
   private hp = START_HP;
@@ -35,9 +40,8 @@ export class Gauntlet implements FloorRun {
     return this.floors[0]!.id;
   }
 
-  /** ★★★ for the whole run: the fewest total moves with HP carried over. */
   get par(): number {
-    return this.floors[0]!.runPar ?? this.floors.reduce((n, f) => n + (f.par ?? 0), 0);
+    return gauntletPar(this.floors);
   }
 
   /** Starts (or continues with) the current floor. */
@@ -57,10 +61,11 @@ export class Gauntlet implements FloorRun {
       music: 'depths',
       title: `${this.index + 1}. ${t(first.name)} · ${this.floor + 1}/${n}`,
       campaignIndex: this.index,
+      run: { par: this.par, movesBefore: this.moves },
       lesson: this.floor === 0 ? this.lesson : null,
       onStart: () => this.game.save.update((d) => (d.lastLevelId = first.id)),
       onWin: (state, _stars, ms) => this.cleared(state, ms),
-      onBack: () => this.game.goLevels(),
+      onBack: () => this.game.goLevels(this.index),
     };
   }
 
@@ -113,6 +118,6 @@ export class Gauntlet implements FloorRun {
 
   /** "Later" between floors: back to the map (the gauntlet starts over next time). */
   leave(): void {
-    this.game.goLevels();
+    this.game.goLevels(this.index);
   }
 }

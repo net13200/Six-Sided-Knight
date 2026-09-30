@@ -199,6 +199,14 @@ test.describe('Six Sided Knight', () => {
     await page.getByTestId('map-play').click();
     await expect.poll(() => scene(page)).toBe('play');
     expect(await levelIndex(page)).toBe(1);
+    // Back from a replayed level: the die stands on that level, not the next one.
+    await page.goto('/?level=1');
+    await expect.poll(() => scene(page)).toBe('play');
+    await page.keyboard.press('Escape');
+    await expect.poll(() => scene(page)).toBe('levels');
+    await page.getByTestId('map-play').click();
+    await expect.poll(() => scene(page)).toBe('play');
+    expect(await levelIndex(page)).toBe(0);
   });
 
   test('the World view, and tapping a landmark rolls the die there', async ({ page }) => {

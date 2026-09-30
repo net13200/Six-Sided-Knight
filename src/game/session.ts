@@ -29,6 +29,11 @@ export interface PlaySession {
    * and being knocked out ends the run (`onLose`).
    */
   readonly permadeath?: boolean;
+  /**
+   * A gauntlet: moves and par count for the whole run, not this floor
+   * (`movesBefore`: moves played on the floors already cleared).
+   */
+  readonly run?: { readonly par: number; readonly movesBefore: number };
   /** Moves already played on this level (a resumed floor picks up where it was). */
   readonly resume?: readonly Dir[];
   /** Called once when play begins. */

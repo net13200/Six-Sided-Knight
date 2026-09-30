@@ -251,8 +251,9 @@ export class Game {
     this.go(new MenuScene(this));
   }
 
-  goLevels(chapter?: number): void {
-    this.go(new LevelsScene(this, chapter));
+  /** The map; `at`: the campaign level just left, where the die stands. */
+  goLevels(at?: number): void {
+    this.go(new LevelsScene(this, at));
   }
 
   /**
@@ -292,7 +293,7 @@ export class Game {
         const summary = this.recordWin(i, state, stars, ms);
         return () => this.goResults(i, state, summary);
       },
-      onBack: () => this.goLevels(),
+      onBack: () => this.goLevels(i),
     });
   }
 
