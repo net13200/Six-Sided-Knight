@@ -145,3 +145,25 @@ export function findPath(open: ReadonlySet<string>, from: Pos, to: Pos): Dir[] |
   }
   return null;
 }
+
+/**
+ * The open tile nearest to `p` (a tap on grass, scenery or a locked level):
+ * closest by straight-line distance, then by how far the die would roll.
+ */
+export function nearestOpen(open: ReadonlySet<string>, p: Pos, from: Pos): Pos | null {
+  let best: Pos | null = null;
+  let bestD = Infinity;
+  let bestWalk = Infinity;
+  for (const k of open) {
+    const [c, r] = k.split(',').map(Number) as [number, number];
+    const d = Math.hypot(c - p.c, r - p.r);
+    if (d > bestD + 1e-9) continue;
+    const walk = Math.abs(c - from.c) + Math.abs(r - from.r);
+    if (d < bestD - 1e-9 || walk < bestWalk) {
+      best = { c, r };
+      bestD = d;
+      bestWalk = walk;
+    }
+  }
+  return best;
+}

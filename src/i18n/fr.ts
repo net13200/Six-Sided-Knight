@@ -227,7 +227,6 @@ const dict: Dict = {
   ', {n} of 3 stars': ', {n} étoiles sur 3',
   ', changed: solve it again': ', modifié : à refaire',
   'Level {n}, locked': 'Niveau {n}, verrouillé',
-  Prev: 'Préc.',
   Next: 'Suivant',
   'Chapter {n}': 'Chapitre {n}',
   NEW: 'NEUF',
@@ -698,6 +697,10 @@ const dict: Dict = {
   'Roll along the road': 'Rouler sur la route',
   'Roll to that level': "Rouler jusqu'à ce niveau",
   'Play the level you are on': 'Jouer le niveau où tu es',
+  '{name}, {n} of {max} stars': '{name}, {n} étoiles sur {max}',
+  '{name}, locked': '{name}, verrouillé',
+  World: 'Monde',
+  'The Well': 'Le Puits',
 };
 
 export default dict;

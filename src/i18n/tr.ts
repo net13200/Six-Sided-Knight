@@ -224,7 +224,6 @@ const dict: Dict = {
   ', {n} of 3 stars': ', 3 üzerinden {n} yıldız',
   ', changed: solve it again': ', değişti: tekrar çöz',
   'Level {n}, locked': 'Bölüm {n}, kilitli',
-  Prev: 'Önceki',
   Next: 'Sonraki',
   'Chapter {n}': 'Kısım {n}',
   NEW: 'YENİ',
@@ -692,6 +691,10 @@ const dict: Dict = {
   'Roll along the road': 'Yol boyunca yuvarlan',
   'Roll to that level': 'O bölüme yuvarlan',
   'Play the level you are on': 'Üzerinde durduğun bölümü oyna',
+  '{name}, {n} of {max} stars': '{name}, {max} üzerinden {n} yıldız',
+  '{name}, locked': '{name}, kilitli',
+  World: 'Dünya',
+  'The Well': 'Kuyu',
 };
 
 export default dict;

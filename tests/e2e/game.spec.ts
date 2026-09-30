@@ -10,6 +10,7 @@ import {
   swipe,
   tileClient,
   trackErrors,
+  tutorialFingerprints,
   waitForMoves,
 } from './helpers';
 
@@ -200,16 +201,19 @@ test.describe('Six Sided Knight', () => {
     expect(await levelIndex(page)).toBe(1);
   });
 
-  test('the map scrolls through the districts, and the die rolls to landmarks', async ({
-    page,
-  }) => {
+  test('the World view, and the die rolls to landmarks', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('levels').click();
     await expect(page.getByTestId('level-1')).toBeVisible();
-    await page.getByTestId('chapter-next').click();
-    await expect(page.getByTestId('level-11')).toBeVisible();
-    await expect(page.getByTestId('level-11')).toBeDisabled();
-    await page.getByTestId('chapter-prev').click();
+    // The World view: every district and its stars; only open ones can be picked.
+    await page.getByTestId('world').click();
+    await expect(page.getByTestId('area-1')).toHaveAttribute(
+      'aria-label',
+      /First Steps, 0 of 30 stars/,
+    );
+    await expect(page.getByTestId('area-2')).toBeDisabled();
+    await page.getByTestId('world').click();
+    await expect(page.getByTestId('area-1')).toBeHidden();
     await expect(page.getByTestId('level-1')).toBeVisible();
     // Roll by hand: down from level 1, then right along the side road to the Smith.
     for (const k of ['ArrowDown', 'ArrowRight', 'ArrowRight', 'ArrowRight', 'ArrowRight']) {
@@ -224,6 +228,41 @@ test.describe('Six Sided Knight', () => {
     await expect.poll(() => scene(page)).toBe('levels');
     await page.getByTestId('landmark-daily').click();
     await expect.poll(() => scene(page), { timeout: 5000 }).toBe('daily');
+  });
+
+  test('picking a district in the World view tosses the die there', async ({ page }) => {
+    await page.addInitScript((fps) => {
+      if (sessionStorage.getItem('seeded')) return;
+      sessionStorage.setItem('seeded', '1');
+      const levels: Record<string, unknown> = {};
+      const hints: Record<string, boolean> = {
+        'story:intro': true,
+        'story:ch1': true,
+        'story:ch2': true,
+      };
+      for (let i = 1; i <= 10; i++) {
+        const id = `c1-${String(i).padStart(2, '0')}`;
+        levels[id] = { stars: 3, bestMoves: 9, completions: 1, bestTimeMs: 9000, fp: fps[i - 1] };
+        hints[`map:${i < 10 ? `c1-${String(i + 1).padStart(2, '0')}` : 'c2-01'}`] = true;
+      }
+      localStorage.setItem(
+        'ssk.save',
+        JSON.stringify({ version: 3, campaign: 2, createdAt: 1, levels, hints }),
+      );
+    }, tutorialFingerprints());
+    await page.goto('/');
+    await page.getByTestId('levels').click();
+    // The die starts on level 11 (the next to play); toss it back to First Steps.
+    await expect(page.getByTestId('map-play')).toBeEnabled();
+    await page.getByTestId('world').click();
+    await expect(page.getByTestId('area-1')).toHaveAttribute('aria-label', /30 of 30 stars/);
+    await page.getByTestId('area-1').click();
+    await expect(page.getByTestId('map-announcer')).toContainText('Level 1:', { timeout: 5000 });
+    await page.getByTestId('world').click();
+    await page.getByTestId('area-2').click();
+    await expect(page.getByTestId('map-announcer')).toContainText('Level 11:', { timeout: 5000 });
+    await page.getByTestId('map-play').click();
+    await expect.poll(() => scene(page)).not.toBe('levels');
   });
 
   test('progress survives a reload and Play continues where you left off', async ({ page }) => {

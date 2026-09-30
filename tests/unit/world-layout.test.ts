@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { buildWorld, COLS, findPath, key, stepFrom, type Pos } from '../../src/game/world/layout';
+import {
+  buildWorld,
+  COLS,
+  findPath,
+  key,
+  nearestOpen,
+  stepFrom,
+  type Pos,
+} from '../../src/game/world/layout';
 
 const world = buildWorld(60, 10);
 const inside = (p: Pos) => p.c >= 0 && p.c < COLS && p.r >= 0 && p.r < world.rows;
@@ -57,5 +65,12 @@ describe('the world map layout', () => {
     expect(key(at)).toBe(key(world.pedestals[4]!));
     expect(findPath(open, world.pedestals[0]!, world.pedestals[5]!)).toBeNull();
     expect(findPath(open, world.pedestals[2]!, world.pedestals[2]!)).toEqual([]);
+  });
+
+  it('a tap off the road goes to the nearest open tile', () => {
+    const open = new Set(['2,5', '3,5', '4,5', '4,6']);
+    expect(nearestOpen(open, { c: 3, r: 2 }, { c: 4, r: 6 })).toEqual({ c: 3, r: 5 });
+    expect(nearestOpen(open, { c: 9, r: 9 }, { c: 2, r: 5 })).toEqual({ c: 4, r: 6 });
+    expect(nearestOpen(new Set(), { c: 0, r: 0 }, { c: 0, r: 0 })).toBeNull();
   });
 });

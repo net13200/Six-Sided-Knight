@@ -65,6 +65,7 @@ const ICONS: Record<string, string> = {
   die: '<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.2"/><circle cx="15" cy="15" r="1.2"/><circle cx="12" cy="12" r="1.2"/>',
   stats: '<path d="M5 20V11M12 20V5M19 20v-7"/>',
   crown: '<path d="M4 18l-1-10 5 4 4-7 4 7 5-4-1 10z"/>',
+  map: '<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14"/>',
   video: '<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10.5l5-3v9l-5-3z"/>',
 };
 

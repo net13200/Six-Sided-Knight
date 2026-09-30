@@ -6,7 +6,8 @@
  * place tile by tile and the die rolls along it. Districts (one per chapter)
  * stack from the village at the bottom to the Well at the top; the Smith and
  * the Daily Roll's notice board stand by the start, the Well (the Depths) and
- * the Greenwood past the last level.
+ * the Greenwood past the last level. The World button zooms out to every
+ * district and its stars; pick one and the die is tossed there.
  */
 import { rollDie, type DieState, type Dir } from '../../engine';
 import { t, tk } from '../../i18n';
@@ -22,7 +23,8 @@ import type { Command } from '../input';
 import { el, icon, iconButton, place } from '../ui';
 import { drawFace } from '../view/art';
 import { drawControls, sideCard, touchFirst, wrap } from '../view/backdrop';
-import { cameraMatrix, drawCube3d, IDENTITY, rollRotation } from '../view/cube';
+import { cameraMatrix, drawCube3d, IDENTITY, matmul, rollRotation } from '../view/cube';
+import { ease } from '../view/fx';
 import { C } from '../view/palette';
 import {
   BAND_ROWS,
@@ -30,6 +32,7 @@ import {
   COLS,
   findPath,
   key,
+  nearestOpen,
   stepFrom,
   TILE,
   TOP_ROWS,
@@ -116,6 +119,35 @@ export class LevelsScene implements Scene {
   private playBtn: HTMLButtonElement | null = null;
   private announcer: HTMLElement | null = null;
   private lastCam = NaN;
+  /** A toss to another district: wind-up, flight, then a bouncy landing. */
+  private toss: {
+    from: { x: number; y: number };
+    to: Pos;
+    t: number;
+    dur: number;
+    height: number;
+    stage: 'windup' | 'fly' | 'land';
+  } | null = null;
+  /** Sparkles and dust (world coordinates). */
+  private bits: Array<{
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    t: number;
+    life: number;
+    kind: 'spark' | 'dust' | 'star';
+  }> = [];
+  private sparkClock = 0;
+  /** After rolling as far as the road goes toward a tap, bump toward it. */
+  private bumpToward: Pos | null = null;
+  /** The World view (every district at once). */
+  private overview = false;
+  private overviewT = 0;
+  private overviewSel = 0;
+  private worldBtn: HTMLButtonElement | null = null;
+  private backBtn: HTMLElement | null = null;
+  private readonly areaButtons: HTMLButtonElement[] = [];
 
   constructor(
     private readonly game: Game,
@@ -231,13 +263,13 @@ export class LevelsScene implements Scene {
   }
 
   private selectedLevel(): number | null {
-    if (this.roll) return null;
+    if (this.roll || this.toss) return null;
     const i = this.pedestalAt.get(key(this.pos));
     return i !== undefined && this.unlocked[i] ? i : null;
   }
 
   private selectedLandmark(): Landmark | null {
-    if (this.roll) return null;
+    if (this.roll || this.toss) return null;
     return this.landmarkAt.get(key(this.pos)) ?? null;
   }
 
@@ -284,40 +316,41 @@ export class LevelsScene implements Scene {
       ui.append(b);
     }
 
-    const chapters = this.world.bands.length;
-    const look = (d: number) => {
-      // Past the last district: the top of the world (the Well).
-      const now = this.camY < TOP_ROWS * TILE ? chapters : this.viewChapter();
-      const ch = Math.max(0, Math.min(chapters, now + d));
-      this.camTarget = this.bandY(ch);
-    };
+    // The World view's districts: pick one and the die is tossed there.
+    this.world.bands.forEach((band) => {
+      const ch = band.chapter;
+      const open = this.chapterOpen(ch);
+      const { got, max } = this.chapterStars(ch);
+      const name = t(CHAPTER_NAMES[ch] ?? '');
+      const b = el('button', {
+        className: 'map-spot',
+        testId: `area-${ch + 1}`,
+        label: open
+          ? t('{name}, {n} of {max} stars', { name, n: got, max })
+          : t('{name}, locked', { name }),
+        onClick: () => this.tossTo(ch),
+      });
+      b.disabled = !open;
+      b.style.display = 'none';
+      place(b, 8, this.areaY(ch), 324, 58);
+      this.areaButtons.push(b);
+      ui.append(b);
+    });
+    this.worldBtn = iconButton('map', t('World'), () => this.setOverview(!this.overview), 'world');
     this.playBtn = el('button', {
       className: 'btn primary',
       testId: 'map-play',
       onClick: () => this.play(),
     });
     ui.append(
-      place(
-        iconButton('back', t('Prev'), () => look(-1), 'chapter-prev'),
-        2,
-        1,
-        60,
-        60,
-      ),
-      place(
-        iconButton('next', t('Next'), () => look(1), 'chapter-next'),
-        278,
-        1,
-        60,
-        60,
-      ),
-      place(
+      place(this.worldBtn, 2, 1, 60, 60),
+      (this.backBtn = place(
         iconButton('back', t('Menu'), () => this.game.goMenu(), 'back'),
         4,
         414,
         64,
         62,
-      ),
+      )),
       place(this.playBtn, 74, 416, 262, 60),
     );
     this.syncCard();
@@ -345,7 +378,7 @@ export class LevelsScene implements Scene {
 
   /** Rolls the die along the road to `to` (fast), then selects what's there. */
   private travelTo(to: Pos, goal: LandmarkId | null = null): void {
-    if (this.reveal) return;
+    if (this.reveal || this.toss) return;
     const from = this.roll ? stepFrom(this.roll.from, this.roll.dir) : this.pos;
     const path = findPath(this.open, from, to);
     if (!path) return;
@@ -380,6 +413,209 @@ export class LevelsScene implements Scene {
       }
     }
     this.goal = null;
+    if (this.bumpToward) {
+      const dc = this.bumpToward.c - this.pos.c;
+      const dr = this.bumpToward.r - this.pos.r;
+      this.bumpToward = null;
+      if (dc || dr) {
+        const dir: Dir = Math.abs(dc) > Math.abs(dr) ? (dc > 0 ? 'E' : 'W') : dr > 0 ? 'S' : 'N';
+        this.bump = { dir, t: 0 };
+        this.game.audio.play('bump');
+      }
+    }
+  }
+
+  // ---------- the World view and the toss ----------
+
+  private chapterOpen(ch: number): boolean {
+    return this.unlocked[ch * CHAPTER_SIZE] === true;
+  }
+
+  private chapterStars(ch: number): { got: number; max: number } {
+    const levels = this.game.levels.slice(ch * CHAPTER_SIZE, (ch + 1) * CHAPTER_SIZE);
+    const save = this.game.save.data;
+    return {
+      got: levels.reduce((n, l) => n + (save.levels[l.id]?.stars ?? 0), 0),
+      max: levels.length * 3,
+    };
+  }
+
+  /** Where a district's card sits in the World view (the last district on top). */
+  private areaY(ch: number): number {
+    const n = this.world.bands.length;
+    return 102 + (n - 1 - ch) * 62;
+  }
+
+  /** The chapter the die is in. */
+  private dieChapter(): number {
+    const r = this.pos.r;
+    for (const b of this.world.bands) if (r >= b.top && r < b.top + BAND_ROWS) return b.chapter;
+    return r < TOP_ROWS ? this.world.bands.length - 1 : 0;
+  }
+
+  private setOverview(on: boolean): void {
+    if (this.reveal || this.toss) return;
+    this.overview = on;
+    if (on) this.overviewSel = this.dieChapter();
+    this.worldBtn?.replaceChildren(
+      icon(on ? 'close' : 'map'),
+      el('span', { text: on ? t('Close') : t('World') }),
+    );
+    this.worldBtn?.setAttribute('aria-label', on ? t('Close') : t('World'));
+    for (const b of this.areaButtons) b.style.display = on ? '' : 'none';
+    if (this.playBtn) this.playBtn.style.display = on ? 'none' : '';
+    if (this.backBtn) this.backBtn.style.display = on ? 'none' : '';
+    this.syncButtons(true);
+    if (on) this.areaButtons[this.overviewSel]?.focus();
+  }
+
+  /** Where the die lands in a district: its first unbeaten level, else its first. */
+  private landingIn(ch: number): Pos | null {
+    const save = this.game.save.data;
+    const levels = this.game.levels;
+    let first: number | null = null;
+    for (let i = ch * CHAPTER_SIZE; i < Math.min(levels.length, (ch + 1) * CHAPTER_SIZE); i++) {
+      if (!this.unlocked[i]) break;
+      first ??= i;
+      if (!isCompleted(save, levels[i]!) || needsRedo(save, levels[i]!))
+        return this.world.pedestals[i]!;
+    }
+    return first === null ? null : this.world.pedestals[first]!;
+  }
+
+  /** Picks a district in the World view: the die is tossed there. */
+  private tossTo(ch: number): void {
+    const to = this.landingIn(ch);
+    this.setOverview(false);
+    if (!to || this.roll || this.queue.length) return;
+    if (key(to) === key(this.pos)) return;
+    const from = this.dieXY();
+    const dist = Math.hypot(to.c * TILE + TILE / 2 - from.x, to.r * TILE + TILE / 2 - from.y);
+    this.camTarget = null;
+    if (this.game.reducedMotion) {
+      this.land(to);
+      return;
+    }
+    this.toss = {
+      from: { x: from.x, y: from.y },
+      to,
+      t: 0,
+      dur: Math.min(1.5, 0.75 + dist / 3000),
+      height: Math.min(170, 60 + dist * 0.06),
+      stage: 'windup',
+    };
+    this.game.audio.play('click');
+  }
+
+  private land(to: Pos): void {
+    this.pos = to;
+    // A 180° spin on the way: the die comes down turned over twice (east).
+    this.die = rollDie(rollDie(this.die, 'E'), 'E');
+    this.arrive();
+  }
+
+  private updateToss(dt: number): void {
+    const s = this.toss!;
+    s.t += dt;
+    if (s.stage === 'windup' && s.t >= 0.2) {
+      s.stage = 'fly';
+      s.t = 0;
+      this.game.audio.play('pull');
+    } else if (s.stage === 'fly') {
+      // A sparkle trail behind the die.
+      this.sparkClock += dt;
+      if (this.sparkClock > 0.035) {
+        this.sparkClock = 0;
+        const p = this.tossXY();
+        this.bits.push({
+          x: p.x + (Math.random() - 0.5) * 10,
+          y: p.y - p.h + (Math.random() - 0.5) * 10,
+          vx: 0,
+          vy: 10,
+          t: 0,
+          life: 0.45,
+          kind: 'spark',
+        });
+      }
+      if (s.t >= s.dur) {
+        s.stage = 'land';
+        s.t = 0;
+        this.game.audio.play('bump');
+        const x = s.to.c * TILE + TILE / 2;
+        const y = s.to.r * TILE + TILE / 2;
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2;
+          this.bits.push({
+            x,
+            y: y + 6,
+            vx: Math.cos(a) * 40,
+            vy: Math.sin(a) * 16,
+            t: 0,
+            life: 0.5,
+            kind: 'dust',
+          });
+        }
+        for (let i = 0; i < 5; i++) {
+          const a = -Math.PI / 2 + (i - 2) * 0.5;
+          this.bits.push({
+            x,
+            y: y - 12,
+            vx: Math.cos(a) * 60,
+            vy: Math.sin(a) * 60,
+            t: 0,
+            life: 0.6,
+            kind: 'star',
+          });
+        }
+      }
+    } else if (s.stage === 'land') {
+      // Two little hops: a clack on each.
+      const before = s.t - dt;
+      if (before < 0.24 && s.t >= 0.24) this.game.audio.play('click');
+      if (before < 0.4 && s.t >= 0.4) this.game.audio.play('click');
+      if (s.t >= 0.5) {
+        this.toss = null;
+        this.land(s.to);
+      }
+    }
+  }
+
+  /** The die's ground position and height during a toss. */
+  private tossXY(): { x: number; y: number; h: number; p: number } {
+    const s = this.toss!;
+    const tx = s.to.c * TILE + TILE / 2;
+    const ty = s.to.r * TILE + TILE / 2;
+    if (s.stage === 'windup') return { x: s.from.x, y: s.from.y, h: 0, p: 0 };
+    if (s.stage === 'land') {
+      // Bounces: 10 px, then 4.
+      const k = s.t;
+      const h =
+        k < 0.24
+          ? Math.sin((k / 0.24) * Math.PI) * 10
+          : k < 0.4
+            ? Math.sin(((k - 0.24) / 0.16) * Math.PI) * 4
+            : 0;
+      return { x: tx, y: ty, h, p: 1 };
+    }
+    const p = Math.min(1, s.t / s.dur);
+    const q = ease.inOut(p);
+    return {
+      x: s.from.x + (tx - s.from.x) * q,
+      y: s.from.y + (ty - s.from.y) * q,
+      h: Math.sin(Math.PI * p) * s.height,
+      p,
+    };
+  }
+
+  private updateBits(dt: number): void {
+    for (const b of this.bits) {
+      b.t += dt;
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      b.vx *= 0.92;
+      b.vy = b.kind === 'star' ? b.vy + 160 * dt : b.vy * 0.92;
+    }
+    this.bits = this.bits.filter((b) => b.t < b.life);
   }
 
   private say(text: string): void {
@@ -389,11 +625,30 @@ export class LevelsScene implements Scene {
   }
 
   command(cmd: Command): void {
+    if (this.overview) {
+      const n = this.world.bands.length;
+      if (cmd.type === 'back') this.setOverview(false);
+      else if (cmd.type === 'confirm') this.tossTo(this.overviewSel);
+      else if (cmd.type === 'move' && (cmd.dir === 'N' || cmd.dir === 'S')) {
+        // Up is the next district (they're stacked, the last on top).
+        let sel = this.overviewSel;
+        do sel = Math.max(0, Math.min(n - 1, sel + (cmd.dir === 'N' ? 1 : -1)));
+        while (!this.chapterOpen(sel) && sel > 0 && cmd.dir === 'N' && sel < n - 1);
+        if (this.chapterOpen(sel)) this.overviewSel = sel;
+        this.areaButtons[this.overviewSel]?.focus();
+      } else if (cmd.type === 'tap') {
+        for (const b of this.world.bands) {
+          const y = this.areaY(b.chapter);
+          if (cmd.y >= y && cmd.y < y + 58 && this.chapterOpen(b.chapter)) this.tossTo(b.chapter);
+        }
+      }
+      return;
+    }
     if (cmd.type === 'back') {
       this.game.goMenu();
       return;
     }
-    if (this.reveal) return;
+    if (this.reveal || this.toss) return;
     if (cmd.type === 'confirm') this.play();
     else if (cmd.type === 'move') {
       if (this.roll || this.queue.length) return;
@@ -411,10 +666,18 @@ export class LevelsScene implements Scene {
       const c = Math.floor(cmd.x / TILE);
       const r = Math.floor((cmd.y - HUD_H + this.camY) / TILE);
       const k = key({ c, r });
-      const i = this.pedestalAt.get(k);
       const l = this.landmarkAt.get(k);
-      if (i !== undefined && this.unlocked[i]) this.travelTo({ c, r });
-      else if (l && this.landmarkOpen(l)) this.travelTo(l.pos, l.id);
+      if (l && this.landmarkOpen(l)) this.travelTo(l.pos, l.id);
+      else if (this.open.has(k)) this.travelTo({ c, r });
+      else {
+        // Grass, scenery or a locked level: as close as the road goes.
+        const from = this.roll ? stepFrom(this.roll.from, this.roll.dir) : this.pos;
+        const near = nearestOpen(this.open, { c, r }, from);
+        if (!near) return;
+        this.travelTo(near);
+        this.bumpToward = { c, r };
+        if (key(near) === key(this.pos) && !this.roll) this.arrive();
+      }
     }
   }
 
@@ -425,6 +688,9 @@ export class LevelsScene implements Scene {
       if (this.bump.t >= 1) this.bump = null;
     }
     if (this.reveal) this.updateReveal(dt);
+    if (this.toss) this.updateToss(dt);
+    this.updateBits(dt);
+    this.overviewT = Math.max(0, Math.min(1, this.overviewT + (this.overview ? dt : -dt) * 7));
     if (this.roll) {
       this.roll.t += dt / this.roll.dur;
       if (this.roll.t >= 1) {
@@ -437,8 +703,10 @@ export class LevelsScene implements Scene {
         else this.arrive();
       }
     }
-    const target = this.camTarget ?? this.followY();
-    const k = this.game.reducedMotion ? 1 : Math.min(1, dt * 7);
+    const target = this.toss
+      ? this.clampCam(this.tossXY().y - VIEW_H * 0.58 - this.tossXY().h * 0.4)
+      : (this.camTarget ?? this.followY());
+    const k = this.game.reducedMotion ? 1 : Math.min(1, dt * (this.toss ? 9 : 7));
     this.camY += (target - this.camY) * k;
     if (Math.abs(target - this.camY) < 0.3) this.camY = target;
     this.syncButtons();
@@ -471,7 +739,7 @@ export class LevelsScene implements Scene {
       // A bit bigger than the tile: touch targets stay at least 44 px on small phones.
       const y = HUD_H + pos.r * TILE - this.camY;
       place(b, pos.c * TILE - 13, y - 13, TILE + 26, TILE + 26);
-      b.style.display = y > HUD_H - 6 && y + TILE < CARD_Y + 6 ? '' : 'none';
+      b.style.display = !this.overview && y > HUD_H - 6 && y + TILE < CARD_Y + 6 ? '' : 'none';
     }
   }
 
@@ -481,7 +749,7 @@ export class LevelsScene implements Scene {
     const l = this.selectedLandmark();
     const label = i !== null ? t('Play') : l ? t('Enter') : t('Play');
     this.playBtn.replaceChildren(icon('play'), el('span', { text: label }));
-    this.playBtn.disabled = (i === null && !l) || !!this.reveal;
+    this.playBtn.disabled = (i === null && !l) || !!this.reveal || !!this.toss;
   }
 
   // ---------- drawing ----------
@@ -502,9 +770,11 @@ export class LevelsScene implements Scene {
     this.drawPedestals(ctx, r0, r1);
     this.drawFolk(ctx, r0, r1);
     this.drawDie(ctx);
+    this.drawBits(ctx);
     ctx.restore();
     this.drawHud(ctx);
     this.drawCard(ctx);
+    if (this.overviewT > 0) this.drawOverview(ctx);
   }
 
   private themeOf(r: number): number {
@@ -1091,6 +1361,10 @@ export class LevelsScene implements Scene {
   }
 
   private drawDie(ctx: CanvasRenderingContext2D): void {
+    if (this.toss) {
+      this.drawTossedDie(ctx);
+      return;
+    }
     const { x, y, lift } = this.dieXY();
     let bx = 0;
     let by = 0;
@@ -1106,6 +1380,190 @@ export class LevelsScene implements Scene {
     ctx.fill();
     const model = this.roll ? rollRotation(this.roll.dir, Math.min(1, this.roll.t)) : IDENTITY;
     drawCube3d(ctx, this.die, x + bx, y - 8 - lift + by, 19, DIE_CAMERA, model);
+  }
+
+  private drawTossedDie(ctx: CanvasRenderingContext2D): void {
+    const s = this.toss!;
+    const { x, y, h, p } = this.tossXY();
+    // Shadow on the ground: smaller and fainter the higher the die flies.
+    const far = Math.min(1, h / 120);
+    ctx.fillStyle = `rgba(0,0,0,${0.3 - 0.18 * far})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y + 9, 13 * (1 - 0.5 * far), 5 * (1 - 0.5 * far), 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Squash and stretch: crouch before the jump, stretch in the air, squish on landing.
+    let sx: number;
+    let sy: number;
+    if (s.stage === 'windup') {
+      const w = Math.sin((s.t / 0.2) * Math.PI * 0.5);
+      sx = 1 + 0.22 * w;
+      sy = 1 - 0.25 * w;
+    } else if (s.stage === 'fly') {
+      const k = p < 0.15 ? 1 - p / 0.15 : 0;
+      sx = 1 - 0.12 * k;
+      sy = 1 + 0.18 * k;
+    } else {
+      const k = Math.max(0, 1 - s.t / 0.14);
+      sx = 1 + 0.3 * k;
+      sy = 1 - 0.28 * k;
+    }
+    const grow = 1 + h / 260;
+    const model =
+      s.stage === 'fly'
+        ? matmul(rollRotation('N', 4 * ease.inOut(p)), rollRotation('E', 2 * ease.inOut(p)))
+        : s.stage === 'land'
+          ? matmul(rollRotation('N', 4), rollRotation('E', 2))
+          : IDENTITY;
+    ctx.save();
+    ctx.translate(x, y + 2 - h);
+    ctx.scale(sx * grow, sy * grow);
+    drawCube3d(ctx, this.die, 0, -10, 19, DIE_CAMERA, model);
+    ctx.restore();
+    if (s.stage === 'windup') {
+      // A little "!" pops up before the jump.
+      const k = Math.min(1, s.t / 0.12);
+      ctx.fillStyle = C.gold;
+      ctx.font = `900 ${10 + 6 * k}px system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('!', x + 14, y - 34 - 4 * k);
+    }
+  }
+
+  private drawBits(ctx: CanvasRenderingContext2D): void {
+    for (const b of this.bits) {
+      const k = 1 - b.t / b.life;
+      if (b.kind === 'dust') {
+        ctx.fillStyle = `rgba(236,230,214,${0.5 * k})`;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 3 + (1 - k) * 5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        const r = b.kind === 'star' ? 4 * k + 1 : 2.5 * k;
+        ctx.fillStyle =
+          b.kind === 'star' ? `rgba(255,215,94,${k})` : `rgba(255,241,176,${0.9 * k})`;
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const a = (i * Math.PI) / 4;
+          const rr = i % 2 ? r * 0.4 : r;
+          ctx.lineTo(b.x + Math.cos(a) * rr, b.y + Math.sin(a) * rr);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+  }
+
+  /** The World view: every district as a card, with its stars; the last on top. */
+  private drawOverview(ctx: CanvasRenderingContext2D): void {
+    const a = this.game.reducedMotion ? (this.overview ? 1 : 0) : this.overviewT;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.fillStyle = 'rgba(15,13,22,0.96)';
+    ctx.fillRect(0, HUD_H, 340, 480 - HUD_H);
+    ctx.translate(0, (1 - a) * 12);
+    // The Well, at the top of the world.
+    ctx.fillStyle = C.textDim;
+    ctx.font = 'bold 11px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(t('The Well'), 170, 84, 300);
+    const save = this.game.save.data;
+    const dieCh = this.dieChapter();
+    for (const band of this.world.bands) {
+      const ch = band.chapter;
+      const y = this.areaY(ch);
+      const open = this.chapterOpen(ch);
+      const theme = THEMES[ch % THEMES.length]!;
+      const { got, max } = this.chapterStars(ch);
+      const sel = this.overview && ch === this.overviewSel;
+      ctx.fillStyle = open ? '#221f2f' : '#1a1724';
+      ctx.beginPath();
+      ctx.roundRect(8, y, 324, 58, 12);
+      ctx.fill();
+      ctx.strokeStyle = sel ? C.gold : ch === dieCh ? '#8d86a0' : '#3a3550';
+      ctx.lineWidth = sel ? 2 : 1;
+      ctx.stroke();
+      // A window onto the district: its ground and a piece of its scenery.
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(14, y + 6, 46, 46, 9);
+      ctx.clip();
+      ctx.fillStyle = theme.ground;
+      ctx.fillRect(14, y + 6, 46, 46);
+      ctx.translate(37, y + 30);
+      if (ch === 0) this.bush(ctx, '#3d6b35', '#2e5429');
+      else if (ch === 1) this.pine(ctx, '#3f6b58', true);
+      else if (ch === 2) this.goldPile(ctx);
+      else if (ch === 3) this.tower(ctx);
+      else if (ch === 4) this.grave(ctx);
+      else this.pillar(ctx);
+      ctx.restore();
+      if (!open) {
+        ctx.fillStyle = 'rgba(15,13,22,0.6)';
+        ctx.beginPath();
+        ctx.roundRect(14, y + 6, 46, 46, 9);
+        ctx.fill();
+      }
+      ctx.textAlign = 'left';
+      ctx.fillStyle = C.textDim;
+      ctx.font = 'bold 9px system-ui, sans-serif';
+      ctx.fillText(t('Chapter {n}', { n: ch + 1 }).toUpperCase(), 70, y + 15, 150);
+      ctx.fillStyle = open ? C.text : '#6d6480';
+      ctx.font = '800 15px system-ui, sans-serif';
+      ctx.fillText(t(CHAPTER_NAMES[ch] ?? ''), 70, y + 30, 160);
+      // One mark per level: gold ★★★, lilac beaten, ivory open, dark locked.
+      const levels = this.game.levels.slice(ch * CHAPTER_SIZE, (ch + 1) * CHAPTER_SIZE);
+      levels.forEach((l, k) => {
+        const i = ch * CHAPTER_SIZE + k;
+        const stars = save.levels[l.id]?.stars ?? 0;
+        const done = isCompleted(save, l) && !needsRedo(save, l);
+        ctx.fillStyle = !this.unlocked[i]
+          ? '#3a3550'
+          : done
+            ? stars === 3
+              ? C.gold
+              : '#b3a8c9'
+            : '#ece6d6';
+        ctx.beginPath();
+        ctx.roundRect(70 + k * 11, y + 41, 8, 8, 2);
+        ctx.fill();
+      });
+      if (open) {
+        drawStar(ctx, 262, y + 29, 7, got > 0);
+        ctx.fillStyle = C.gold;
+        ctx.font = '800 14px system-ui, sans-serif';
+        ctx.fillText(`${got}/${max}`, 273, y + 30, 54);
+        if (this.districtGold(ch)) {
+          ctx.fillStyle = '#5e4726';
+          ctx.fillRect(312, y + 6, 2, 20);
+          ctx.fillStyle = C.gold;
+          ctx.beginPath();
+          ctx.moveTo(314, y + 6);
+          ctx.lineTo(326, y + 10);
+          ctx.lineTo(314, y + 14);
+          ctx.closePath();
+          ctx.fill();
+        }
+      } else {
+        ctx.save();
+        ctx.translate(288, y + 29);
+        ctx.strokeStyle = '#6d6480';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(-7, -2, 14, 11, 2);
+        ctx.moveTo(-4, -2);
+        ctx.arc(0, -3, 4, Math.PI, 0);
+        ctx.lineTo(4, -2);
+        ctx.stroke();
+        ctx.restore();
+      }
+      // You are here: a little die on the card.
+      if (ch === dieCh) {
+        drawCube3d(ctx, this.die, 226, y + 30, 9, DIE_CAMERA);
+      }
+    }
+    ctx.restore();
   }
 
   private drawHud(ctx: CanvasRenderingContext2D): void {
