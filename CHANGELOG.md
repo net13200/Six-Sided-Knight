@@ -2,6 +2,12 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.16.0 — Look around
+
+- **Scroll the map.** Drag the map up or down (or use the mouse wheel) to look along the road; a quick flick keeps it gliding. Dragging never moves the die or starts a level, and the view follows the die again when it next rolls.
+- **Clear of notches.** On phones with a notch, rounded corners or a home bar (and in fullscreen apps), the game and its side panels now stay inside the screen's safe area.
+- A long press no longer brings up the "save image" menu on iPhone.
+
 ## 0.15.0 — A winding road
 
 - **The road zigzags up the island.** Each district's road climbs across the board and the next one climbs back, with just one stone between levels, so it's much shorter to get around. The road to levels you haven't reached shows faintly, so you can see where it goes.
