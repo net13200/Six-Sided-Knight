@@ -2,6 +2,13 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.14.0 — Toss the die
+
+- **A map of Oddmere.** The World button on the level map opens a hand-drawn map: the six districts as islands along the road to the Throne, each with its stars and a dot for every level (gold for ★★★). Districts you haven't reached are fogged and locked, and your die shows where you are.
+- **Fast travel: toss the die.** Pick a district on the map and your die is thrown there: it crouches, flies spinning through the air with a sparkle trail, and lands with a thump, a puff of dust and a couple of bounces, on the district's first unbeaten level.
+- **Tap anywhere to roll.** Tap any spot on the level map and the die rolls there along the road (or as close as the road goes).
+- **Finished districts get a medal.** When every level in a district has ★★★, a gold medal with a check marks it on the map, on its last level and next to its stars.
+
 ## 0.13.0 — A world to roll across
 
 - **A world map.** The level map is now Oddmere itself: one board, a district per chapter from the village up to the Well, and you roll your die along the road between the levels. Swipe or use the arrow keys, or tap a level and the die rolls there by itself. Land on a level to see its stars and par, then Play.
