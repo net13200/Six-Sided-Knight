@@ -201,7 +201,7 @@ test.describe('Six Sided Knight', () => {
     expect(await levelIndex(page)).toBe(1);
   });
 
-  test('the World view, and the die rolls to landmarks', async ({ page }) => {
+  test('the World view, and tapping a landmark rolls the die there', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('levels').click();
     await expect(page.getByTestId('level-1')).toBeVisible();
@@ -215,13 +215,12 @@ test.describe('Six Sided Knight', () => {
     await page.getByTestId('world').click();
     await expect(page.getByTestId('area-1')).toBeHidden();
     await expect(page.getByTestId('level-1')).toBeVisible();
-    // Roll by hand: down from level 1, then right along the side road to the Smith.
-    for (const k of ['ArrowDown', 'ArrowRight', 'ArrowRight', 'ArrowRight', 'ArrowRight']) {
-      await page.keyboard.press(k);
-      await page.waitForTimeout(220);
-    }
-    await expect(page.getByTestId('map-announcer')).toContainText('Smith');
-    await page.getByTestId('map-play').click();
+    // No rolling tile by tile: a swipe or arrow key doesn't walk off the road.
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(300);
+    await expect(page.getByTestId('map-announcer')).not.toContainText('Smith');
+    // Tap the Smith: the die rolls there and it opens.
+    await page.getByTestId('landmark-smith').click();
     await expect.poll(() => scene(page)).toBe('forge');
     // The Smith's Back returns to the map; tapping the notice board rolls there and opens it.
     await page.getByTestId('back').click();
@@ -260,6 +259,11 @@ test.describe('Six Sided Knight', () => {
     await expect(page.getByTestId('map-announcer')).toContainText('Level 1:', { timeout: 5000 });
     await page.getByTestId('world').click();
     await page.getByTestId('area-2').click();
+    await expect(page.getByTestId('map-announcer')).toContainText('Level 11:', { timeout: 5000 });
+    // The arrow keys hop level to level: down to level 10, up to 11 again.
+    await page.keyboard.press('ArrowDown');
+    await expect(page.getByTestId('map-announcer')).toContainText('Level 10:', { timeout: 5000 });
+    await page.keyboard.press('ArrowUp');
     await expect(page.getByTestId('map-announcer')).toContainText('Level 11:', { timeout: 5000 });
     await page.getByTestId('map-play').click();
     await expect.poll(() => scene(page)).not.toBe('levels');

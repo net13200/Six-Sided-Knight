@@ -694,13 +694,13 @@ const dict: Dict = {
   'Gauntlet: {n} floors in a row': 'Prüfung: {n} Ebenen am Stück',
   'Not played yet': 'Noch nicht gespielt',
   'Roll to a level, or tap one': 'Roll zu einem Level oder tippe darauf',
-  'Roll along the road': 'Die Straße entlang rollen',
   'Roll to that level': 'Zu diesem Level rollen',
   'Play the level you are on': 'Das Level spielen, auf dem du stehst',
   '{name}, {n} of {max} stars': '{name}, {n} von {max} Sternen',
   '{name}, locked': '{name}, gesperrt',
   World: 'Welt',
   'The Well': 'Der Brunnen',
+  'Hop to the next or previous level': 'Zum nächsten oder vorigen Level springen',
 };
 
 export default dict;

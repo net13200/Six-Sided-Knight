@@ -695,13 +695,13 @@ const dict: Dict = {
   'Gauntlet: {n} floors in a row': 'Beproeving: {n} verdiepingen op rij',
   'Not played yet': 'Nog niet gespeeld',
   'Roll to a level, or tap one': 'Rol naar een level of tik erop',
-  'Roll along the road': 'Rol over de weg',
   'Roll to that level': 'Rol naar dat level',
   'Play the level you are on': 'Speel het level waar je op staat',
   '{name}, {n} of {max} stars': '{name}, {n} van {max} sterren',
   '{name}, locked': '{name}, op slot',
   World: 'Wereld',
   'The Well': 'De Put',
+  'Hop to the next or previous level': 'Spring naar het volgende of vorige level',
 };
 
 export default dict;

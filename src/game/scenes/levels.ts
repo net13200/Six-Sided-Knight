@@ -1,13 +1,14 @@
 /**
  * The world map: Oddmere as one board, and you roll the die across it. Levels
- * are pedestals on a road; roll onto one (swipe, arrow keys, or tap it and
- * the die rolls there by itself) and its card shows below, with Play. Beat a
- * level and, next time you're on the map, the road to the next one flips into
- * place tile by tile and the die rolls along it. Districts (one per chapter)
- * stack from the village at the bottom to the Well at the top; the Smith and
- * the Daily Roll's notice board stand by the start, the Well (the Depths) and
- * the Greenwood past the last level. The World button zooms out to every
- * district and its stars; pick one and the die is tossed there.
+ * are pedestals on a road; tap one (or any spot) and the die rolls there by
+ * itself, and its card shows below, with Play. The arrow keys hop from level
+ * to level. Beat a level and, next time you're on the map, the road to the
+ * next one flips into place tile by tile and the die rolls along it.
+ * Districts (one per chapter) stack from the village at the bottom to the
+ * Well at the top; the Smith and the Daily Roll's notice board stand by the
+ * start, the Well (the Depths) and the Greenwood past the last level. The
+ * World button zooms out to every district and its stars; pick one and the
+ * die is tossed there.
  */
 import { rollDie, type DieState, type Dir } from '../../engine';
 import { t, tk } from '../../i18n';
@@ -676,12 +677,16 @@ export class LevelsScene implements Scene {
     if (this.reveal || this.toss) return;
     if (cmd.type === 'confirm') this.play();
     else if (cmd.type === 'move') {
-      if (this.roll || this.queue.length) return;
-      const to = stepFrom(this.pos, cmd.dir);
-      this.camTarget = null;
-      if (this.open.has(key(to))) {
-        this.queue = [cmd.dir];
-        this.nextStep();
+      // No rolling tile by tile: you tap where to go. Swipes do nothing here;
+      // the arrow keys hop to the next (up/right) or previous level.
+      if (cmd.swipe || this.roll || this.queue.length) return;
+      const here = this.pedestalAt.get(key(this.pos));
+      const step = cmd.dir === 'N' || cmd.dir === 'E' ? 1 : -1;
+      const from = here ?? (step > 0 ? -1 : this.unlocked.length);
+      let i = from + step;
+      while (i >= 0 && i < this.unlocked.length && !this.unlocked[i]) i += step;
+      if (i >= 0 && i < this.unlocked.length && this.unlocked[i]) {
+        this.travelTo(this.world.pedestals[i]!);
       } else {
         this.bump = { dir: cmd.dir, t: 0 };
         this.game.audio.play('bump');
@@ -1867,12 +1872,9 @@ export class LevelsScene implements Scene {
         w,
         y + 4,
         touchFirst()
-          ? [
-              [t('Swipe'), t('Roll along the road')],
-              [t('Tap'), t('Roll to that level')],
-            ]
+          ? [[t('Tap'), t('Roll to that level')]]
           : [
-              ['← ↑ → ↓', t('Roll along the road')],
+              ['← ↑ → ↓', t('Hop to the next or previous level')],
               ['Enter', t('Play the level you are on')],
               ['Esc', t('Back to the menu')],
             ],

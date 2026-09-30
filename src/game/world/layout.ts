@@ -47,8 +47,11 @@ export interface WorldLayout {
   readonly landmarks: readonly Landmark[];
 }
 
-/** Columns of a district's ten pedestals, bottom to top (odd districts are mirrored). */
-const PATTERN = [4, 1, 3, 6, 8, 5, 2, 4, 7, 4];
+/**
+ * Columns of a district's ten pedestals, bottom to top (odd districts are
+ * mirrored): a gentle S, so one or two road tiles lead from level to level.
+ */
+const PATTERN = [3, 4, 5, 6, 6, 5, 4, 3, 3, 4];
 
 export const key = (p: Pos): string => `${p.c},${p.r}`;
 
@@ -86,17 +89,19 @@ export function buildWorld(levelCount: number, chapterSize = 10): WorldLayout {
   // Side roads. The Smith and the notice board sit below level 1.
   const first = pedestals[0] ?? { c: 4, r: rows - 2 };
   const low = first.r + 1;
-  const smithRoad = [{ c: first.c, r: low }, ...between({ c: first.c, r: low }, { c: 8, r: low })];
-  const dailyRoad = [{ c: first.c, r: low }, ...between({ c: first.c, r: low }, { c: 1, r: low })];
+  const smithAt = { c: Math.min(COLS - 2, first.c + 3), r: low };
+  const dailyAt = { c: Math.max(1, first.c - 2), r: low };
+  const smithRoad = [{ c: first.c, r: low }, ...between({ c: first.c, r: low }, smithAt)];
+  const dailyRoad = [{ c: first.c, r: low }, ...between({ c: first.c, r: low }, dailyAt)];
   // The Well crowns the world, past the last level; the Greenwood beyond it.
   const last = pedestals[pedestals.length - 1] ?? first;
-  const well = { c: 4, r: 3 };
+  const well = { c: 4, r: TOP_ROWS - 2 };
   const wellRoad = between(last, well);
-  const greenwood = { c: 8, r: 1 };
+  const greenwood = { c: 7, r: TOP_ROWS - 4 };
   const greenRoad = between(well, greenwood);
   const landmarks: Landmark[] = [
-    { id: 'smith', pos: { c: 8, r: low }, road: smithRoad, when: 'always' },
-    { id: 'daily', pos: { c: 1, r: low }, road: dailyRoad, when: 'always' },
+    { id: 'smith', pos: smithAt, road: smithRoad, when: 'always' },
+    { id: 'daily', pos: dailyAt, road: dailyRoad, when: 'always' },
     { id: 'well', pos: well, road: wellRoad, when: 'campaign' },
     { id: 'greenwood', pos: greenwood, road: [well, ...greenRoad], when: 'campaign' },
   ];

@@ -688,13 +688,13 @@ const dict: Dict = {
   'Gauntlet: {n} floors in a row': 'Sınav: art arda {n} kat',
   'Not played yet': 'Henüz oynanmadı',
   'Roll to a level, or tap one': 'Bir bölüme yuvarlan ya da dokun',
-  'Roll along the road': 'Yol boyunca yuvarlan',
   'Roll to that level': 'O bölüme yuvarlan',
   'Play the level you are on': 'Üzerinde durduğun bölümü oyna',
   '{name}, {n} of {max} stars': '{name}, {max} üzerinden {n} yıldız',
   '{name}, locked': '{name}, kilitli',
   World: 'Dünya',
   'The Well': 'Kuyu',
+  'Hop to the next or previous level': 'Sonraki ya da önceki bölüme atla',
 };
 
 export default dict;

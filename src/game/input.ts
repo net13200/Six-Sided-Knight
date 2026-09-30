@@ -5,7 +5,7 @@
 import type { Dir } from '../engine';
 
 export type Command =
-  | { type: 'move'; dir: Dir }
+  | { type: 'move'; dir: Dir; swipe?: boolean }
   | { type: 'tap'; x: number; y: number } // logical coordinates
   | { type: 'undo' }
   | { type: 'retry' }
@@ -92,7 +92,7 @@ export function bindInput(
     if (!start || e.pointerId !== start.id) return;
     const dir = swipeDirection(e.clientX - start.x, e.clientY - start.y);
     if (dir) {
-      onCommand({ type: 'move', dir });
+      onCommand({ type: 'move', dir, swipe: true });
     } else {
       const p = target.toLogical(start.x, start.y);
       onCommand({ type: 'tap', x: p.x, y: p.y });
