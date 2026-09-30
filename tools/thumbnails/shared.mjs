@@ -25,8 +25,8 @@ export function ffmpeg() {
   }
 }
 
-/** A player with every level beaten (so the Ember skin is unlocked and worn). */
-export function seedSave() {
+/** A player with every level beaten and every skin unlocked, wearing `skin`. */
+export function seedSave(skin = 'ember') {
   const levels = {};
   for (let c = 1; c <= 6; c++)
     for (let l = 1; l <= 10; l++)
@@ -41,7 +41,9 @@ export function seedSave() {
     createdAt: 1,
     campaign: 2,
     levels,
-    skin: 'ember',
+    skin,
+    // A 14-day best Daily streak: the streak skins (Flame, Night Sky, Royal) too.
+    daily: { lastDate: null, streak: 0, bestStreak: 14, results: {}, inProgress: null },
     hints: { inspect: true },
     settings: { muted: true },
   });
@@ -101,18 +103,19 @@ export async function drawCover(browser, base, w, h, path) {
 }
 
 /**
- * Records a level being played along `route` in a `w` x `h` window. Returns
- * the webm and the seconds in it from the first move to just after the
- * winning one (before the results screen comes up).
+ * Records a level being played along `route` in a `w` x `h` window, with the
+ * die in `skin`. Returns the webm and the seconds in it from the first move
+ * to just after the last one (for a full route, the winning move: before the
+ * results screen comes up).
  */
-export async function recordClip(browser, base, { level, route, stepMs, w, h, dir }) {
+export async function recordClip(browser, base, { level, route, stepMs, w, h, dir, skin }) {
   const ctx = await browser.newContext({
     viewport: { width: w, height: h },
     recordVideo: { dir, size: { width: w, height: h } },
   });
   await ctx.addInitScript((s) => {
     if (!localStorage.getItem('ssk.save')) localStorage.setItem('ssk.save', s);
-  }, seedSave());
+  }, seedSave(skin));
   const t0 = Date.now();
   const page = await ctx.newPage();
   await page.goto(`${base}/?level=${level + 1}`);

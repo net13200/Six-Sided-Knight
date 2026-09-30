@@ -8,7 +8,9 @@
  * Their rules: 15-20 seconds, 1080p, no sound, the cover as the first frame,
  * no black bars, text or logos on top, and gameplay at its real pace. So each
  * video opens on the cover, then plays a few levels as they look in the game
- * in that window, one move at a time, each ending on the winning move.
+ * in that window, one move at a time. Only part of each solution is shown
+ * (it stops well before the stairs), and each level has the die in a
+ * different skin.
  * Needs an ffmpeg with H.264 (see shared.mjs).
  */
 import { execFileSync } from 'node:child_process';
@@ -20,14 +22,19 @@ const OUT = 'crazygames';
 const TMP = 'tools/thumbnails/out';
 /** The cover holds this long before the gameplay starts. */
 const COVER_S = 1.5;
-/** The longest a scene may run (the end of its route is kept: the payoff). */
+/** The longest a scene may run (the latest part of what's played is kept). */
 const SCENE_S = 4.5;
-/** Campaign level (0-based) and ms per move: a natural pace, never sped up. */
+/** How much of each solution is played: never all of it. */
+const PART = 0.6;
+/**
+ * Campaign level (0-based), ms per move (a natural pace, never sped up) and
+ * the die's skin. One level from each of four districts.
+ */
 const SCENES = [
-  { level: 9, stepMs: 420 }, // Crowd Control: a Bomb takes out a crowd
-  { level: 11, stepMs: 650 }, // Skating Rink: sliding on ice
-  { level: 27, stepMs: 420 }, // a chapter 3 vault
-  { level: 44, stepMs: 420 }, // Winter Watch: Freeze and an archer
+  { level: 18, stepMs: 420, skin: 'gilded' },
+  { level: 23, stepMs: 420, skin: 'frost' },
+  { level: 38, stepMs: 420, skin: 'night' },
+  { level: 47, stepMs: 420, skin: 'flame' },
 ];
 const FORMATS = [
   { name: 'landscape', w: 1920, h: 1080 },
@@ -37,7 +44,9 @@ const FORMATS = [
 mkdirSync(OUT, { recursive: true });
 rmSync(TMP, { recursive: true, force: true });
 mkdirSync(TMP, { recursive: true });
-const paths = await routes(SCENES.map((s) => s.level));
+const paths = (await routes(SCENES.map((s) => s.level))).map((r) =>
+  r.slice(0, Math.max(3, Math.floor(r.length * PART))),
+);
 const made = [];
 await withGame(4182, async (browser, base) => {
   for (const f of FORMATS) {
