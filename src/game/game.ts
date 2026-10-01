@@ -26,6 +26,7 @@ import { Audio } from './audio';
 import type { Command } from './input';
 import type { TrackId } from './music';
 import { Gauntlet } from './gauntlet';
+import { IS_PORTAL } from '../platform/target';
 import type { FloorRun, FloorSummary } from './runs';
 import { DailyScene } from './scenes/daily';
 import { DepthsScene } from './scenes/depths';
@@ -269,6 +270,7 @@ export class Game {
         i,
         (k) => this.storySeen(k),
         isCompleted(this.save.data, level),
+        IS_PORTAL,
       );
       if (pages.length > 0) {
         this.goStory(pages, () => this.goPlay(i, { ...opts, story: false }), keys, tk('Begin'));

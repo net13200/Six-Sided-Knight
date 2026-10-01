@@ -32,6 +32,15 @@ describe('story', () => {
     expect(storyBeforeLevel(0, none, true).pages).toEqual([]);
   });
 
+  it('portals: level 1 first, then the intro and chapter card before level 2', () => {
+    expect(storyBeforeLevel(0, none, false, true).pages).toEqual([]);
+    const { pages, keys } = storyBeforeLevel(1, none, false, true);
+    expect(keys).toEqual([STORY_KEYS.intro, STORY_KEYS.chapter(0)]);
+    expect(pages.length).toBeGreaterThan(1);
+    expect(storyBeforeLevel(1, seenAll, false, true).pages).toEqual([]);
+    expect(storyBeforeLevel(1, none, true, true).pages).toEqual([]);
+  });
+
   it('the replay holds the intro, the chapters reached, and the ending once earned', () => {
     expect(storySoFar(none, 2)).toHaveLength(INTRO.length + 2);
     const all = storySoFar((k) => k === STORY_KEYS.ending, 6);

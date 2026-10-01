@@ -63,7 +63,27 @@ const KEYS: Record<string, Command> = {
   Enter: { type: 'confirm' },
 };
 
-export function keyCommand(key: string): Command | null {
+/**
+ * WASD by where the keys are, not what they say: on an AZERTY keyboard the
+ * same four keys read Z, Q, S, D (and Z is still Undo on QWERTY).
+ */
+const CODE_MOVES: Readonly<Record<string, Command>> = {
+  KeyW: { type: 'move', dir: 'N' },
+  KeyS: { type: 'move', dir: 'S' },
+  KeyA: { type: 'move', dir: 'W' },
+  KeyD: { type: 'move', dir: 'E' },
+};
+
+/**
+ * The command for a key press. With `code` (the physical key), the WASD
+ * moves follow key positions; a letter W, A, S or D elsewhere does nothing.
+ */
+export function keyCommand(key: string, code?: string): Command | null {
+  if (code !== undefined) {
+    const move = CODE_MOVES[code];
+    if (move) return move;
+    if (/^[wasd]$/i.test(key)) return null;
+  }
   return KEYS[key] ?? KEYS[key.toLowerCase()] ?? null;
 }
 
@@ -78,6 +98,7 @@ export function bindInput(
   target: InputTarget,
   onCommand: (cmd: Command) => void,
   onGesture: () => void,
+  opts: { escape?: boolean } = {},
 ): () => void {
   let start: { id: number; x: number; y: number } | null = null;
 
@@ -107,7 +128,9 @@ export function bindInput(
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     // Let buttons handle their own Enter/Space.
     if ((e.key === 'Enter' || e.key === ' ') && e.target instanceof HTMLButtonElement) return;
-    const cmd = keyCommand(e.key);
+    // Portals: Escape only leaves fullscreen there (the Menu button goes back).
+    if (e.key === 'Escape' && opts.escape === false) return;
+    const cmd = keyCommand(e.key, e.code);
     if (cmd) {
       e.preventDefault();
       onCommand(cmd);

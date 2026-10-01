@@ -64,6 +64,15 @@ describe('gestures', () => {
     expect(keyCommand('q')).toBeNull();
   });
 
+  it('WASD by key position, so AZERTY (ZQSD) works and Z stays Undo on QWERTY', () => {
+    expect(keyCommand('w', 'KeyW')).toEqual({ type: 'move', dir: 'N' });
+    expect(keyCommand('z', 'KeyW')).toEqual({ type: 'move', dir: 'N' }); // AZERTY Z
+    expect(keyCommand('q', 'KeyA')).toEqual({ type: 'move', dir: 'W' }); // AZERTY Q
+    expect(keyCommand('w', 'KeyZ')).toBeNull(); // AZERTY W: not a move
+    expect(keyCommand('z', 'KeyZ')).toEqual({ type: 'undo' }); // QWERTY Z
+    expect(keyCommand('ArrowDown', 'ArrowDown')).toEqual({ type: 'move', dir: 'S' });
+  });
+
   it('converts between tiles and board coordinates', () => {
     for (const [x, y] of [
       [0, 0],

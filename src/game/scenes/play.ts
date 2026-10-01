@@ -689,7 +689,8 @@ export class PlayScene implements Scene {
           ['I', t('Look at all six faces')],
           ['H', t('Hear the board described')],
           ['M', t('Sound on or off')],
-          ['Esc', t('Back to the menu')],
+          // Portals: Esc only leaves fullscreen there.
+          ...(IS_PORTAL ? [] : [['Esc', t('Back to the menu')] as const]),
         ];
     const end = drawControls(ctx, w, y + 4, rows);
     ctx.fillStyle = C.textDim;

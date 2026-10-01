@@ -34,6 +34,7 @@ bindInput(
   { surface: stage.canvas, toLogical: (x, y) => stage.toLogical(x, y) },
   (cmd) => game.command(cmd),
   () => game.audio.unlock(),
+  { escape: !IS_PORTAL },
 );
 
 // Music starts right away where the browser allows it (e.g. an installed app).

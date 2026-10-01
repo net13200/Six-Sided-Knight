@@ -3,6 +3,7 @@
  * / Retry / Map / Sound, the stage's lesson on first play, and a win panel
  * with stars. Its own scene: the Ranger's board is made of triangles.
  */
+import { IS_PORTAL } from '../../platform/target';
 import type { Dir } from '../../engine';
 import { RANGER_FACE_INFO, RANGER_LESSONS } from '../../ranger/lessons';
 import {
@@ -443,7 +444,8 @@ export class RangerPlayScene implements Scene {
               ['Z', t('Undo a move')],
               ['R', t('Retry the stage')],
               ['I', t('Your faces')],
-              ['Esc', t('Back to the map')],
+              // Portals: Esc only leaves fullscreen there.
+              ...(IS_PORTAL ? [] : [['Esc', t('Back to the map')] as const]),
             ],
       );
     }

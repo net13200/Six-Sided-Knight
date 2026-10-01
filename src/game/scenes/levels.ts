@@ -10,6 +10,7 @@
  * World button zooms out to every district and its stars; pick one and the
  * die is tossed there.
  */
+import { IS_PORTAL } from '../../platform/target';
 import { rollDie, type DieState, type Dir } from '../../engine';
 import { t, tk } from '../../i18n';
 import {
@@ -1998,7 +1999,8 @@ export class LevelsScene implements Scene {
           : [
               ['← ↑ → ↓', t('Hop to the next or previous level')],
               ['Enter', t('Play the level you are on')],
-              ['Esc', t('Back to the menu')],
+              // Portals: Esc only leaves fullscreen there.
+              ...(IS_PORTAL ? [] : [['Esc', t('Back to the menu')] as const]),
             ],
       );
     }

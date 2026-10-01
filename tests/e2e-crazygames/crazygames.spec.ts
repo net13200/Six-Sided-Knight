@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { KEY, scene, solutionFor, trackErrors } from '../e2e/helpers';
+import { KEY, dismissLesson, levelIndex, scene, solutionFor, trackErrors } from '../e2e/helpers';
 
-test('a portal-ready build: straight into the story and level 1, no install bits, no SDK', async ({
+test('a portal-ready build: straight into level 1, no splash, no install bits, no SDK', async ({
   page,
 }) => {
   const errors = trackErrors(page);
@@ -10,10 +10,10 @@ test('a portal-ready build: straight into the story and level 1, no install bits
     if (!r.url().startsWith('http://localhost:4175')) outside.push(r.url());
   });
   await page.goto('/');
-  // A first-time player skips the title screen: the story, then level 1.
-  await expect.poll(() => scene(page)).toBe('story');
-  await page.getByTestId('story-skip').click();
+  // A first-time player lands in gameplay: level 1, its lesson card in the game.
   await expect.poll(() => scene(page)).toBe('play');
+  expect(await levelIndex(page)).toBe(0);
+  expect(await (await page.request.get('/')).text()).not.toContain('id="splash"');
   // Everything is in the zip: nothing loads from anywhere else.
   expect(outside).toEqual([]);
   await expect(page.locator('link[rel="manifest"]')).toHaveCount(0);
@@ -21,6 +21,31 @@ test('a portal-ready build: straight into the story and level 1, no install bits
     await page.evaluate(() => navigator.serviceWorker.getRegistrations().then((r) => r.length)),
   ).toBe(0);
   expect(errors).toEqual([]);
+});
+
+test('the story comes after the first win, before level 2', async ({ page }) => {
+  await page.goto('/');
+  await expect.poll(() => scene(page)).toBe('play');
+  await dismissLesson(page);
+  for (const d of solutionFor(0)) await page.keyboard.press(KEY[d]);
+  await expect.poll(() => scene(page), { timeout: 5000 }).toBe('results');
+  await page.getByTestId('next').click();
+  await expect.poll(() => scene(page)).toBe('story');
+  await page.getByTestId('story-skip').click();
+  await expect.poll(() => scene(page)).toBe('play');
+  expect(await levelIndex(page)).toBe(1);
+});
+
+test('Escape does nothing (it only leaves fullscreen); the Menu button goes back', async ({
+  page,
+}) => {
+  await page.goto('/?level=12');
+  await expect.poll(() => scene(page)).toBe('play');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  expect(await scene(page)).toBe('play');
+  await page.getByTestId('menu').click();
+  await expect.poll(() => scene(page)).not.toBe('play');
 });
 
 test('level 1 plays through to the results, and progress is saved', async ({ page }) => {
