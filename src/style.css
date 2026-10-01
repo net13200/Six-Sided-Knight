@@ -755,6 +755,10 @@ button:focus-visible {
 .reward-row .btn {
   flex: 1 1 0;
 }
+/* Right to left (Hebrew): Back and Next arrows point the other way. */
+[dir='rtl'] .dir-icon {
+  transform: scaleX(-1);
+}
 .overlay .stuck-btn {
   height: 40px;
   margin-top: 12px;

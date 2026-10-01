@@ -4,6 +4,7 @@
  * A dungeon wall with torches (or the forest, in the bonus chapter), and side
  * panels the current scene may fill, drawn at the same scale as the game.
  */
+import { isRtl } from '../../i18n';
 import type { Stage } from './stage';
 import { LOGICAL_H } from './stage';
 
@@ -154,9 +155,11 @@ export function sideCard(ctx: Ctx, w: number, h: number, title: string): number 
   ctx.stroke();
   ctx.fillStyle = '#ffd75e';
   ctx.font = '800 15px system-ui, sans-serif';
-  ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillText(title, 16, 24);
+  // Right to left (Hebrew): titles start on the right.
+  ctx.textAlign = isRtl() ? 'right' : 'left';
+  ctx.fillText(title, isRtl() ? w - 16 : 16, 24);
+  ctx.textAlign = 'left';
   return 50;
 }
 
@@ -167,29 +170,40 @@ export function drawControls(
   y: number,
   rows: ReadonlyArray<readonly [string, string]>,
 ): number {
+  // Right to left (Hebrew): the key on the right, its text to its left.
+  const rtl = isRtl();
   for (const [key, what] of rows) {
     ctx.font = 'bold 12px system-ui, sans-serif';
     const kw = Math.max(26, ctx.measureText(key).width + 12);
+    const kx = rtl ? w - 16 - kw : 16;
     ctx.fillStyle = '#2e2940';
     ctx.strokeStyle = '#4d4568';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.roundRect(16, y - 11, kw, 22, 5);
+    ctx.roundRect(kx, y - 11, kw, 22, 5);
     ctx.fill();
     ctx.stroke();
     ctx.fillStyle = '#ece6d6';
     ctx.textAlign = 'center';
-    ctx.fillText(key, 16 + kw / 2, y);
+    // Keys read left to right in every language ("← ↑ → ↓", "W A S D").
+    const dir = ctx.direction;
+    ctx.direction = 'ltr';
+    ctx.fillText(key, kx + kw / 2, y);
+    ctx.direction = dir;
     ctx.textAlign = 'left';
     ctx.fillStyle = '#b9b0cc';
     ctx.font = '12px system-ui, sans-serif';
-    const end = wrap(ctx, what, 16 + kw + 10, y, w - kw - 42, 15);
+    const end = wrap(ctx, what, rtl ? 16 : 16 + kw + 10, y, w - kw - 42, 15);
     y = Math.max(y + 32, end + 12);
   }
   return y;
 }
 
-/** Wraps text into lines no wider than `max`; returns the y after the last line. */
+/**
+ * Wraps text into lines no wider than `max`; returns the y after the last
+ * line. Left-aligned text is right-aligned in a right-to-left language
+ * (Hebrew), within the same `x` to `x + max` box.
+ */
 export function wrap(
   ctx: Ctx,
   text: string,
@@ -198,16 +212,20 @@ export function wrap(
   max: number,
   lh: number,
 ): number {
+  const flip = isRtl() && ctx.textAlign === 'left';
+  if (flip) ctx.textAlign = 'right';
+  const at = flip ? x + max : x;
   let line = '';
   for (const word of text.split(' ')) {
     const next = line ? `${line} ${word}` : word;
     if (ctx.measureText(next).width > max && line) {
-      ctx.fillText(line, x, y);
+      ctx.fillText(line, at, y);
       y += lh;
       line = word;
     } else line = next;
   }
-  if (line) ctx.fillText(line, x, y);
+  if (line) ctx.fillText(line, at, y);
+  if (flip) ctx.textAlign = 'left';
   return y + lh;
 }
 

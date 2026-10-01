@@ -32,4 +32,20 @@ test.describe('language', () => {
       await expect(page.getByTestId('play')).toContainText('Play');
     });
   });
+
+  test('Hebrew reads right to left', async ({ page }) => {
+    await page.goto('/');
+    await expect.poll(() => scene(page)).toBe('menu');
+    await page.evaluate(() => document.getElementById('splash')?.remove());
+    await page.getByTestId('settings').click();
+    await page.getByTestId('setting-lang').selectOption('he');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'he');
+    await page.getByTestId('settings-close').click();
+    await expect(page.getByTestId('play')).toContainText('שחק');
+    // Back to a left-to-right language.
+    await page.getByTestId('settings').click();
+    await page.getByTestId('setting-lang').selectOption('en');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
+  });
 });

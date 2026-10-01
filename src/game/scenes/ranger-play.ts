@@ -38,7 +38,7 @@ import { C } from '../view/palette';
 import { muteButton } from './common';
 import { LessonCard } from './lesson-card';
 import type { Scene } from './scene';
-import { t, tk } from '../../i18n';
+import { isRtl, t, tk } from '../../i18n';
 
 const MOVE_TIME = 0.16;
 const BAR_Y = 415;
@@ -408,12 +408,15 @@ export class RangerPlayScene implements Scene {
       ctx.font = '800 20px system-ui, sans-serif';
       ctx.textAlign = 'left';
       y = wrap(ctx, t(this.level.name), 16, y + 4, w - 32, 24);
+      const rtl = isRtl();
+      ctx.textAlign = rtl ? 'right' : 'left';
       ctx.fillStyle = C.textDim;
       ctx.font = '13px system-ui, sans-serif';
-      ctx.fillText(t('Moves'), 16, y + 14);
+      ctx.fillText(t('Moves'), rtl ? w - 16 : 16, y + 14);
       ctx.fillStyle = C.text;
       ctx.font = '800 34px system-ui, sans-serif';
-      ctx.fillText(String(this.state.moves), 16, y + 44);
+      ctx.fillText(String(this.state.moves), rtl ? w - 16 : 16, y + 44);
+      ctx.textAlign = 'left';
       y += 78;
       const par = this.level.par ?? 0;
       ctx.font = '13px system-ui, sans-serif';

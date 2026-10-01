@@ -12,7 +12,7 @@
  */
 import { IS_PORTAL } from '../../platform/target';
 import { rollDie, type DieState, type Dir } from '../../engine';
-import { t, tk } from '../../i18n';
+import { isRtl, t, tk } from '../../i18n';
 import {
   CHAPTER_NAMES,
   CHAPTER_SIZE,
@@ -1982,13 +1982,18 @@ export class LevelsScene implements Scene {
       y = wrap(ctx, t(CHAPTER_NAMES[ch] ?? ''), 16, y + 4, w - 32, 24);
       const got = levels.reduce((n, l) => n + (save.levels[l.id]?.stars ?? 0), 0);
       const done = levels.filter((l) => isCompleted(save, l)).length;
+      // Right to left (Hebrew): the card reads from its right edge.
+      const rtl = isRtl();
+      const X = (x: number) => (rtl ? w - x : x);
+      ctx.textAlign = rtl ? 'right' : 'left';
       ctx.fillStyle = C.textDim;
       ctx.font = '13px system-ui, sans-serif';
-      ctx.fillText(t('{n}/{max} levels', { n: done, max: levels.length }), 16, y + 12);
-      drawStar(ctx, 24, y + 42, 8, true);
+      ctx.fillText(t('{n}/{max} levels', { n: done, max: levels.length }), X(16), y + 12);
+      drawStar(ctx, X(24), y + 42, 8, true);
       ctx.fillStyle = C.gold;
       ctx.font = '800 22px system-ui, sans-serif';
-      ctx.fillText(`${got} / ${levels.length * 3}`, 40, y + 43);
+      ctx.fillText(`${got} / ${levels.length * 3}`, X(40), y + 43);
+      ctx.textAlign = 'left';
     } else {
       const y = sideCard(ctx, w, cardH, t('How to play'));
       drawControls(

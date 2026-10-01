@@ -19,7 +19,11 @@ export const LANGS = [
   { id: 'it', name: 'Italiano' },
   { id: 'nl', name: 'Nederlands' },
   { id: 'tr', name: 'Türkçe' },
+  { id: 'he', name: 'עברית' },
 ] as const;
+
+/** Languages written right to left. */
+const RTL: ReadonlySet<string> = new Set(['he']);
 
 export type Lang = (typeof LANGS)[number]['id'];
 
@@ -31,6 +35,7 @@ const LOADERS: Readonly<Record<Exclude<Lang, 'en'>, () => Promise<{ default: Dic
   nl: () => import('./nl'),
   pt: () => import('./pt'),
   tr: () => import('./tr'),
+  he: () => import('./he'),
 };
 const loaded: Partial<Record<Lang, Dict>> = {};
 
@@ -82,12 +87,20 @@ export async function loadLang(choice: string | null | undefined): Promise<Lang>
 export function setLang(choice: string | null | undefined): Lang {
   lang = resolve(choice);
   dict = lang === 'en' ? {} : (loaded[lang] ?? {});
-  if (typeof document !== 'undefined') document.documentElement.lang = lang;
+  if (typeof document !== 'undefined') {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = RTL.has(lang) ? 'rtl' : 'ltr';
+  }
   return lang;
 }
 
 export function currentLang(): Lang {
   return lang;
+}
+
+/** Whether the current language is written right to left (Hebrew). */
+export function isRtl(): boolean {
+  return RTL.has(lang);
 }
 
 /** Translates English text, filling `{name}` placeholders from `vars`. */

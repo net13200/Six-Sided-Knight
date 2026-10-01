@@ -21,7 +21,7 @@ function files(dir) {
   });
 }
 
-const LANG_FILE = /assets\/(de|es|fr|it|nl|pt|tr)-[\w-]+\.js$/;
+const LANG_FILE = /assets\/(de|es|fr|it|nl|pt|tr|he)-[\w-]+\.js$/;
 let total = 0;
 let langMax = 0;
 const rows = [];

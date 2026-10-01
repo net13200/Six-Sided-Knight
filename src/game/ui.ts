@@ -75,6 +75,8 @@ export function icon(name: keyof typeof ICONS | string): SVGSVGElement {
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('aria-hidden', 'true');
   svg.innerHTML = ICONS[name] ?? '';
+  // Back and Next point the other way in a right-to-left language (style.css).
+  if (name === 'back' || name === 'next') svg.classList.add('dir-icon');
   return svg;
 }
 

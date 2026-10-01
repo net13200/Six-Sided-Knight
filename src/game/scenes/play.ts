@@ -38,7 +38,7 @@ import { SolutionWatch } from './watch';
 import { lessonKey } from '../lessons';
 import { buySolution, shouldOffer, SOLVE_PRICE, STUCK_AFTER } from '../../meta/solve-offer';
 import type { Scene } from './scene';
-import { t } from '../../i18n';
+import { isRtl, t } from '../../i18n';
 
 export class PlayScene implements Scene {
   readonly name = 'play';
@@ -693,12 +693,16 @@ export class PlayScene implements Scene {
     ctx.font = '800 20px system-ui, sans-serif';
     ctx.textAlign = 'left';
     if (i !== null) y = wrap(ctx, t(this.level.name), 16, y + 4, w - 32, 24);
+    // Right to left (Hebrew): the card reads from its right edge.
+    const rtl = isRtl();
+    const X = (x: number) => (rtl ? w - x : x);
+    ctx.textAlign = rtl ? 'right' : 'left';
     ctx.fillStyle = C.textDim;
     ctx.font = '13px system-ui, sans-serif';
-    ctx.fillText(t('Moves'), 16, y + 14);
+    ctx.fillText(t('Moves'), X(16), y + 14);
     ctx.fillStyle = C.text;
     ctx.font = '800 34px system-ui, sans-serif';
-    ctx.fillText(String(moves), 16, y + 44);
+    ctx.fillText(String(moves), X(16), y + 44);
     y += 78;
     if (par !== undefined) {
       const tiers: Array<[number, string]> = [
@@ -708,20 +712,21 @@ export class PlayScene implements Scene {
       ];
       const now = moves <= par ? 3 : moves <= twoStarLimit(par) ? 2 : 1;
       for (const [n, text] of tiers) {
-        for (let k = 0; k < 3; k++) drawStar(ctx, 24 + k * 15, y, 6, k < n);
+        for (let k = 0; k < 3; k++) drawStar(ctx, X(24 + k * 15), y, 6, k < n);
         ctx.fillStyle = n === now ? C.text : C.textDim;
         ctx.font = `${n === now ? 'bold ' : ''}13px system-ui, sans-serif`;
-        ctx.textAlign = 'left';
-        ctx.fillText(text, 76, y + 1, w - 90);
+        ctx.textAlign = rtl ? 'right' : 'left';
+        ctx.fillText(text, X(76), y + 1, w - 90);
         y += 28;
       }
     }
     y += 6;
     for (let k = 0; k < s.player.maxHp; k++) {
       ctx.globalAlpha = k < s.player.hp ? 1 : 0.2;
-      drawFace(ctx, 'Heart', 26 + k * 24, y + 4, 18);
+      drawFace(ctx, 'Heart', X(26 + k * 24), y + 4, 18);
     }
     ctx.globalAlpha = 1;
+    ctx.textAlign = 'left';
   }
 
   private controlsCard(ctx: CanvasRenderingContext2D, w: number, h: number): void {
@@ -801,24 +806,29 @@ function drawHud(
   ctx.fillStyle = C.hud;
   ctx.fillRect(0, 0, 340, BOARD_Y - 4);
   ctx.textBaseline = 'middle';
-  ctx.textAlign = 'left';
+  // Right to left (Hebrew): title and moves on the right, hearts on the left.
+  const rtl = isRtl();
+  const tx = rtl ? 328 : 12;
+  ctx.textAlign = rtl ? 'right' : 'left';
   ctx.fillStyle = C.text;
   ctx.font = 'bold 15px system-ui, sans-serif';
-  ctx.fillText(title, 12, 16, 268);
+  ctx.fillText(title, tx, 16, 268);
   ctx.font = '12px system-ui, sans-serif';
   ctx.fillStyle = C.textDim;
   ctx.fillText(
     par !== undefined
       ? t('Moves {n} / par {par}', { n: moves, par })
       : t('Moves {n}', { n: moves }),
-    12,
+    tx,
     35,
   );
+  ctx.textAlign = 'left';
 
   // HP hearts
   for (let i = 0; i < s.player.maxHp; i++) {
     ctx.globalAlpha = i < s.player.hp ? 1 : 0.2;
-    drawFace(ctx, 'Heart', 328 - (s.player.maxHp - i) * 17 + 8, 16, 14);
+    const hx = 328 - (s.player.maxHp - i) * 17 + 8;
+    drawFace(ctx, 'Heart', rtl ? 340 - hx : hx, 16, 14);
   }
   ctx.globalAlpha = 1;
 }

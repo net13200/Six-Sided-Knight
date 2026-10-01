@@ -7,8 +7,9 @@ import itDict from '../../src/i18n/it';
 import nl from '../../src/i18n/nl';
 import pt from '../../src/i18n/pt';
 import tr from '../../src/i18n/tr';
+import he from '../../src/i18n/he';
 
-const DICTS = { de, es, fr, it: itDict, nl, pt, tr };
+const DICTS = { de, es, fr, it: itDict, nl, pt, tr, he };
 import { collectKeys, placeholders } from '../../tools/i18n-keys';
 
 const { keys, problems } = collectKeys();
@@ -40,7 +41,7 @@ describe('translations', () => {
   }
 
   it('offers English and seven more', () => {
-    expect(LANGS.map((l) => l.id)).toEqual(['en', 'es', 'pt', 'fr', 'de', 'it', 'nl', 'tr']);
+    expect(LANGS.map((l) => l.id)).toEqual(['en', 'es', 'pt', 'fr', 'de', 'it', 'nl', 'tr', 'he']);
   });
 
   it('follows the browser, else English', () => {

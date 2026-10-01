@@ -58,7 +58,7 @@ Levels sit on a road zigzagging up Oddmere, one district per chapter. Tap a leve
 
 ## Languages
 
-English, Spanish, Portuguese, French, German, Italian, Dutch and Turkish. The game starts in your browser's language; change it in **Settings → Language**.
+English, Spanish, Portuguese, French, German, Italian, Dutch, Turkish and Hebrew. The game starts in your browser's language; change it in **Settings → Language**.
 
 ## Modes
 

@@ -187,12 +187,13 @@ The three game covers (landscape 1920x1080, portrait 800x1200, square 800x800) a
 
 ## Languages
 
-English, Spanish, Portuguese (Brazil), French, German, Italian, Dutch and Turkish. The game follows the browser's language; Settings → Language overrides it (saved with the progress).
+English, Spanish, Portuguese (Brazil), French, German, Italian, Dutch, Turkish and Hebrew. The game follows the browser's language; Settings → Language overrides it (saved with the progress).
 
 - Text is written in English in the code and looked up by that text when shown: `t('Retry')`, `t('Level {n} unlocked', { n })`, `tn(n, '{n} floor', '{n} floors')`. Text defined ahead of time (lessons, the story, level names in the `.txt` files) is marked with `tk()` or picked up from the level files, and translated where it's drawn.
 - Translations live in `src/i18n/<lang>.ts`, keyed by the English text. A missing one falls back to English.
 - `tests/unit/i18n.test.ts` fails if any language misses a string, has a leftover one, or changes a `{placeholder}`. `npx tsx tools/i18n-keys.ts de` lists what German is missing.
 - Long labels shrink to fit their buttons, and canvas text is squeezed to its space, so longer languages don't overflow.
+- Hebrew is written right to left: `setLang` sets `dir="rtl"` on the page (the DOM mirrors itself), and the canvas cards, side panels and the play screen's header read from the right (`isRtl()`). Key chips stay left to right; Back/Next arrows flip.
 
 ## Solver, difficulty and generator
 
