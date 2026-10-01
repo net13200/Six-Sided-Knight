@@ -2,6 +2,12 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.17.0 — עברית
+
+- **Hebrew.** The whole game in Hebrew, written right to left: menus, the story, lessons and the play screen all read from the right. Pick עברית in Settings → Language (it starts in Hebrew if that's your browser's language).
+- **Stuck? See the solution.** If a level keeps beating you (past the tutorial), after a few knock-outs or retries you can spend 100 crowns to watch the best solution play out, one move at a time.
+- **French keyboards.** WASD moves now follow key positions, so ZQSD works on an AZERTY keyboard (and Z is still Undo elsewhere).
+
 ## 0.16.0 — Look around
 
 - **Scroll the map.** Drag the map up or down (or use the mouse wheel) to look along the road; a quick flick keeps it gliding. Dragging never moves the die or starts a level, and the view follows the die again when it next rolls.
