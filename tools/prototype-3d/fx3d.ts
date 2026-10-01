@@ -83,7 +83,7 @@ export class Effects {
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.42, 40), ringMat);
     ring.rotation.x = -Math.PI / 2;
     ring.position.copy(at).setY(0.04);
-    this.add(ring, ringMat, { life: 0.45, grow: 6 * k });
+    this.add(ring, ringMat, { life: 0.4, grow: 3.6 * k });
     // sparks
     const sparkGeo = new THREE.BoxGeometry(0.05, 0.05, 0.16);
     for (let i = 0; i < 26 * k; i++) {

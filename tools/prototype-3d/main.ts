@@ -431,6 +431,7 @@ function finish(): void {
 }
 
 function win(): void {
+  updateHud();
   const at = built.exitAt!;
   fx.sparkle(at, '#ffd75e', 26);
   fx.flash(at, '#ffd27a', 18, 0.9, 5);

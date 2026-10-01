@@ -43,7 +43,7 @@ for (const d of path) {
   }
   await frames(d === 'N' && n < 200 ? 10 : 5);
 }
-await frames(75); // win + result card
+await frames(50); // win + result card
 await b.close();
 execFileSync(ffmpeg, [
   '-y',
