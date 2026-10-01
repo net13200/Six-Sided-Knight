@@ -63,6 +63,11 @@ body {
 .stage-ui > * {
   pointer-events: auto;
 }
+/* An ad is on its way or playing: no button responds until it's over. */
+.ad-playing .stage-ui,
+.ad-playing .stage-ui * {
+  pointer-events: none !important;
+}
 button {
   font: inherit;
   color: inherit;

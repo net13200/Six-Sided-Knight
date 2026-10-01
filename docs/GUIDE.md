@@ -50,6 +50,8 @@ Knocking out an enemy rolls your die onto its tile.
 
 Stars are about moves. Finish at **par** (the fewest moves possible) or better for ★★★, within a few moves of par for ★★, and anywhere for ★. Damage doesn't cost stars, but you only have 3 HP. A Gauntlet has one par for all its floors together. Your best result on each level is kept, and every star you earn for the first time pays **10 crowns**.
 
+Stuck on a level? After a few knock-outs or retries (past the tutorial), you can spend **100 crowns** to watch the best solution play out.
+
 ## The world map
 
 Levels sit on a road zigzagging up Oddmere, one district per chapter. Tap a level (or any spot) and your die rolls there; the arrow keys hop to the next or previous level. Drag the map (or use the mouse wheel) to look up and down the road. Land on a level and press Play. Beating a level opens the road to the next one, and leaving a level brings you back to it on the map. The Smith and the Daily Roll board are by level 1; the Well is at the top. The **World** button shows a map of every district and its stars: pick one and your die is tossed there. A gold medal marks a district where every level has ★★★.

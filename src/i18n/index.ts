@@ -46,7 +46,14 @@ export function detectLang(languages: readonly string[] = navigatorLanguages()):
   return 'en';
 }
 
+/** A portal's idea of the player's language (CrazyGames' locale), ahead of the browser's. */
+let preferred: string | null = null;
+export function preferLocale(locale: string | null): void {
+  preferred = locale;
+}
+
 function navigatorLanguages(): readonly string[] {
+  if (preferred) return [preferred];
   if (typeof navigator === 'undefined') return [];
   return navigator.languages?.length ? navigator.languages : [navigator.language ?? 'en'];
 }

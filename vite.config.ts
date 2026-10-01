@@ -18,10 +18,15 @@ function gitSha(): string {
   }
 }
 
-/** The portal builds (`vite build --mode crazygames`), each in its own folder. */
+/** The portal builds (`vite build --mode crazygames` / `crazygames-full`), each in its own folder. */
 const PORTALS: Record<string, { outDir: string; sdk: string | null }> = {
   // Basic Launch: no SDK needed (and no ads).
   crazygames: { outDir: 'dist-crazygames', sdk: null },
+  // Full Launch: their SDK, loaded before the game code.
+  'crazygames-full': {
+    outDir: 'dist-crazygames-full',
+    sdk: 'https://sdk.crazygames.com/crazygames-sdk-v3.js',
+  },
 };
 
 /**

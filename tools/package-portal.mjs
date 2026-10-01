@@ -1,14 +1,15 @@
 /**
  * Zips a portal build (dist-<portal>/) into six-sided-knight-<portal>.zip,
- * ready to upload. Run by `npm run build:crazygames`.
+ * ready to upload. Run by `npm run build:crazygames` (Basic Launch) and
+ * `npm run build:crazygames:full` (Full Launch, with their SDK).
  * Source maps stay out of the zip.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, rmSync } from 'node:fs';
 
 const portal = process.argv[2];
-if (!['crazygames'].includes(portal ?? '')) {
-  throw new Error('usage: node tools/package-portal.mjs crazygames');
+if (!['crazygames', 'crazygames-full'].includes(portal ?? '')) {
+  throw new Error('usage: node tools/package-portal.mjs crazygames|crazygames-full');
 }
 const dir = `dist-${portal}`;
 const zip = `six-sided-knight-${portal}.zip`;

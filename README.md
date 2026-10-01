@@ -151,31 +151,39 @@ The version lives in `package.json` and is shown in the game as `v0.3.0 (commit)
 2. Add an entry to [CHANGELOG.md](CHANGELOG.md).
 3. Commit to `main` (this deploys automatically), then tag it: `git tag v0.4.0 && git push origin v0.4.0`.
 
-## CrazyGames build
+## CrazyGames builds
 
-The same game, packaged for [CrazyGames](https://developer.crazygames.com) at the **Basic Launch** stage: a limited test launch where their SDK is optional and there are no ads. Submit it through the developer portal. The web version (GitHub Pages) is unaffected.
+The same game, packaged for [CrazyGames](https://developer.crazygames.com) in two versions, uploaded through their developer portal. The web version (GitHub Pages) is unaffected.
+
+- **Basic Launch** (a limited test launch, judged on playtime, conversion to gameplay and retention): no SDK, no ads.
+- **Full Launch** (once they select the game): their SDK v3, ads, and saves through their Data module. Tick "Progress Save: Yes, using the Data Module" when submitting it.
 
 ```bash
-npm run build:crazygames      # -> dist-crazygames/ and six-sided-knight-crazygames.zip
-npm run test:e2e:crazygames   # browser tests of the CrazyGames build
+npm run build:crazygames             # Basic Launch -> six-sided-knight-crazygames.zip
+npm run test:e2e:crazygames
+npm run build:crazygames:full        # Full Launch  -> six-sided-knight-crazygames-full.zip
+npm run test:e2e:crazygames:full     # with a stand-in SDK
 ```
 
-CI builds and tests it on every push; the zip is attached to each CI run as the `six-sided-knight-crazygames` artifact. Their terms ask for every update to reach them no later than anywhere else, so upload a new zip with each release.
+CI builds and tests both on every push (artifacts `six-sided-knight-crazygames` and `six-sided-knight-crazygames-full`). Their terms ask for every update to reach them no later than anywhere else, so upload a new zip with each release.
 
-What differs from the web build (`src/platform/target.ts`, `src/platform/portal.ts`, the `ssk-portal` plugin in `vite.config.ts`):
+What both differ in from the web build (`src/platform/target.ts`, the `ssk-portal` plugin in `vite.config.ts`):
 
+- A first-time player lands in gameplay: level 1 at once (its lesson card teaches in the game), the intro and chapter 1 card before level 2. No SugiGames splash (`VITE_PORTAL_SPLASH=1` brings it back).
+- Escape does nothing (on their site it leaves fullscreen); the Menu button goes back.
 - No developer tools: no debug mode, secret combo, `?level`/`?perf` or test hook (automated test browsers excepted).
-- No installable-app bits (manifest, service worker, update notice), shared Daily Roll results carry no link, and nothing loads from other hosts.
-- A first-time player skips the title screen: the story, then level 1.
-- The SugiGames splash is kept. Build with `VITE_PORTAL_SPLASH=0` to drop it.
+- No installable-app bits (manifest, service worker, update notice), shared Daily Roll results carry no link, and nothing loads from other hosts (the Full Launch build loads only their SDK).
 
-**Ready for an ad SDK (Full Launch).** `src/platform/ads.ts` is the interface a portal SDK wrapper implements (loading done, gameplay start/stop, ad breaks, rewarded ads); without the SDK every call is a no-op. The game already calls it at the right places:
+**The SDK** (`src/platform/crazygames.ts`, Full Launch only). If it's blocked, fails or is disabled, every call is a quiet no-op: no ads, saves on the device.
 
-- Gameplay start on the player's first move in a level (or bonus stage), stop when the level ends or play is interrupted (a menu, the die view, a card, leaving the level, before an ad). Never the same event twice in a row, and none while an ad plays.
-- **Ad breaks** (`src/meta/ad-policy.ts`), only when the player is heading back into play: next level or replay from the results screen (never on the map's or title screen's Play: that's navigation); starting a new Daily Roll or Depths run (never when continuing one); the next bonus stage. Never before the tutorial (levels 1-10) is finished, never when heading into a tutorial level, never in the middle of a run. The portal decides how often ads actually show. While an ad plays, the game is silent and ignores input.
-- **Rewarded ad: "Solve"** (with a video icon, never green): on campaign levels past the tutorial it asks first, with "Not now" next to and as big as "Watch ad"; after the ad the best solution plays straight away. Not in the tutorial, the Daily Roll or the Depths.
+- Loading start (before the game loads) and stop (once the first screen is up). Gameplay start on the player's first move in a level (or bonus stage), stop when the level ends or play is interrupted (a menu, the die view, a card, leaving the level, before an ad). Never the same event twice in a row, and none while an ad plays.
+- **Midgame ads** (`src/meta/ad-policy.ts`), only when heading back into play: next level or replay from the results screen; starting a new Daily Roll or Depths run (never when continuing one); the next bonus stage. Never on the map's or title screen's Play (that's navigation), before the tutorial (levels 1-10) is finished, when heading into a tutorial level, or in the middle of a run. Their SDK spaces ads (one every 3 minutes at most) and ignores requests that come too soon.
+- **Rewarded ad: "Stuck? See the solution"** (`src/meta/solve-offer.ts`, every build): offered to a player struggling with a campaign level past the tutorial (3 knock-outs or retries), on the knock-out screen or once after a retry (again after 4 more), never as a button on the board. "Not now" first and as big as the rest; 100 crowns or a rewarded ad (video icon). No reward without a watched ad; "no ad right now, try again later" when none comes; under an ad blocker the ad button is off with a note. Not in the tutorial, Gauntlets, the Daily Roll or the Depths.
+- While an ad is requested or plays, nothing responds (keys, board, buttons); the sound goes only once an ad really starts.
+- **Saves** go to their Data module (synced to the player's CrazyGames account; guests' data moves to their account when they log in). Progress saved locally before the SDK is copied over once.
+- Their **mute setting** wins over the Sound button; their **locale** picks the language (unless the player chose one); **completion percentage** (levels beaten out of 60) at start and after each win; **happy time** only for a district reaching all ★★★ or the campaign beaten; the current level as **game context** for player feedback.
 
-The three game covers (landscape 1920x1080, portrait 800x1200, square 800x800) are in `crazygames/`; `node tools/thumbnails/covers.mjs` redraws them. The preview videos (`preview-landscape.mp4` 1920x1080, `preview-portrait.mp4` 1080x1920: about 19 s, silent, opening on the cover, then part of four levels' solutions played at their real pace, each with the die in a different skin) come from `node tools/thumbnails/videos.mjs`. For a Full Launch, CrazyGames' SDK (v3) gets wired in as an implementation of `src/platform/ads.ts`.
+The three game covers (landscape 1920x1080, portrait 800x1200, square 800x800) are in `crazygames/`; `node tools/thumbnails/covers.mjs` redraws them. The preview videos (`preview-landscape.mp4` 1920x1080, `preview-portrait.mp4` 1080x1920: about 19 s, silent, opening on the cover, then part of four levels' solutions played at their real pace, each with the die in a different skin) come from `node tools/thumbnails/videos.mjs`.
 
 ## Languages
 

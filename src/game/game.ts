@@ -119,8 +119,14 @@ export class Game {
     this.save.update((d) =>
       refreshChangedLevels(d, this.levels, this.gauntlets, FINGERPRINTS_0_9_0),
     );
-    this.audio.muted = this.save.data.settings.muted;
+    this.applyMute();
+    // A portal's own mute setting wins over the Sound button (CrazyGames rule).
+    platform.portal?.onForcedMuteChange(() => {
+      this.applyMute();
+      this.stage.root.dispatchEvent(new CustomEvent('ssk:settings'));
+    });
     this.audio.setMusicVolume(this.save.data.settings.musicVolume);
+    this.reportProgress();
     this.analytics = new LocalAnalytics(platform.storage, platform.now, randomId, VERSION);
     this.analytics.optedOut = this.save.data.settings.analyticsOptOut;
     this.debug = options.debug === true;
@@ -137,17 +143,14 @@ export class Game {
    * `level` is the campaign level the player is heading into, if any.
    */
   breakThen(moment: BreakMoment, next: () => void, level?: number): void {
-    if (
-      this.platform.ads === NO_ADS ||
-      this.adPlaying ||
-      !breakAllowed(moment, level, this.tutorialDone)
-    ) {
+    if (this.adPlaying) return; // a second tap while an ad is on its way
+    if (this.platform.ads === NO_ADS || !breakAllowed(moment, level, this.tutorialDone)) {
       next();
       return;
     }
     // Input is blocked from the request on; sound goes only once an ad really
     // plays (often none does, and muting for nothing is jarring).
-    this.adPlaying = true;
+    this.setAdPlaying(true);
     this.platform.ads.gameplayStop();
     let muted = false;
     void this.platform.ads
@@ -156,7 +159,7 @@ export class Game {
         this.audio.suspend();
       })
       .finally(() => {
-        this.adPlaying = false;
+        this.setAdPlaying(false);
         if (muted) this.audio.resume();
         next();
       });
@@ -180,7 +183,7 @@ export class Game {
    */
   async rewardedAd(): Promise<RewardResult> {
     if (this.platform.ads === NO_ADS || this.adPlaying) return 'error';
-    this.adPlaying = true;
+    this.setAdPlaying(true);
     this.platform.ads.gameplayStop();
     let muted = false;
     try {
@@ -191,9 +194,18 @@ export class Game {
     } catch {
       return 'error';
     } finally {
-      this.adPlaying = false;
+      this.setAdPlaying(false);
       if (muted) this.audio.resume();
     }
+  }
+
+  /**
+   * While an ad is requested or plays, nothing responds: keys and the board
+   * (see command), and every button on screen.
+   */
+  private setAdPlaying(on: boolean): void {
+    this.adPlaying = on;
+    this.stage.root.classList.toggle('ad-playing', on);
   }
 
   /** Whether an ad blocker stops rewarded ads (false where there are no ads). */
@@ -262,6 +274,8 @@ export class Game {
     // Portals want to know when the player is playing: a new screen stops
     // play; the play screens report their first real input.
     this.platform.ads.gameplayStop();
+    // Feedback sent from the portal says which level the player was on.
+    if (next.name !== 'play') this.platform.portal?.context(null);
     next.enter(this.stage.ui);
   }
 
@@ -408,6 +422,7 @@ export class Game {
 
   goPlaySession(session: PlaySession): void {
     this.go(new PlayScene(this, session));
+    this.platform.portal?.context({ level: session.title, mode: session.mode });
   }
 
   goDaily(): void {
@@ -451,6 +466,8 @@ export class Game {
     const firstClear = (this.save.data.levels[level.id]?.completions ?? 0) === 0;
     const before = this.save.data.levels[level.id]?.stars ?? 0;
     const skinsBefore = unlockedSkins(this.save.data);
+    const goldBefore = this.chapterGold(index);
+    const campaignBefore = this.levels.every((l) => isCompleted(this.save.data, l));
     let improved = false;
     let crowns = 0;
     this.save.update((d) => {
@@ -478,6 +495,13 @@ export class Game {
       this.analytics.track('tutorial_step_complete', { step: index + 1, level: level.id });
     }
     const newSkins = newlyUnlocked(skinsBefore, unlockedSkins(this.save.data));
+    this.reportProgress();
+    // Celebrated on the portal, sparingly: a whole district at ★★★, or the
+    // campaign beaten (never for a single level).
+    const campaignNow = this.levels.every((l) => isCompleted(this.save.data, l));
+    if ((!goldBefore && this.chapterGold(index)) || (!campaignBefore && campaignNow)) {
+      this.platform.portal?.happytime();
+    }
     const totalStars = this.save.data.levels[level.id]?.stars ?? stars.count;
     return { stars, earlierStars: before, totalStars, improved, firstClear, crowns, newSkins };
   }
@@ -538,12 +562,33 @@ export class Game {
   // ---------- settings ----------
 
   get muted(): boolean {
-    return this.save.data.settings.muted;
+    return this.save.data.settings.muted || this.platform.portal?.forcedMute() === true;
+  }
+
+  /** Sound off if the player muted it, or the portal's own setting does. */
+  private applyMute(): void {
+    this.audio.muted = this.muted;
+  }
+
+  /** Tells the portal how much of the campaign is done (beaten levels out of all). */
+  private reportProgress(): void {
+    const portal = this.platform.portal;
+    if (!portal) return;
+    const done = this.levels.filter((l) => isCompleted(this.save.data, l)).length;
+    portal.progress((done / Math.max(1, this.levels.length)) * 100);
+  }
+
+  /** Every level of the chapter that level `index` is in has ★★★. */
+  private chapterGold(index: number): boolean {
+    const start = Math.floor(index / CHAPTER_SIZE) * CHAPTER_SIZE;
+    return this.levels
+      .slice(start, start + CHAPTER_SIZE)
+      .every((l) => (this.save.data.levels[l.id]?.stars ?? 0) >= 3);
   }
 
   toggleMute(): void {
     this.save.update((d) => (d.settings.muted = !d.settings.muted));
-    this.audio.muted = this.save.data.settings.muted;
+    this.applyMute();
     this.audio.setMusicVolume(this.save.data.settings.musicVolume);
     this.stage.root.dispatchEvent(new CustomEvent('ssk:settings'));
   }

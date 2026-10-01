@@ -29,6 +29,14 @@ jobs:
         with:
           name: six-sided-knight-crazygames
           path: six-sided-knight-crazygames.zip
+      # The CrazyGames Full Launch build (their SDK, ads, Data module saves), likewise.
+      - run: npm run build:crazygames:full
+      - run: npm run size -- dist-crazygames-full
+      - run: npm run test:e2e:crazygames:full
+      - uses: actions/upload-artifact@v4
+        with:
+          name: six-sided-knight-crazygames-full
+          path: six-sided-knight-crazygames-full.zip
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

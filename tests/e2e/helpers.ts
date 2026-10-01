@@ -57,7 +57,8 @@ type Hook = {
 };
 
 export async function scene(page: Page): Promise<string | undefined> {
-  return page.evaluate(() => (window.__ssk as Hook).scene());
+  // Undefined while the game is still starting (the test hook comes last).
+  return page.evaluate(() => (window.__ssk as Hook | undefined)?.scene());
 }
 
 export async function gameState(page: Page): Promise<GameState> {

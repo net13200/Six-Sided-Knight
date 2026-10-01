@@ -2,7 +2,7 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'dist-crazygames', 'node_modules', 'coverage'] },
+  { ignores: ['dist', 'dist-crazygames', 'dist-crazygames-full', 'node_modules', 'coverage'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

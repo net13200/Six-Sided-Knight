@@ -4,12 +4,14 @@ import { Game } from './game/game';
 import { bindInput } from './game/input';
 import { Loop } from './game/loop';
 import { autoFitLabels } from './game/ui';
-import { loadLang } from './i18n';
+import { loadLang, preferLocale } from './i18n';
 import { Stage } from './game/view/stage';
 import { runSplash } from './splash';
 import { createBrowserPlatform } from './platform/browser';
+import { connectCrazyGames, createCrazyGamesPlatform } from './platform/crazygames';
 import { createPortalPlatform } from './platform/portal';
-import { IS_PORTAL, PORTAL, PORTAL_OPTIONS } from './platform/target';
+import { CRAZY_SDK, IS_PORTAL, PORTAL, PORTAL_OPTIONS } from './platform/target';
+import { SAVE_KEY } from './meta/save';
 import { registerServiceWorker } from './platform/pwa';
 import { VERSION_LABEL } from './version';
 import './style.css';
@@ -24,7 +26,20 @@ const params = new URLSearchParams(location.search);
 const devTools = !IS_PORTAL || navigator.webdriver;
 const debug = !IS_PORTAL && (params.has('debug') || location.hash === '#debug');
 
-const platform = PORTAL ? createPortalPlatform(PORTAL) : createBrowserPlatform();
+// CrazyGames Full Launch: the SDK first (it preloads the player's saved data).
+const crazy = CRAZY_SDK ? await connectCrazyGames() : null;
+try {
+  crazy?.game.loadingStart();
+} catch {
+  // never let the SDK stop the game
+}
+const platform = CRAZY_SDK
+  ? createCrazyGamesPlatform(crazy, [SAVE_KEY])
+  : PORTAL
+    ? createPortalPlatform(PORTAL)
+    : createBrowserPlatform();
+// The portal's idea of the player's language comes before the browser's.
+if (platform.portal) preferLocale(platform.locale());
 const stage = new Stage(document.getElementById('app')!);
 // Long labels (some languages) shrink to fit their buttons.
 autoFitLabels(stage.ui);

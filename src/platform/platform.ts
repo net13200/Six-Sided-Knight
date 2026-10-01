@@ -33,4 +33,19 @@ export interface Platform {
   /** Wall-clock milliseconds (for timestamps, not simulation). */
   now(): number;
   prefersReducedMotion(): boolean;
+  /** A portal's extras (CrazyGames' SDK); absent elsewhere. */
+  readonly portal?: PortalHooks;
+}
+
+/** What a portal SDK offers beyond ads. Every call is optional to the game. */
+export interface PortalHooks {
+  /** A special moment worth celebrating on the site (sparingly: not every level). */
+  happytime(): void;
+  /** How much of the game the player has completed, 0-100. */
+  progress(pct: number): void;
+  /** What the player is doing, attached to their feedback; null clears it. */
+  context(ctx: Readonly<Record<string, string | number>> | null): void;
+  /** The portal's own mute setting: it wins over the game's Sound button. */
+  forcedMute(): boolean;
+  onForcedMuteChange(fn: (muted: boolean) => void): void;
 }

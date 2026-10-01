@@ -19,9 +19,11 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "build:crazygames": "tsc --noEmit && vite build --mode crazygames && node tools/package-portal.mjs crazygames",
+    "build:crazygames:full": "tsc --noEmit && vite build --mode crazygames-full && node tools/package-portal.mjs crazygames-full",
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "test:e2e:crazygames": "playwright test -c playwright.crazygames.config.ts",
+    "test:e2e:crazygames:full": "playwright test -c playwright.crazygames-full.config.ts",
     "replay": "tsx tools/replay.ts",
     "size": "node tools/check-size.mjs"
   },
