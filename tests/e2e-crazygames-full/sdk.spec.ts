@@ -106,13 +106,15 @@ async function struggle(page: Page, index: number): Promise<void> {
   await expect(page.getByTestId('solve-sheet')).toBeVisible();
 }
 
-test('starts with the SDK: loading reported, straight into level 1, progress in the Data module', async ({
+test('starts with the SDK: loading reported, the story, then level 1; progress in the Data module', async ({
   page,
 }) => {
   await withSdk(page);
   await page.goto('/');
-  await expect.poll(() => scene(page)).toBe('play');
+  await expect.poll(() => scene(page)).toBe('story');
   await expect.poll(() => calls(page)).toContain('loadingStop');
+  await page.getByTestId('story-skip').click();
+  await expect.poll(() => scene(page)).toBe('play');
   const c = await calls(page);
   expect(c.slice(0, 2)).toEqual(['init', 'loadingStart']);
   expect(c).toContain('progress:0');
@@ -198,14 +200,17 @@ test("their mute setting wins over the game's Sound button", async ({ page }) =>
 test('the language follows their locale', async ({ page }) => {
   await withSdk(page, { locale: 'de-DE' });
   await page.goto('/');
-  await expect.poll(() => scene(page)).toBe('play');
+  await expect.poll(() => scene(page)).toBe('story');
   await expect(page.locator('html')).toHaveAttribute('lang', 'de');
 });
 
 test('still runs when the SDK is blocked: no ads, saves on the device', async ({ page }) => {
   await page.route('**/crazygames-sdk-v3.js', (r) => r.abort());
   await page.goto('/');
+  await expect.poll(() => scene(page)).toBe('story');
+  await page.getByTestId('story-skip').click();
   await expect.poll(() => scene(page)).toBe('play');
+  await dismissLesson(page);
   await page.keyboard.press(KEY[solutionFor(0)[0]!]);
   await expect.poll(() => page.evaluate(() => localStorage.getItem('ssk.save'))).not.toBeNull();
 });

@@ -32,7 +32,7 @@ const PORTALS: Record<string, { outDir: string; sdk: string | null }> = {
 /**
  * A portal build: adds the portal's SDK (if any), and drops what a portal
  * doesn't want: the installable-app manifest and service worker, and (with
- * VITE_PORTAL_SPLASH=1) the SugiGames splash.
+ * VITE_PORTAL_SPLASH=0) the SugiGames splash.
  */
 function portal(outDir: string, sdk: string | null): Plugin {
   return {
@@ -46,7 +46,7 @@ function portal(outDir: string, sdk: string | null): Plugin {
           '',
         );
       if (sdk) out = out.replace('</head>', `  <script src="${sdk}"></script>\n  </head>`);
-      if (process.env.VITE_PORTAL_SPLASH !== '1')
+      if (process.env.VITE_PORTAL_SPLASH === '0')
         out = out.replace(
           /\s*<div id="splash"[\s\S]*?<\/svg>\s*<div id="splash-word">[\s\S]*?<\/div>\s*<\/div>/,
           '',

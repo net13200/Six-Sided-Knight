@@ -17,9 +17,6 @@ export const CRAZY_SDK = MODE === 'crazygames-full';
 export const IS_PORTAL = PORTAL !== null;
 
 export const PORTAL_OPTIONS = {
-  /**
-   * The SugiGames intro splash. Off: portals show their own loader and want
-   * players in the game at once. Build with VITE_PORTAL_SPLASH=1 to keep it.
-   */
-  splash: import.meta.env.VITE_PORTAL_SPLASH === '1',
+  /** The SugiGames intro splash. On; build with VITE_PORTAL_SPLASH=0 to drop it. */
+  splash: import.meta.env.VITE_PORTAL_SPLASH !== '0',
 } as const;

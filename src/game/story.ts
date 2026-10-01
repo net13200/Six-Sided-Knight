@@ -139,30 +139,12 @@ export function chapterPage(i: number): StoryPage {
  * What to show before playing campaign level `index`: the intro (then the
  * chapter 1 card) before a first level 1, or a chapter's card before its
  * first level. Players who already beat that level see nothing.
- *
- * With `playFirst` (portals: new players land in gameplay), level 1 starts
- * straight away and the intro and chapter 1 card come before level 2 instead.
  */
 export function storyBeforeLevel(
   index: number,
   seen: (key: string) => boolean,
   completed: boolean,
-  playFirst = false,
 ): { pages: StoryPage[]; keys: string[] } {
-  if (playFirst && index === 0) return { pages: [], keys: [] };
-  if (playFirst && index === 1 && !completed) {
-    const pages: StoryPage[] = [];
-    const keys: string[] = [];
-    if (!seen(STORY_KEYS.intro)) {
-      pages.push(...INTRO);
-      keys.push(STORY_KEYS.intro);
-    }
-    if (!seen(STORY_KEYS.chapter(0))) {
-      pages.push(chapterPage(0));
-      keys.push(STORY_KEYS.chapter(0));
-    }
-    return { pages, keys };
-  }
   if (completed || index % CHAPTER_SIZE !== 0) return { pages: [], keys: [] };
   const chapter = index / CHAPTER_SIZE;
   const pages: StoryPage[] = [];

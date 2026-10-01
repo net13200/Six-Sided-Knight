@@ -169,7 +169,7 @@ CI builds and tests both on every push (artifacts `six-sided-knight-crazygames` 
 
 What both differ in from the web build (`src/platform/target.ts`, the `ssk-portal` plugin in `vite.config.ts`):
 
-- A first-time player lands in gameplay: level 1 at once (its lesson card teaches in the game), the intro and chapter 1 card before level 2. No SugiGames splash (`VITE_PORTAL_SPLASH=1` brings it back).
+- A first-time player goes straight from the SugiGames splash into the story, no clicks needed; one tap on Skip starts level 1. (Build with `VITE_PORTAL_SPLASH=0` to drop the splash.)
 - Escape does nothing (on their site it leaves fullscreen); the Menu button goes back.
 - No developer tools: no debug mode, secret combo, `?level`/`?perf` or test hook (automated test browsers excepted).
 - No installable-app bits (manifest, service worker, update notice), shared Daily Roll results carry no link, and nothing loads from other hosts (the Full Launch build loads only their SDK).
