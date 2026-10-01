@@ -1,6 +1,6 @@
 /**
- * Where the Poki build may ask for an ad break. How often ads actually show is
- * up to Poki's system (its rules forbid our own timers), so this only decides
+ * Where a portal build may ask for an ad break. How often ads actually show is
+ * up to the portal (its SDK enforces its own spacing), so this only decides
  * the places: never before the tutorial is done, never when heading into a
  * tutorial level, never in the middle of a run (Daily Roll, Depths, a
  * Gauntlet's floors: those moments simply aren't break moments), and only

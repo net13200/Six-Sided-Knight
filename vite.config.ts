@@ -18,12 +18,8 @@ function gitSha(): string {
   }
 }
 
-/** Poki's SDK: their page serves it, and it must load before the game. */
-const POKI_SDK = 'https://game-cdn.poki.com/scripts/v2/poki-sdk.js';
-
-/** The portal builds (`vite build --mode poki` / `--mode crazygames`), each in its own folder. */
+/** The portal builds (`vite build --mode crazygames`), each in its own folder. */
 const PORTALS: Record<string, { outDir: string; sdk: string | null }> = {
-  poki: { outDir: 'dist-poki', sdk: POKI_SDK },
   // Basic Launch: no SDK needed (and no ads).
   crazygames: { outDir: 'dist-crazygames', sdk: null },
 };
@@ -31,7 +27,7 @@ const PORTALS: Record<string, { outDir: string; sdk: string | null }> = {
 /**
  * A portal build: adds the portal's SDK (if any), and drops what a portal
  * doesn't want: the installable-app manifest and service worker, and (with
- * VITE_POKI_SPLASH=0) the SugiGames splash.
+ * VITE_PORTAL_SPLASH=0) the SugiGames splash.
  */
 function portal(outDir: string, sdk: string | null): Plugin {
   return {
@@ -45,7 +41,7 @@ function portal(outDir: string, sdk: string | null): Plugin {
           '',
         );
       if (sdk) out = out.replace('</head>', `  <script src="${sdk}"></script>\n  </head>`);
-      if (process.env.VITE_POKI_SPLASH === '0')
+      if (process.env.VITE_PORTAL_SPLASH === '0')
         out = out.replace(
           /\s*<div id="splash"[\s\S]*?<\/svg>\s*<div id="splash-word">[\s\S]*?<\/div>\s*<\/div>/,
           '',

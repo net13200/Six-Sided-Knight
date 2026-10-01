@@ -132,7 +132,7 @@ export class Game {
 
   /**
    * Goes on with `next`, first showing an ad break if this is a good moment
-   * for one (Poki build only; the web build has no ads and goes on at once).
+   * for one (a portal build with ads; otherwise it goes on at once).
    * `level` is the campaign level the player is heading into, if any.
    */
   breakThen(moment: BreakMoment, next: () => void, level?: number): void {
@@ -161,7 +161,7 @@ export class Game {
     else this.platform.ads.gameplayStop();
   }
 
-  /** Whether this build can show rewarded ads (the Poki build). */
+  /** Whether this build can show rewarded ads (a portal build with an ad SDK). */
   get hasRewardedAds(): boolean {
     return this.platform.ads !== NO_ADS;
   }

@@ -1,7 +1,7 @@
 /**
  * Fails if the built game is over its size budget (gzipped), so it stays quick
  * to download on a phone. Run after `npm run build`:  npm run size
- * `npm run size -- dist-poki` checks the Poki build.
+ * `npm run size -- dist-crazygames` checks the CrazyGames build.
  * Counts everything a player downloads: HTML, JS (game + generator worker),
  * CSS, the manifest, the service worker, fonts and icons. Source maps are
  * not downloaded by players and are skipped. A player downloads one language

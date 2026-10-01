@@ -723,7 +723,7 @@ button:focus-visible {
   font-size: 14px;
 }
 
-/* Poki build: rewarded buttons (never green; a video icon; never bigger than the plain choice). */
+/* Builds with ads: rewarded buttons (never green; a video icon; never bigger than the plain choice). */
 .btn.ad-btn,
 .btn.reward-btn {
   gap: 4px;

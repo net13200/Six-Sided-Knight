@@ -57,7 +57,7 @@ The Knight's ending says: _"Meanwhile, in the Greenwood: past the edge of Oddmer
 
 ## 4. Publishing on CrazyGames (primary target)
 
-Poki is curated and declined early access, so **CrazyGames comes first**; keep the platform layer ready for Poki later.
+**CrazyGames is the only portal target** (Poki is curated and declined early access; the Knight dropped its Poki build). Keep portal code behind the platform layer anyway.
 
 - **Basic Launch** (first step): no SDK needed, no ads, a limited test launch judged on engagement. Requirements:
   - ≤ 50 MB total, and ≤ 20 MB to be eligible for the mobile homepage; ≤ 1,500 files; relative paths only; **no requests to other hosts**;

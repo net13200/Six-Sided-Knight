@@ -16,8 +16,6 @@ test('a portal-ready build: straight into the story and level 1, no install bits
   await expect.poll(() => scene(page)).toBe('play');
   // Everything is in the zip: nothing loads from anywhere else.
   expect(outside).toEqual([]);
-  const html = await (await page.request.get('/')).text();
-  expect(html).not.toContain('poki-sdk');
   await expect(page.locator('link[rel="manifest"]')).toHaveCount(0);
   expect(
     await page.evaluate(() => navigator.serviceWorker.getRegistrations().then((r) => r.length)),

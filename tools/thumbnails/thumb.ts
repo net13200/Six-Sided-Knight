@@ -1,6 +1,6 @@
 /**
- * The static thumbnails and covers (Poki's 1080x1080 square, CrazyGames'
- * landscape, portrait and square covers), drawn with the game's own art: a
+ * The game covers (CrazyGames' landscape, portrait and square covers, and the
+ * videos' first frames), drawn with the game's own art: a
  * dungeon room with enemies closing in, the title, and the die burning in the
  * Ember skin. Rendered by tools/thumbnails/make.mjs; not part of the game.
  */
@@ -18,7 +18,7 @@ import { drawEnemy, drawTile } from '../../src/game/view/art';
 import { drawDieCube } from '../../src/game/view/cube';
 import { SKINS } from '../../src/meta/skins';
 
-/** Size in pixels: ?w=&h= (default 1080x1080, Poki's square). */
+/** Size in pixels: ?w=&h= (default 1080x1080). */
 const params = new URLSearchParams(location.search);
 const W = Number(params.get('w')) || 1080;
 const H = Number(params.get('h')) || 1080;
@@ -155,7 +155,7 @@ function main(): void {
   ctx.shadowColor = 'rgba(0,0,0,0.85)';
   ctx.shadowBlur = 28;
   ctx.fillStyle = '#f3ead2';
-  // Sized in logical units: 128 and 150 px on Poki's 1080 square.
+  // Sized in logical units: 128 and 150 px on a 1080 square.
   ctx.font = `900 ${(128 / 3) * K}px system-ui, sans-serif`;
   ctx.fillText('Six Sided', W / 2, (130 / 3) * K);
   ctx.fillStyle = '#ffd75e';

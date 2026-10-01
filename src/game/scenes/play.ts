@@ -170,7 +170,7 @@ export class PlayScene implements Scene {
         ),
       );
     }
-    // Poki build: the best solution, for a rewarded ad (campaign levels past the tutorial).
+    // Builds with ads: the best solution, for a rewarded ad (campaign levels past the tutorial).
     if (this.offersSolutionAd) {
       ui.append(
         place(
@@ -193,7 +193,7 @@ export class PlayScene implements Scene {
     }
     // The secret combo for everyone: 5 quick taps on the level title (see
     // secretTap). Invisible, and kept out of the tab order. Not on portals,
-    // where hidden tools aren't allowed (on Poki the solution is a rewarded ad).
+    // where hidden tools aren't allowed (there, the solution is a rewarded ad).
     if (!IS_PORTAL) {
       const secret = el('button', {
         className: 'compass-btn',
@@ -240,7 +240,7 @@ export class PlayScene implements Scene {
       el('div', { className: 'sheet', testId: 'solution-ad-sheet' }, [
         el('h2', { text: t('Show the solution?') }),
         el('p', { text: t('Watch a short ad, then see the best solution play out.') }),
-        // Poki's rules: the plain choice comes first and is at least as big.
+        // Portal ad rules: the plain choice comes first and is at least as big.
         el('div', { className: 'row reward-row' }, [
           el('button', {
             className: 'btn',
@@ -257,7 +257,7 @@ export class PlayScene implements Scene {
               onClick: () => {
                 sheet.remove();
                 void this.game.rewardedAd().then((ok) => {
-                  // No ad (or an ad blocker): no reward and no message; Poki handles that.
+                  // No ad (or an ad blocker): no reward and no message; the portal handles that.
                   if (!ok) return;
                   this.game.audio.play('unlock');
                   this.flashNotice(t('Solution unlocked!'));
@@ -292,7 +292,7 @@ export class PlayScene implements Scene {
   /**
    * Solve the level (in the worker) and watch the best solution play out:
    * the developer button and P (debug mode), the secret combo (web version),
-   * or a rewarded ad (Poki), which plays it straight away.
+   * or a rewarded ad (builds with ads), which plays it straight away.
    */
   private openWatch(how: 'dev' | 'secret' | 'reward' = 'dev'): void {
     const allowed =

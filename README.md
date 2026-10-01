@@ -151,46 +151,31 @@ The version lives in `package.json` and is shown in the game as `v0.3.0 (commit)
 2. Add an entry to [CHANGELOG.md](CHANGELOG.md).
 3. Commit to `main` (this deploys automatically), then tag it: `git tag v0.4.0 && git push origin v0.4.0`.
 
-## Poki build
-
-The same game, packaged for [Poki](https://developers.poki.com). The web version (GitHub Pages) is unaffected.
-
-```bash
-npm run build:poki      # -> dist-poki/ and six-sided-knight-poki.zip (upload the zip to Poki)
-npm run test:e2e:poki   # browser tests of the Poki build, with a stand-in SDK
-```
-
-CI builds and tests it on every push; the zip is attached to each CI run as the `six-sided-knight-poki` artifact.
-
-What differs from the web build (`src/platform/target.ts`, `src/platform/portal.ts`, the `ssk-portal` plugin in `vite.config.ts`):
-
-- Poki's SDK is loaded by `index.html`; `src/platform/ads.ts` wraps it. Without the SDK (blocked by an ad blocker, or offline) every call is a no-op and the game runs normally.
-- Events: loading finished when the title screen is up; gameplay start on the player's first move in a level (or bonus stage), gameplay stop when the level ends or play is interrupted (a menu, the die view, a card, leaving the level, before an ad). Never the same event twice in a row, and none while an ad plays.
-- No developer tools: no debug mode, secret combo, `?level`/`?perf` or test hook (automated test browsers excepted).
-- No installable-app bits (manifest, service worker, update notice), and shared Daily Roll results carry no link.
-- The SugiGames splash is kept. Build with `VITE_POKI_SPLASH=0` to drop it.
-- **Rewarded ad: "Solve"** (with a video icon, never green). On campaign levels past the tutorial, it asks first, with "Not now" next to and as big as "Watch ad"; after the ad the best solution plays straight away ("Solution unlocked!"). Not in the tutorial, the Daily Roll or the Depths. No ad (or an ad blocker): no reward and no message of our own (Poki handles that).
-
-**Ad breaks** (`src/meta/ad-policy.ts`). A break is only ever asked for when the player is heading back into play:
-
-- next level or replay from the results screen; a level started from the map or the title screen's Play
-- starting a new Daily Roll or Depths run (never when continuing one)
-- the next bonus stage
-
-How often ads actually show is up to Poki: its rules forbid internal ad timers, so the game has no spacing of its own. Never before the tutorial (levels 1-10) is finished, never when heading into a tutorial level, and never in the middle of a run (between Daily Roll, Depths or Gauntlet floors). While an ad plays, the game is silent and ignores input.
-
-Thumbnails for Poki's game page are in `poki/`: `thumbnail-1080.png` (and a 628 copy) and `thumbnail-animated.mp4` (1080x1080, three 2-second scenes). `node tools/thumbnails/make.mjs` redraws them from the game itself. It needs an ffmpeg with H.264 (`pip install imageio-ffmpeg` is enough).
-
 ## CrazyGames build
 
-The same game, packaged for [CrazyGames](https://developer.crazygames.com) at the **Basic Launch** stage: a limited test launch where their SDK is optional and there are no ads. Submit it through the developer portal.
+The same game, packaged for [CrazyGames](https://developer.crazygames.com) at the **Basic Launch** stage: a limited test launch where their SDK is optional and there are no ads. Submit it through the developer portal. The web version (GitHub Pages) is unaffected.
 
 ```bash
 npm run build:crazygames      # -> dist-crazygames/ and six-sided-knight-crazygames.zip
 npm run test:e2e:crazygames   # browser tests of the CrazyGames build
 ```
 
-It's the Poki build without an SDK: no ads or "Solve" ad, no developer tools or secret combo, no installable-app bits, no link in shared results, and a first-time player goes straight into the story and level 1. CI builds and tests it on every push (artifact `six-sided-knight-crazygames`). The three game covers (landscape 1920x1080, portrait 800x1200, square 800x800) are in `crazygames/`; `node tools/thumbnails/covers.mjs` redraws them. The preview videos (`preview-landscape.mp4` 1920x1080, `preview-portrait.mp4` 1080x1920: about 19 s, silent, opening on the cover, then part of four levels' solutions played at their real pace, each with the die in a different skin) come from `node tools/thumbnails/videos.mjs`. For a Full Launch, CrazyGames' SDK (v3) gets wired into `src/platform/ads.ts` like Poki's.
+CI builds and tests it on every push; the zip is attached to each CI run as the `six-sided-knight-crazygames` artifact. Their terms ask for every update to reach them no later than anywhere else, so upload a new zip with each release.
+
+What differs from the web build (`src/platform/target.ts`, `src/platform/portal.ts`, the `ssk-portal` plugin in `vite.config.ts`):
+
+- No developer tools: no debug mode, secret combo, `?level`/`?perf` or test hook (automated test browsers excepted).
+- No installable-app bits (manifest, service worker, update notice), shared Daily Roll results carry no link, and nothing loads from other hosts.
+- A first-time player skips the title screen: the story, then level 1.
+- The SugiGames splash is kept. Build with `VITE_PORTAL_SPLASH=0` to drop it.
+
+**Ready for an ad SDK (Full Launch).** `src/platform/ads.ts` is the interface a portal SDK wrapper implements (loading done, gameplay start/stop, ad breaks, rewarded ads); without the SDK every call is a no-op. The game already calls it at the right places:
+
+- Gameplay start on the player's first move in a level (or bonus stage), stop when the level ends or play is interrupted (a menu, the die view, a card, leaving the level, before an ad). Never the same event twice in a row, and none while an ad plays.
+- **Ad breaks** (`src/meta/ad-policy.ts`), only when the player is heading back into play: next level or replay from the results screen; a level started from the map or the title screen's Play; starting a new Daily Roll or Depths run (never when continuing one); the next bonus stage. Never before the tutorial (levels 1-10) is finished, never when heading into a tutorial level, never in the middle of a run. The portal decides how often ads actually show. While an ad plays, the game is silent and ignores input.
+- **Rewarded ad: "Solve"** (with a video icon, never green): on campaign levels past the tutorial it asks first, with "Not now" next to and as big as "Watch ad"; after the ad the best solution plays straight away. Not in the tutorial, the Daily Roll or the Depths.
+
+The three game covers (landscape 1920x1080, portrait 800x1200, square 800x800) are in `crazygames/`; `node tools/thumbnails/covers.mjs` redraws them. The preview videos (`preview-landscape.mp4` 1920x1080, `preview-portrait.mp4` 1080x1920: about 19 s, silent, opening on the cover, then part of four levels' solutions played at their real pace, each with the die in a different skin) come from `node tools/thumbnails/videos.mjs`. For a Full Launch, CrazyGames' SDK (v3) gets wired in as an implementation of `src/platform/ads.ts`.
 
 ## Languages
 
