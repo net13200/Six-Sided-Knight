@@ -43,8 +43,8 @@ export class MenuScene implements Scene {
         className: 'btn primary',
         testId: 'play',
         onClick: () => {
-          const i = this.game.continueIndex();
-          this.game.breakThen('map-level', () => this.game.goPlay(i), i);
+          // No ad here: the title screen's Play is navigation (portal ad rules).
+          this.game.goPlay(this.game.continueIndex());
         },
       },
       [

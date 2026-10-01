@@ -750,6 +750,11 @@ button:focus-visible {
 .reward-row .btn {
   flex: 1 1 0;
 }
+.overlay .stuck-btn {
+  height: 40px;
+  margin-top: 12px;
+  padding: 0 14px;
+}
 
 /* A short message over the board (fades by itself). */
 .toast {

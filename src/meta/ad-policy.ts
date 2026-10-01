@@ -10,7 +10,6 @@
 /** Moments that may carry a break (all lead back into play). */
 export type BreakMoment =
   | 'next-level' // "Next level" / "Retry" on the results screen
-  | 'map-level' // starting a level from the map or the title screen
   | 'daily-start' // starting a new Daily Roll (not continuing one)
   | 'depths-start' // starting a new Depths run (not continuing one)
   | 'bonus-next'; // the next bonus stage
@@ -28,7 +27,6 @@ export function breakAllowed(
   tutorialDone: boolean,
 ): boolean {
   if (!tutorialDone) return false;
-  if ((moment === 'next-level' || moment === 'map-level') && (level ?? 0) < FIRST_AD_LEVEL)
-    return false;
+  if (moment === 'next-level' && (level ?? 0) < FIRST_AD_LEVEL) return false;
   return true;
 }

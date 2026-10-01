@@ -12,14 +12,23 @@ export interface Ads {
   gameplayStop(): void;
   /** A natural break. Resolves when the game may go on (after an ad, or at once). */
   commercialBreak(onAdStart?: () => void): Promise<void>;
-  /** An ad the player chose to watch; resolves true if they earned the reward. */
-  rewardedBreak(onAdStart?: () => void): Promise<boolean>;
+  /** An ad the player chose to watch: why it did or didn't earn the reward. */
+  rewardedBreak(onAdStart?: () => void): Promise<RewardResult>;
+  /** Whether an ad blocker is on (so no rewarded ad can play). */
+  adblocked(): Promise<boolean>;
 }
+
+/**
+ * How a rewarded ad went: watched (reward it), none to show right now
+ * (unfilled, too soon after another), blocked by an ad blocker, or failed.
+ */
+export type RewardResult = 'rewarded' | 'unavailable' | 'adblock' | 'error';
 
 export const NO_ADS: Ads = {
   loaded() {},
   gameplayStart() {},
   gameplayStop() {},
   commercialBreak: () => Promise.resolve(),
-  rewardedBreak: () => Promise.resolve(false),
+  rewardedBreak: () => Promise.resolve('error'),
+  adblocked: () => Promise.resolve(false),
 };

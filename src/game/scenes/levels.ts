@@ -467,7 +467,8 @@ export class LevelsScene implements Scene {
     if (this.reveal) return;
     const i = this.selectedLevel();
     if (i !== null) {
-      this.game.breakThen('map-level', () => this.game.goPlay(i), i);
+      // No ad here: Play on the map is navigation (portal ad rules).
+      this.game.goPlay(i);
       return;
     }
     const l = this.selectedLandmark();

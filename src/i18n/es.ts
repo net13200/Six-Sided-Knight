@@ -276,11 +276,6 @@ const dict: Dict = {
   Undo: 'Deshacer',
   Retry: 'Reintentar',
   'Inspect your die': 'Ver tu dado',
-  'Show the solution (watch an ad)': 'Mostrar la solución (ver un anuncio)',
-  Solve: 'Resolver',
-  'Show the solution?': '¿Mostrar la solución?',
-  'Watch a short ad, then see the best solution play out.':
-    'Mira un anuncio corto y luego la mejor solución.',
   'Watch an ad to see the solution': 'Mira un anuncio para ver la solución',
   'Solution unlocked!': '¡Solución desbloqueada!',
   'Watch ad': 'Ver anuncio',
@@ -700,6 +695,15 @@ const dict: Dict = {
   World: 'Mundo',
   'The Well': 'El Pozo',
   'Hop to the next or previous level': 'Saltar al nivel siguiente o anterior',
+  'Stuck?': '¿Atascado?',
+  'Stuck? See the solution': '¿Atascado? Ver la solución',
+  'See the best solution play out, one move at a time.':
+    'Mira la mejor solución, movimiento a movimiento.',
+  'Pay {n} crowns to see the solution': 'Paga {n} coronas para ver la solución',
+  'You have {n} crowns.': 'Tienes {n} coronas.',
+  'No ad right now. Try again later.': 'Ahora no hay anuncios. Inténtalo más tarde.',
+  'Ads are blocked, so there is no ad to watch.':
+    'Los anuncios están bloqueados, así que no hay ninguno que ver.',
 };
 
 export default dict;

@@ -6,7 +6,6 @@ describe('where ad breaks may come', () => {
   it('only after the tutorial, never heading into a tutorial level; how often is up to the portal', () => {
     expect(breakAllowed('daily-start', undefined, false)).toBe(false);
     expect(breakAllowed('next-level', 9, true)).toBe(false);
-    expect(breakAllowed('map-level', 3, true)).toBe(false);
     expect(breakAllowed('next-level', FIRST_AD_LEVEL, true)).toBe(true);
     expect(breakAllowed('daily-start', undefined, true)).toBe(true);
     // No spacing of our own: back-to-back moments are all allowed.

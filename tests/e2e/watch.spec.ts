@@ -1,5 +1,23 @@
 import { expect, test } from '@playwright/test';
-import { campaign, gameState, scene, trackErrors } from './helpers';
+import { type Page } from '@playwright/test';
+import { campaign, gameState, KEY, scene, solutionFor, trackErrors, waitForMoves } from './helpers';
+
+/** A player with some crowns (and the inspect hint seen). */
+async function seedCrowns(page: Page, crowns: number): Promise<void> {
+  await page.addInitScript((n) => {
+    if (localStorage.getItem('ssk.save')) return;
+    localStorage.setItem(
+      'ssk.save',
+      JSON.stringify({
+        version: 3,
+        createdAt: 1,
+        campaign: 2,
+        wallet: { crowns: n, earned: n, spent: 0 },
+        hints: { inspect: true },
+      }),
+    );
+  }, crowns);
+}
 
 test.describe('watching the par solution (developer mode)', () => {
   let errors: string[];
@@ -65,12 +83,43 @@ test.describe('watching the par solution (developer mode)', () => {
     await expect(page.getByTestId('watch-chooser')).toHaveCount(0);
   });
 
-  test('the web version has no ads: no "Solve" button, even past the tutorial', async ({
+  test('stuck: after a few retries, the solution for 100 crowns (no ad without ads)', async ({
     page,
   }) => {
+    await seedCrowns(page, 150);
     await page.goto('/?level=12');
     await expect.poll(() => scene(page)).toBe('play');
-    await expect(page.getByTestId('solution-ad')).toHaveCount(0);
+    // Nothing on the board itself.
+    await expect(page.getByTestId('solve-sheet')).toHaveCount(0);
+    const first = KEY[solutionFor(11)[0]!];
+    for (let k = 0; k < 3; k++) {
+      await page.keyboard.press(first);
+      await expect.poll(async () => (await gameState(page)).stats.moves).toBe(1);
+      await page.keyboard.press('r');
+      await waitForMoves(page, 0);
+    }
+    await expect(page.getByTestId('solve-sheet')).toBeVisible();
+    await expect(page.getByTestId('solve-ad')).toHaveCount(0); // the web version has no ads
+    await page.getByTestId('solve-crowns').click();
+    await expect(page.getByTestId('watch-bar')).toBeVisible();
+    const save = await page.evaluate(() => JSON.parse(localStorage.getItem('ssk.save')!));
+    expect(save.wallet.crowns).toBe(50);
+  });
+
+  test('stuck, but short of crowns: the offer can only be declined', async ({ page }) => {
+    await seedCrowns(page, 40);
+    await page.goto('/?level=12');
+    await expect.poll(() => scene(page)).toBe('play');
+    const first = KEY[solutionFor(11)[0]!];
+    for (let k = 0; k < 3; k++) {
+      await page.keyboard.press(first);
+      await expect.poll(async () => (await gameState(page)).stats.moves).toBe(1);
+      await page.keyboard.press('r');
+      await waitForMoves(page, 0);
+    }
+    await expect(page.getByTestId('solve-crowns')).toBeDisabled();
+    await page.getByTestId('solve-cancel').click();
+    await expect(page.getByTestId('solve-sheet')).toHaveCount(0);
   });
 
   test('the secret combo works in the regular game: 5 taps on the title, or Shift+P', async ({

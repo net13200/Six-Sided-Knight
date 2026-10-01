@@ -277,11 +277,6 @@ const dict: Dict = {
   Undo: 'Annulla',
   Retry: 'Riprova',
   'Inspect your die': 'Guarda il tuo dado',
-  'Show the solution (watch an ad)': 'Mostra la soluzione (guarda una pubblicità)',
-  Solve: 'Risolvi',
-  'Show the solution?': 'Mostrare la soluzione?',
-  'Watch a short ad, then see the best solution play out.':
-    'Guarda una breve pubblicità, poi la soluzione migliore.',
   'Watch an ad to see the solution': 'Guarda una pubblicità per vedere la soluzione',
   'Solution unlocked!': 'Soluzione sbloccata!',
   'Watch ad': 'Guarda la pubblicità',
@@ -698,6 +693,15 @@ const dict: Dict = {
   World: 'Mondo',
   'The Well': 'Il Pozzo',
   'Hop to the next or previous level': 'Salta al livello successivo o precedente',
+  'Stuck?': 'Bloccato?',
+  'Stuck? See the solution': 'Bloccato? Vedi la soluzione',
+  'See the best solution play out, one move at a time.':
+    'Guarda la soluzione migliore, una mossa alla volta.',
+  'Pay {n} crowns to see the solution': 'Paga {n} corone per vedere la soluzione',
+  'You have {n} crowns.': 'Hai {n} corone.',
+  'No ad right now. Try again later.': 'Nessuna pubblicità al momento. Riprova più tardi.',
+  'Ads are blocked, so there is no ad to watch.':
+    'Le pubblicità sono bloccate, quindi non ce n’è nessuna da guardare.',
 };
 
 export default dict;

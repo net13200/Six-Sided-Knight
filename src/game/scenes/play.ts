@@ -36,6 +36,7 @@ import { InspectView } from './inspect';
 import { LessonCard } from './lesson-card';
 import { SolutionWatch } from './watch';
 import { lessonKey } from '../lessons';
+import { buySolution, shouldOffer, SOLVE_PRICE, STUCK_AFTER } from '../../meta/solve-offer';
 import type { Scene } from './scene';
 import { t } from '../../i18n';
 
@@ -54,6 +55,9 @@ export class PlayScene implements Scene {
   private activeMs = 0;
   private flushedMs = 0;
   private won = false;
+  /** Knock-outs and retries on this visit to the level (for the "Stuck?" offer). */
+  private struggles = 0;
+  private lastOffer: number | null = null;
   /** Moves per leading face not yet written to the lifetime stats. */
   private faceMoves = new Map<string, number>();
   private inspect: InspectView | null = null;
@@ -170,30 +174,9 @@ export class PlayScene implements Scene {
         ),
       );
     }
-    // Builds with ads: the best solution, for a rewarded ad (campaign levels past the tutorial).
-    if (this.offersSolutionAd) {
-      ui.append(
-        place(
-          el(
-            'button',
-            {
-              className: 'btn small ad-btn',
-              testId: 'solution-ad',
-              label: t('Show the solution (watch an ad)'),
-              onClick: () => this.askSolutionAd(),
-            },
-            [icon('video'), el('span', { text: t('Solve') })],
-          ),
-          204,
-          8,
-          64,
-          34,
-        ),
-      );
-    }
     // The secret combo for everyone: 5 quick taps on the level title (see
     // secretTap). Invisible, and kept out of the tab order. Not on portals,
-    // where hidden tools aren't allowed (there, the solution is a rewarded ad).
+    // where hidden tools aren't allowed (there, "Stuck?" offers the solution).
     if (!IS_PORTAL) {
       const secret = el('button', {
         className: 'compass-btn',
@@ -219,65 +202,113 @@ export class PlayScene implements Scene {
     }
   }
 
-  /** Whether this level offers the solution for a rewarded ad. */
-  private get offersSolutionAd(): boolean {
+  /**
+   * Whether this level can offer its solution ("Stuck?"): campaign levels past
+   * the tutorial, not gauntlet floors, never where there are no second chances.
+   */
+  private get offersSolve(): boolean {
     const i = this.session.campaignIndex;
     return (
-      this.game.hasRewardedAds &&
       this.session.mode === 'campaign' &&
       !this.session.permadeath &&
+      !this.session.run &&
       i !== null &&
       i >= TUTORIAL_LENGTH
     );
   }
 
-  /** Makes clear an ad comes first, then (after it) plays the best solution. */
-  private askSolutionAd(): void {
+  /**
+   * "Stuck? See the solution": pay crowns, or (where there are ads) watch a
+   * rewarded ad. Never a button on the board while playing (portal ad rules):
+   * it comes up on the knock-out screen, or after a few retries.
+   */
+  private async openSolveOffer(): Promise<void> {
     if (!this.ui || this.watch || this.lesson || this.inspect || this.finishing) return;
+    this.lastOffer = this.struggles;
     this.game.setPlaying(false);
     this.hideOverlay();
+    const ads = this.game.hasRewardedAds;
+    const blocked = ads && (await this.game.adblocked());
+    if (!this.ui || this.watch || this.finishing) return;
+    const crowns = this.game.save.data.wallet.crowns;
+    const afford = crowns >= SOLVE_PRICE;
+    const close = () => sheet.remove();
+    // Portal ad rules: "Not now" comes first, as big and plain as the others.
+    const buttons: HTMLElement[] = [
+      el('button', {
+        className: 'btn',
+        testId: 'solve-cancel',
+        text: t('Not now'),
+        onClick: close,
+      }),
+    ];
+    if (ads) {
+      const watch = el(
+        'button',
+        {
+          className: 'btn',
+          testId: 'solve-ad',
+          label: t('Watch an ad to see the solution'),
+          onClick: () => {
+            close();
+            void this.game.rewardedAd().then((r) => {
+              if (r === 'rewarded') this.unlockSolution();
+              else if (r === 'adblock')
+                this.flashNotice(t('Ads are blocked, so there is no ad to watch.'));
+              else this.flashNotice(t('No ad right now. Try again later.'));
+            });
+          },
+        },
+        [icon('video'), el('span', { text: t('Watch ad') })],
+      ) as HTMLButtonElement;
+      // An ad blocker: not clickable, and the note below says why.
+      watch.disabled = blocked;
+      buttons.push(watch);
+    }
+    const pay = el(
+      'button',
+      {
+        className: 'btn',
+        testId: 'solve-crowns',
+        label: t('Pay {n} crowns to see the solution', { n: SOLVE_PRICE }),
+        onClick: () => {
+          close();
+          let paid = false;
+          this.game.save.update((d) => (paid = buySolution(d)));
+          if (paid) this.unlockSolution();
+        },
+      },
+      [icon('crown'), el('span', { text: String(SOLVE_PRICE) })],
+    ) as HTMLButtonElement;
+    pay.disabled = !afford;
+    buttons.push(pay);
     const sheet = place(
-      el('div', { className: 'sheet', testId: 'solution-ad-sheet' }, [
-        el('h2', { text: t('Show the solution?') }),
-        el('p', { text: t('Watch a short ad, then see the best solution play out.') }),
-        // Portal ad rules: the plain choice comes first and is at least as big.
-        el('div', { className: 'row reward-row' }, [
-          el('button', {
-            className: 'btn',
-            testId: 'solution-ad-cancel',
-            text: t('Not now'),
-            onClick: () => sheet.remove(),
-          }),
-          el(
-            'button',
-            {
-              className: 'btn reward-btn',
-              testId: 'solution-ad-watch',
-              label: t('Watch an ad to see the solution'),
-              onClick: () => {
-                sheet.remove();
-                void this.game.rewardedAd().then((ok) => {
-                  // No ad (or an ad blocker): no reward and no message; the portal handles that.
-                  if (!ok) return;
-                  this.game.audio.play('unlock');
-                  this.flashNotice(t('Solution unlocked!'));
-                  this.openWatch('reward');
-                });
-              },
-            },
-            [icon('video'), el('span', { text: t('Watch ad') })],
-          ),
-        ]),
+      el('div', { className: 'sheet', testId: 'solve-sheet' }, [
+        el('h2', { text: t('Stuck?') }),
+        el('p', { text: t('See the best solution play out, one move at a time.') }),
+        el('div', { className: 'row reward-row' }, buttons),
+        el('p', {
+          className: 'fine',
+          text: blocked
+            ? t('Ads are blocked, so there is no ad to watch.')
+            : t('You have {n} crowns.', { n: crowns }),
+        }),
       ]),
-      40,
-      120,
-      260,
+      30,
+      110,
+      280,
       0,
     );
     sheet.style.height = 'auto';
     sheet.setAttribute('role', 'dialog');
     this.ui.append(sheet);
     (sheet.querySelector('button') as HTMLButtonElement | null)?.focus();
+  }
+
+  private unlockSolution(): void {
+    this.game.audio.play('unlock');
+    this.flashNotice(t('Solution unlocked!'));
+    this.openWatch('reward');
   }
 
   /** A short message over the board that fades by itself. */
@@ -292,7 +323,7 @@ export class PlayScene implements Scene {
   /**
    * Solve the level (in the worker) and watch the best solution play out:
    * the developer button and P (debug mode), the secret combo (web version),
-   * or a rewarded ad (builds with ads), which plays it straight away.
+   * or a bought solution ("Stuck?": crowns or a rewarded ad), which plays at once.
    */
   private openWatch(how: 'dev' | 'secret' | 'reward' = 'dev'): void {
     const allowed =
@@ -403,8 +434,10 @@ export class PlayScene implements Scene {
         this.game.audio.play('undo');
         this.hideOverlay();
         break;
-      case 'retry':
+      case 'retry': {
         if (this.session.permadeath || this.finishing || this.history.depth === 0) return;
+        // A retry after a knock-out was already counted as that knock-out.
+        if (this.state.status === 'playing') this.struggles++;
         this.game.analytics.track('retry_used', { level: this.level.id, turn: this.state.turn });
         this.game.save.update((d) => d.stats.retries++);
         this.fx.finishAll();
@@ -414,7 +447,11 @@ export class PlayScene implements Scene {
         this.refreshDescription();
         this.game.audio.play('undo');
         this.hideOverlay();
+        if (this.offersSolve && shouldOffer(this.struggles, this.lastOffer)) {
+          void this.openSolveOffer();
+        }
         break;
+      }
       case 'back':
         this.session.onBack();
         break;
@@ -464,6 +501,7 @@ export class PlayScene implements Scene {
         time_ms: Math.round(this.activeMs),
       });
       this.game.save.update((d) => d.stats.deaths++);
+      this.struggles++;
       if (this.session.onLose) {
         // No second chances: the run ends now (saved at once), the screen follows the fall.
         this.finishing = true;
@@ -474,6 +512,8 @@ export class PlayScene implements Scene {
 
   private showOverlay(): void {
     if (this.overlay || !this.ui) return;
+    // Struggling here: the knock-out screen (not the board) offers the solution.
+    const stuck = this.offersSolve && this.struggles >= STUCK_AFTER;
     this.overlay = place(
       el('div', { className: 'overlay', testId: 'fail-overlay' }, [
         el('h2', { text: t('Knocked out!') }),
@@ -482,11 +522,21 @@ export class PlayScene implements Scene {
           iconButton('undo', t('Undo'), () => this.command({ type: 'undo' }), 'overlay-undo'),
           iconButton('retry', t('Retry'), () => this.command({ type: 'retry' }), 'overlay-retry'),
         ]),
+        ...(stuck
+          ? [
+              el('button', {
+                className: 'btn small stuck-btn',
+                testId: 'stuck-offer',
+                text: t('Stuck? See the solution'),
+                onClick: () => void this.openSolveOffer(),
+              }),
+            ]
+          : []),
       ]),
       BOARD_X + 30,
-      BOARD_Y + 110,
+      BOARD_Y + (stuck ? 90 : 110),
       8 * TILE - 60,
-      150,
+      stuck ? 196 : 150,
     );
     this.ui.append(this.overlay);
   }

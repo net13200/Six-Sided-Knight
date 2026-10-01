@@ -275,11 +275,6 @@ const dict: Dict = {
   Undo: 'Geri al',
   Retry: 'Yeniden',
   'Inspect your die': 'Zarına bak',
-  'Show the solution (watch an ad)': 'Çözümü göster (reklam izle)',
-  Solve: 'Çöz',
-  'Show the solution?': 'Çözüm gösterilsin mi?',
-  'Watch a short ad, then see the best solution play out.':
-    'Kısa bir reklam izle, sonra en iyi çözümü gör.',
   'Watch an ad to see the solution': 'Çözümü görmek için reklam izle',
   'Solution unlocked!': 'Çözüm açıldı!',
   'Watch ad': 'Reklam izle',
@@ -695,6 +690,14 @@ const dict: Dict = {
   World: 'Dünya',
   'The Well': 'Kuyu',
   'Hop to the next or previous level': 'Sonraki ya da önceki bölüme atla',
+  'Stuck?': 'Takıldın mı?',
+  'Stuck? See the solution': 'Takıldın mı? Çözümü gör',
+  'See the best solution play out, one move at a time.': 'En iyi çözümü hamle hamle izle.',
+  'Pay {n} crowns to see the solution': 'Çözümü görmek için {n} taç öde',
+  'You have {n} crowns.': '{n} taçın var.',
+  'No ad right now. Try again later.': 'Şu an reklam yok. Daha sonra tekrar dene.',
+  'Ads are blocked, so there is no ad to watch.':
+    'Reklamlar engelli, bu yüzden izlenecek reklam yok.',
 };
 
 export default dict;

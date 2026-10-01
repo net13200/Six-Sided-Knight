@@ -277,11 +277,6 @@ const dict: Dict = {
   Undo: 'Rückgängig',
   Retry: 'Neustart',
   'Inspect your die': 'Deinen Würfel ansehen',
-  'Show the solution (watch an ad)': 'Lösung zeigen (Werbung ansehen)',
-  Solve: 'Lösung',
-  'Show the solution?': 'Lösung zeigen?',
-  'Watch a short ad, then see the best solution play out.':
-    'Sieh dir eine kurze Werbung an und dann die beste Lösung.',
   'Watch an ad to see the solution': 'Werbung ansehen, um die Lösung zu sehen',
   'Solution unlocked!': 'Lösung freigeschaltet!',
   'Watch ad': 'Werbung ansehen',
@@ -701,6 +696,16 @@ const dict: Dict = {
   World: 'Welt',
   'The Well': 'Der Brunnen',
   'Hop to the next or previous level': 'Zum nächsten oder vorigen Level springen',
+  'Stuck?': 'Festgefahren?',
+  'Stuck? See the solution': 'Festgefahren? Zur Lösung',
+  'See the best solution play out, one move at a time.':
+    'Sieh dir die beste Lösung an, Zug für Zug.',
+  'Pay {n} crowns to see the solution': '{n} Kronen zahlen und die Lösung sehen',
+  'You have {n} crowns.': 'Du hast {n} Kronen.',
+  'No ad right now. Try again later.':
+    'Gerade keine Werbung verfügbar. Versuch es später noch einmal.',
+  'Ads are blocked, so there is no ad to watch.':
+    'Werbung ist blockiert, daher gibt es keine anzusehen.',
 };
 
 export default dict;

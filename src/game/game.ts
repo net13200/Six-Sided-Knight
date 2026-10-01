@@ -57,7 +57,7 @@ import { setDieSkin } from './view/cube';
 import { setSkinMotion } from './view/skin-fx';
 import { drawBackdrop } from './view/backdrop';
 import { breakAllowed, type BreakMoment } from '../meta/ad-policy';
-import { NO_ADS } from '../platform/ads';
+import { NO_ADS, type RewardResult } from '../platform/ads';
 import { activeSkin, newlyUnlocked, unlockedSkins, type SkinDef } from '../meta/skins';
 import { canTransition, type Scene } from './scenes/scene';
 import type { PlaySession } from './session';
@@ -145,14 +145,21 @@ export class Game {
       next();
       return;
     }
+    // Input is blocked from the request on; sound goes only once an ad really
+    // plays (often none does, and muting for nothing is jarring).
     this.adPlaying = true;
     this.platform.ads.gameplayStop();
-    this.audio.suspend();
-    void this.platform.ads.commercialBreak().finally(() => {
-      this.adPlaying = false;
-      this.audio.resume();
-      next();
-    });
+    let muted = false;
+    void this.platform.ads
+      .commercialBreak(() => {
+        muted = true;
+        this.audio.suspend();
+      })
+      .finally(() => {
+        this.adPlaying = false;
+        if (muted) this.audio.resume();
+        next();
+      });
   }
 
   /** The player is playing (a move) or stopped (level end, a menu, a card). */
@@ -168,20 +175,30 @@ export class Game {
   }
 
   /**
-   * A rewarded ad the player asked for. Resolves true if they watched it and
-   * earned the reward.
+   * A rewarded ad the player asked for: 'rewarded' only if they watched it.
+   * Input is blocked while it's requested and shown; sound goes once it plays.
    */
-  async rewardedAd(): Promise<boolean> {
-    if (this.platform.ads === NO_ADS || this.adPlaying) return false;
+  async rewardedAd(): Promise<RewardResult> {
+    if (this.platform.ads === NO_ADS || this.adPlaying) return 'error';
     this.adPlaying = true;
     this.platform.ads.gameplayStop();
-    this.audio.suspend();
+    let muted = false;
     try {
-      return await this.platform.ads.rewardedBreak();
+      return await this.platform.ads.rewardedBreak(() => {
+        muted = true;
+        this.audio.suspend();
+      });
+    } catch {
+      return 'error';
     } finally {
       this.adPlaying = false;
-      this.audio.resume();
+      if (muted) this.audio.resume();
     }
+  }
+
+  /** Whether an ad blocker stops rewarded ads (false where there are no ads). */
+  adblocked(): Promise<boolean> {
+    return this.platform.ads.adblocked().catch(() => false);
   }
 
   /** Reduce motion: the player's choice, or the system setting if they haven't chosen. */

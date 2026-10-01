@@ -280,11 +280,6 @@ const dict: Dict = {
   Undo: 'Ongedaan',
   Retry: 'Opnieuw',
   'Inspect your die': 'Bekijk je dobbelsteen',
-  'Show the solution (watch an ad)': 'Toon de oplossing (bekijk een advertentie)',
-  Solve: 'Oplossen',
-  'Show the solution?': 'De oplossing tonen?',
-  'Watch a short ad, then see the best solution play out.':
-    'Bekijk een korte advertentie en daarna de beste oplossing.',
   'Watch an ad to see the solution': 'Bekijk een advertentie om de oplossing te zien',
   'Solution unlocked!': 'Oplossing vrijgespeeld!',
   'Watch ad': 'Bekijk advertentie',
@@ -702,6 +697,14 @@ const dict: Dict = {
   World: 'Wereld',
   'The Well': 'De Put',
   'Hop to the next or previous level': 'Spring naar het volgende of vorige level',
+  'Stuck?': 'Vastgelopen?',
+  'Stuck? See the solution': 'Vastgelopen? Bekijk de oplossing',
+  'See the best solution play out, one move at a time.': 'Bekijk de beste oplossing, zet voor zet.',
+  'Pay {n} crowns to see the solution': 'Betaal {n} kronen om de oplossing te zien',
+  'You have {n} crowns.': 'Je hebt {n} kronen.',
+  'No ad right now. Try again later.': 'Nu even geen advertentie. Probeer het later nog eens.',
+  'Ads are blocked, so there is no ad to watch.':
+    'Advertenties worden geblokkeerd, dus er is er geen om te bekijken.',
 };
 
 export default dict;
