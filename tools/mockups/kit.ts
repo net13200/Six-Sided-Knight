@@ -45,7 +45,14 @@ export function backdrop(ctx: Ctx, w: number, h: number, hue: 'dungeon' | 'meado
 }
 
 export function vignette(ctx: Ctx, w: number, h: number, strength = 0.6): void {
-  const v = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.3, w / 2, h / 2, Math.max(w, h) * 0.65);
+  const v = ctx.createRadialGradient(
+    w / 2,
+    h / 2,
+    Math.min(w, h) * 0.3,
+    w / 2,
+    h / 2,
+    Math.max(w, h) * 0.65,
+  );
   v.addColorStop(0, 'rgba(0,0,0,0)');
   v.addColorStop(1, `rgba(0,0,0,${strength})`);
   ctx.fillStyle = v;
@@ -94,7 +101,14 @@ export const ICON: Record<string, string> = {
   trophy: 'M7 4h10v5a5 5 0 01-10 0zM7 6H4a3 3 0 003 4M17 6h3a3 3 0 01-3 4M12 14v4M8 20h8',
 };
 
-export function iconPath(ctx: Ctx, name: string, cx: number, cy: number, size: number, color: string): void {
+export function iconPath(
+  ctx: Ctx,
+  name: string,
+  cx: number,
+  cy: number,
+  size: number,
+  color: string,
+): void {
   ctx.save();
   ctx.translate(cx - size / 2, cy - size / 2);
   ctx.scale(size / 24, size / 24);
@@ -133,7 +147,14 @@ export function roundButton(
   ctx.beginPath();
   ctx.arc(cx, cy + 1, r - 1, 0.15 * Math.PI, 0.85 * Math.PI);
   ctx.stroke();
-  iconPath(ctx, name, cx, cy, r * 1.05, style === 'gold' ? INK : style === 'accent' ? GOLD : '#ece6d6');
+  iconPath(
+    ctx,
+    name,
+    cx,
+    cy,
+    r * 1.05,
+    style === 'gold' ? INK : style === 'accent' ? GOLD : '#ece6d6',
+  );
 }
 
 /** A big pill button with an icon and (at most) one word. */
@@ -189,7 +210,15 @@ export function bigButton(
   ctx.fillText(label, start + iw + gap, y + h / 2 + 1);
 }
 
-export function burst(ctx: Ctx, x: number, y: number, n: number, r: number, colors: string[], seed = 0): void {
+export function burst(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  n: number,
+  r: number,
+  colors: string[],
+  seed = 0,
+): void {
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2 + ((i + seed) % 3) * 0.3;
     const d = r * (0.45 + (((i + seed) * 37) % 10) / 14);
@@ -226,7 +255,14 @@ export function glow(ctx: Ctx, x: number, y: number, r: number, color: string): 
   ctx.fillRect(x - r, y - r, r * 2, r * 2);
 }
 
-export function floater(ctx: Ctx, text: string, x: number, y: number, size: number, color: string): void {
+export function floater(
+  ctx: Ctx,
+  text: string,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+): void {
   ctx.font = `900 ${size}px system-ui, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -239,7 +275,13 @@ export function floater(ctx: Ctx, text: string, x: number, y: number, size: numb
 }
 
 /** A design note (cyan): explains the mockup, is not part of the UI. */
-export function note(ctx: Ctx, text: string, x: number, y: number, align: CanvasTextAlign = 'left'): void {
+export function note(
+  ctx: Ctx,
+  text: string,
+  x: number,
+  y: number,
+  align: CanvasTextAlign = 'left',
+): void {
   ctx.font = '700 13px system-ui, sans-serif';
   const w = ctx.measureText(text).width + 18;
   const left = align === 'left' ? x : align === 'right' ? x - w : x - w / 2;
@@ -259,7 +301,10 @@ export function note(ctx: Ctx, text: string, x: number, y: number, align: Canvas
 }
 
 /** A board-space tile centre (the game's 40 px tiles, board origin 10,50). */
-export const tile = (x: number, y: number): [number, number] => [10 + x * 40 + 20, 50 + y * 40 + 20];
+export const tile = (x: number, y: number): [number, number] => [
+  10 + x * 40 + 20,
+  50 + y * 40 + 20,
+];
 
 export interface BoardOpts {
   /** Board-space point placed at (cx, cy); defaults to the board's middle. */
@@ -272,7 +317,14 @@ export interface BoardOpts {
 }
 
 /** The game's real board renderer, placed at (cx, cy) and scaled. */
-export function boardAt(ctx: Ctx, text: string, cx: number, cy: number, scale: number, o: BoardOpts = {}): void {
+export function boardAt(
+  ctx: Ctx,
+  text: string,
+  cx: number,
+  cy: number,
+  scale: number,
+  o: BoardOpts = {},
+): void {
   let state = createState(rules, parseTextLevel(text));
   if (o.mutate) state = o.mutate(state);
   const fx = new Fx();
@@ -298,14 +350,23 @@ export function boardAt(ctx: Ctx, text: string, cx: number, cy: number, scale: n
   ctx.clip();
   ctx.translate(ox, oy);
   ctx.scale(scale, scale);
-  const outcomes = (['N', 'E', 'S', 'W'] as Dir[]).map((d) => [d, predictOutcome(rules, state, d)] as const);
+  const outcomes = (['N', 'E', 'S', 'W'] as Dir[]).map(
+    (d) => [d, predictOutcome(rules, state, d)] as const,
+  );
   drawBoard(ctx, rules, state, fx.compute(), fx, outcomes);
   o.draw?.(ctx);
   ctx.restore();
 }
 
 /** The roll wheel: which face acts on each side, as pictures. */
-export function rollWheel(ctx: Ctx, cx: number, cy: number, r: number, faces: Record<Dir, string>, lit?: Dir): void {
+export function rollWheel(
+  ctx: Ctx,
+  cx: number,
+  cy: number,
+  r: number,
+  faces: Record<Dir, string>,
+  lit?: Dir,
+): void {
   ctx.fillStyle = 'rgba(20,17,30,0.8)';
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -349,7 +410,15 @@ export function rollWheel(ctx: Ctx, cx: number, cy: number, r: number, faces: Re
 }
 
 /** Level badge + name, star meter, hearts. */
-export function hudLevel(ctx: Ctx, x: number, y: number, w: number, n: number, name: string, size = 1): void {
+export function hudLevel(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  w: number,
+  n: number,
+  name: string,
+  size = 1,
+): void {
   const h = 52 * size;
   pill(ctx, x, y, w, h);
   ctx.fillStyle = GOLD;
@@ -367,11 +436,19 @@ export function hudLevel(ctx: Ctx, x: number, y: number, w: number, n: number, n
   ctx.fillText(name, x + 74 * size, y + h / 2 + 1);
 }
 
-export function hudMeter(ctx: Ctx, cx: number, y: number, moves: number, par: number, size = 1): void {
+export function hudMeter(
+  ctx: Ctx,
+  cx: number,
+  y: number,
+  moves: number,
+  par: number,
+  size = 1,
+): void {
   const w = 300 * size;
   const h = 52 * size;
   pill(ctx, cx - w / 2, y, w, h);
-  for (let k = 0; k < 3; k++) star(ctx, cx - w / 2 + 30 * size + k * 30 * size, y + h / 2, 12 * size, true);
+  for (let k = 0; k < 3; k++)
+    star(ctx, cx - w / 2 + 30 * size + k * 30 * size, y + h / 2, 12 * size, true);
   const bx = cx - w / 2 + 114 * size;
   const bw = 130 * size;
   ctx.fillStyle = 'rgba(255,255,255,0.12)';
@@ -380,7 +457,13 @@ export function hudMeter(ctx: Ctx, cx: number, y: number, moves: number, par: nu
   ctx.fill();
   ctx.fillStyle = GOLD;
   ctx.beginPath();
-  ctx.roundRect(bx, y + h / 2 - 6 * size, Math.max(12 * size, bw * (moves / par)), 12 * size, 6 * size);
+  ctx.roundRect(
+    bx,
+    y + h / 2 - 6 * size,
+    Math.max(12 * size, bw * (moves / par)),
+    12 * size,
+    6 * size,
+  );
   ctx.fill();
   ctx.fillStyle = CREAM;
   ctx.font = `800 ${15 * size}px system-ui, sans-serif`;
