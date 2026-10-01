@@ -638,6 +638,11 @@ function frame(): void {
     look.x += ((x0 + x1) / 2 - (R.x0 + R.x1) / 2) * dist * 0.2;
     look.z -= ((y0 + y1) / 2 - (R.y0 + R.y1) / 2) * dist * 0.25;
   }
+  // the fog starts just past the board, however far the camera sits
+  const fog = scene.fog as THREE.Fog;
+  fog.near = dist * 1.05;
+  fog.far = dist * 2;
+  camera.far = dist * 3;
 }
 
 function place(shakeX: number, shakeY: number, intro = 1): void {
