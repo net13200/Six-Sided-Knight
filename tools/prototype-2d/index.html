@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Six Sided Knight Lit Dungeon</title>
+    <style>
+      :root {
+        --gold: #ffd75e;
+        --ink: #231d2b;
+        --cream: #f3ead2;
+        --pill: rgba(20, 17, 30, 0.86);
+        --line: rgba(255, 215, 94, 0.25);
+        --u: min(1px, 0.16vh);
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0d0b14;
+        overflow: hidden;
+        font-family: system-ui, sans-serif;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+      }
+      #view canvas {
+        display: block;
+      }
+      #hud {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        --s: clamp(0.62, calc(100vh / 720px * 1), 1.25);
+      }
+      #hud > * {
+        position: absolute;
+      }
+      .pill {
+        background: var(--pill);
+        border: 1.5px solid var(--line);
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+      }
+      .lvl {
+        left: 20px;
+        top: 16px;
+        height: 50px;
+        padding: 0 22px 0 8px;
+        gap: 12px;
+        color: var(--cream);
+        font-weight: 800;
+        font-size: 21px;
+      }
+      .badge {
+        background: var(--gold);
+        color: var(--ink);
+        font-weight: 900;
+        border-radius: 99px;
+        padding: 6px 14px;
+      }
+      .meter {
+        left: 50%;
+        top: 16px;
+        height: 50px;
+        transform: translateX(-50%);
+        padding: 0 18px;
+        gap: 10px;
+        color: var(--cream);
+        font-weight: 800;
+        font-size: 15px;
+      }
+      .st {
+        width: 24px;
+        height: 24px;
+        background: var(--gold);
+        clip-path: polygon(
+          50% 0,
+          61% 35%,
+          98% 35%,
+          68% 57%,
+          79% 91%,
+          50% 70%,
+          21% 91%,
+          32% 57%,
+          2% 35%,
+          39% 35%
+        );
+        transition:
+          background 0.3s,
+          transform 0.3s;
+      }
+      .st.off {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(0.85);
+      }
+      .bar {
+        width: 130px;
+        height: 12px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.12);
+        overflow: hidden;
+        margin-left: 8px;
+      }
+      #fill {
+        height: 100%;
+        width: 0;
+        background: var(--gold);
+        border-radius: 6px;
+        transition: width 0.25s;
+      }
+      #count {
+        min-width: 34px;
+        text-align: right;
+      }
+      .hearts {
+        right: 20px;
+        top: 16px;
+        height: 50px;
+        padding: 0 14px;
+        gap: 6px;
+      }
+      .heart {
+        width: 36px;
+        height: 36px;
+      }
+      .heart.pop {
+        animation: pop 0.5s;
+      }
+      @keyframes pop {
+        30% {
+          transform: scale(1.6) rotate(-12deg);
+        }
+      }
+      #wheel {
+        left: 30px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 220px;
+        height: 220px;
+      }
+      .side {
+        right: 30px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: min(22px, 2.4vh);
+        pointer-events: auto;
+      }
+      .rb {
+        width: min(64px, 9.5vh);
+        height: min(64px, 9.5vh);
+        border-radius: 50%;
+        background: rgba(34, 31, 47, 0.94);
+        border: 2px solid #4d4568;
+        box-shadow:
+          inset 0 -4px 0 rgba(0, 0, 0, 0.35),
+          0 6px 14px rgba(0, 0, 0, 0.4);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        transition: transform 0.1s;
+      }
+      .rb:active {
+        transform: translateY(2px) scale(0.96);
+      }
+      .rb svg {
+        width: 30px;
+        height: 30px;
+        fill: none;
+        stroke: #ece6d6;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .rb.accent {
+        background: #3b3160;
+        border-color: var(--gold);
+        box-shadow:
+          0 0 18px rgba(255, 215, 94, 0.45),
+          inset 0 -4px 0 rgba(0, 0, 0, 0.35);
+      }
+      .rb.accent svg {
+        stroke: var(--gold);
+      }
+      #callout {
+        left: 50%;
+        top: 30%;
+        transform: translate(-50%, -50%);
+        font:
+          900 64px system-ui,
+          sans-serif;
+        color: var(--gold);
+        -webkit-text-stroke: 10px var(--ink);
+        paint-order: stroke fill;
+        letter-spacing: 2px;
+        opacity: 0;
+        text-shadow: 0 0 30px rgba(255, 180, 60, 0.6);
+      }
+      #callout.on {
+        animation: callout 1.2s ease-out;
+      }
+      @keyframes callout {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.3) rotate(-8deg);
+        }
+        18% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1.25) rotate(-4deg);
+        }
+        30% {
+          transform: translate(-50%, -50%) scale(1) rotate(-4deg);
+        }
+        75% {
+          opacity: 1;
+          transform: translate(-50%, -62%) scale(1) rotate(-4deg);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -80%) scale(0.95) rotate(-4deg);
+        }
+      }
+      #hurt {
+        inset: 0;
+        box-shadow: inset 0 0 160px 40px rgba(255, 40, 70, 0.75);
+        opacity: 0;
+      }
+      #hurt.on {
+        animation: hurt 0.5s;
+      }
+      @keyframes hurt {
+        15% {
+          opacity: 1;
+        }
+      }
+      #result {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle, rgba(13, 11, 20, 0.35), rgba(13, 11, 20, 0.8));
+        animation: fade 0.3s;
+      }
+      #result[hidden] {
+        display: none;
+      }
+      @keyframes fade {
+        from {
+          opacity: 0;
+        }
+      }
+      .card {
+        background: linear-gradient(#2b2540, #1c1829);
+        border: 2px solid rgba(255, 215, 94, 0.5);
+        border-radius: 28px;
+        padding: 26px 40px 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+        box-shadow:
+          0 30px 80px rgba(0, 0, 0, 0.6),
+          0 0 60px rgba(255, 215, 94, 0.15);
+        animation: rise 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+      }
+      @keyframes rise {
+        from {
+          transform: translateY(40px) scale(0.85);
+          opacity: 0;
+        }
+      }
+      .stars {
+        display: flex;
+        gap: 10px;
+        align-items: end;
+      }
+      .big {
+        width: 84px;
+        height: 84px;
+        background: var(--gold);
+        clip-path: polygon(
+          50% 0,
+          61% 35%,
+          98% 35%,
+          68% 57%,
+          79% 91%,
+          50% 70%,
+          21% 91%,
+          32% 57%,
+          2% 35%,
+          39% 35%
+        );
+        animation: stamp 0.45s cubic-bezier(0.3, 1.8, 0.5, 1) backwards;
+        filter: drop-shadow(0 0 12px rgba(255, 215, 94, 0.8));
+      }
+      .big:nth-child(2) {
+        width: 110px;
+        height: 110px;
+        animation-delay: 0.25s;
+      }
+      .big:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .big:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      .big.off {
+        background: rgba(255, 255, 255, 0.15);
+        filter: none;
+      }
+      @keyframes stamp {
+        from {
+          transform: scale(2.4) rotate(-20deg);
+          opacity: 0;
+        }
+      }
+      .moves {
+        color: var(--cream);
+        font:
+          800 22px system-ui,
+          sans-serif;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .moves small {
+        color: #8d86a0;
+        font-weight: 700;
+      }
+      .row {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        pointer-events: auto;
+      }
+      .next {
+        height: 64px;
+        padding: 0 42px;
+        border-radius: 999px;
+        border: 2px solid #fff3c4;
+        background: linear-gradient(#ffe48f, #f2c443);
+        box-shadow:
+          0 6px 0 #a8761a,
+          0 10px 30px rgba(255, 215, 94, 0.4);
+        color: var(--ink);
+        font:
+          900 26px system-ui,
+          sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+      }
+      .next svg {
+        width: 28px;
+        height: 28px;
+        fill: none;
+        stroke: var(--ink);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .tip {
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        padding: 10px 20px;
+        color: var(--cream);
+        font-weight: 700;
+        font-size: 15px;
+        white-space: nowrap;
+        transition: opacity 0.6s;
+      }
+      .tip.gone {
+        opacity: 0;
+      }
+      /* phones held upright: bars on top, wheel and buttons below the board */
+      @media (max-aspect-ratio: 1/1) {
+        .lvl {
+          left: 12px;
+          top: 12px;
+          font-size: 17px;
+          height: 44px;
+        }
+        .hearts {
+          right: 12px;
+          top: 12px;
+          height: 44px;
+          padding: 0 8px;
+          gap: 2px;
+        }
+        .heart {
+          width: 28px;
+          height: 28px;
+        }
+        .meter {
+          top: 66px;
+          height: 40px;
+        }
+        .st {
+          width: 20px;
+          height: 20px;
+        }
+        .bar {
+          width: 100px;
+        }
+        #wheel {
+          left: 50%;
+          top: auto;
+          bottom: 104px;
+          transform: translateX(-50%);
+          width: 150px;
+          height: 150px;
+        }
+        .side {
+          top: auto;
+          right: 50%;
+          bottom: 22px;
+          transform: translateX(50%);
+          flex-direction: row;
+          gap: 14px;
+        }
+        .rb {
+          width: 56px;
+          height: 56px;
+        }
+        .rb svg {
+          width: 26px;
+          height: 26px;
+        }
+        #callout {
+          font-size: 46px;
+          top: 26%;
+        }
+        .card {
+          padding: 22px 26px 26px;
+        }
+        .tip {
+          bottom: auto;
+          top: 118px;
+          font-size: 13px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="view"></div>
+    <div id="hud">
+      <div id="hurt"></div>
+      <div class="pill lvl"><span class="badge">10</span><span>Crowd Control</span></div>
+      <div class="pill meter">
+        <i class="st"></i><i class="st"></i><i class="st"></i>
+        <div class="bar"><div id="fill"></div></div>
+        <span id="count">0/8</span>
+      </div>
+      <div class="pill hearts">
+        <canvas class="heart" width="72" height="72"></canvas>
+        <canvas class="heart" width="72" height="72"></canvas>
+        <canvas class="heart" width="72" height="72"></canvas>
+      </div>
+      <canvas id="wheel" width="440" height="440"></canvas>
+      <div class="side">
+        <button class="rb" id="b-undo" data-icon="undo" aria-label="Undo"></button>
+        <button class="rb" id="b-retry" data-icon="retry" aria-label="Retry"></button>
+        <button class="rb accent" id="b-hint" data-icon="hint" aria-label="Hint"></button>
+        <button class="rb" id="b-menu" data-icon="menu" aria-label="Menu"></button>
+        <button class="rb" id="b-sound" data-icon="sound" aria-label="Sound"></button>
+      </div>
+      <div id="callout"></div>
+      <div class="pill tip" id="tip">Swipe, or press ← ↑ → ↓ to roll</div>
+    </div>
+    <div id="result" hidden>
+      <div class="card">
+        <div class="stars"><i class="big"></i><i class="big"></i><i class="big"></i></div>
+        <div class="moves"><span id="rmoves">8</span><small>/ 8</small></div>
+        <div class="row">
+          <button class="rb" id="r-retry" data-icon="retry" aria-label="Retry"></button>
+          <button class="next" id="r-next" aria-label="Next">
+            <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
