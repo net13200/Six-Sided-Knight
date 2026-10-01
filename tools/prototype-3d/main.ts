@@ -292,6 +292,7 @@ let busy = false;
 let queued: Dir | null = null;
 
 function move(dir: Dir): void {
+  document.getElementById('tip')?.classList.add('gone');
   if (state.status !== 'playing') return;
   if (busy) {
     queued = dir;

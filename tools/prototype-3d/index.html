@@ -147,12 +147,12 @@
         transform: translateY(-50%);
         display: flex;
         flex-direction: column;
-        gap: 22px;
+        gap: min(22px, 2.4vh);
         pointer-events: auto;
       }
       .rb {
-        width: 64px;
-        height: 64px;
+        width: min(64px, 9.5vh);
+        height: min(64px, 9.5vh);
         border-radius: 50%;
         background: rgba(34, 31, 47, 0.94);
         border: 2px solid #4d4568;
@@ -364,6 +364,20 @@
         stroke-linecap: round;
         stroke-linejoin: round;
       }
+      .tip {
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        padding: 10px 20px;
+        color: var(--cream);
+        font-weight: 700;
+        font-size: 15px;
+        white-space: nowrap;
+        transition: opacity 0.6s;
+      }
+      .tip.gone {
+        opacity: 0;
+      }
       /* phones held upright: bars on top, wheel and buttons below the board */
       @media (max-aspect-ratio: 1/1) {
         .lvl {
@@ -425,6 +439,11 @@
         .card {
           padding: 22px 26px 26px;
         }
+        .tip {
+          bottom: auto;
+          top: 118px;
+          font-size: 13px;
+        }
       }
     </style>
   </head>
@@ -452,6 +471,7 @@
         <button class="rb" id="b-sound" data-icon="sound" aria-label="Sound"></button>
       </div>
       <div id="callout"></div>
+      <div class="pill tip" id="tip">Swipe, or press ← ↑ → ↓ to roll</div>
     </div>
     <div id="result" hidden>
       <div class="card">
