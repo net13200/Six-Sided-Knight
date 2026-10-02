@@ -14,7 +14,11 @@ import {
   type GameState,
 } from '../../src/engine';
 import { solve } from '../../src/solver/solve';
-import { dangerTiles } from '../../src/game/view/board';
+import { dangerTiles, drawBoard } from '../../src/game/view/board';
+import { Fx } from '../../src/game/view/fx';
+import { animateBump, animateTurn } from '../../src/game/view/animate';
+import { predictOutcome } from '../../src/game/view/outcome';
+import type { Audio } from '../../src/game/audio';
 import {
   cameraMatrix,
   drawCube3d,
@@ -66,6 +70,9 @@ let px = 60; // device pixels per tile
 let ox = 0; // where tile (0, 0) sits, in device pixels
 let oy = 0;
 let levelArt: HTMLCanvasElement | null = null;
+let classicScale = 1;
+let classicX = 0;
+let classicY = 0;
 
 function layout(): void {
   const dpr = Math.min(devicePixelRatio || 1, 2);
@@ -80,13 +87,17 @@ function layout(): void {
   const portrait = h > w;
   // where the board may go (CSS px), clear of the HUD
   const R = portrait
-    ? { x: 8, y: 116, w: w - 16, h: h - 116 - 270 }
+    ? { x: 8, y: 160, w: w - 16, h: h - 160 - 270 }
     : { x: w * 0.22, y: 78, w: w * 0.56, h: h - 92 };
   const tiles = Math.min(R.w / (bx1 - bx0), R.h / (by1 - by0));
   px = tiles * dpr;
   ox = (R.x + R.w / 2) * dpr - ((bx0 + bx1) / 2) * px;
   oy = (R.y + R.h / 2) * dpr - ((by0 + by1) / 2) * px;
   levelArt = drawLevel(state, px);
+  // the old look: the game's own board (320 x 360 logical px) in the same space
+  classicScale = Math.min(R.w / 320, R.h / 360) * dpr;
+  classicX = (R.x + R.w / 2) * dpr;
+  classicY = (R.y + R.h / 2) * dpr;
 }
 addEventListener('resize', layout);
 
@@ -199,6 +210,7 @@ function move(dir: Dir): void {
   const before = state;
   busy = true;
   if (!res.consumed) {
+    animateBump(classicFx, SILENT, dir);
     bump(dir);
     later(0.2, finish);
     return;
@@ -206,6 +218,8 @@ function move(dir: Dir): void {
   history.push(before);
   state = res.state;
   trail = [];
+  classicFx.finishAll();
+  animateTurn(classicFx, SILENT, res.events, before, res.state);
   play(res.events, dir, before);
 }
 
@@ -223,7 +237,6 @@ function bump(dir: Dir): void {
 function play(events: readonly GameEvent[], dir: Dir, before: GameState): void {
   const after = state;
   const moved = events.some((e) => e.type === 'moved');
-  const kills = events.filter((e) => e.type === 'killed').length;
   const fromX = before.player.x + 0.5;
   const fromY = before.player.y + 0.5;
   let end = ROLL;
@@ -253,7 +266,6 @@ function play(events: readonly GameEvent[], dir: Dir, before: GameState): void {
       }
     });
   }
-  if (kills >= 2) later(0.3, () => callout(kills >= 3 ? 'TRIPLE!' : 'DOUBLE!'));
 
   if (moved) {
     const [dx, dy] = DV[dir];
@@ -376,6 +388,7 @@ function undo(): void {
   const prev = history.pop();
   if (!prev || busy) return;
   state = prev;
+  classicFx.finishAll();
   placeAll(state);
   trail = [];
   updateHud();
@@ -388,6 +401,7 @@ function retry(): void {
   tweens = [];
   busy = false;
   document.getElementById('result')!.hidden = true;
+  classicFx.finishAll();
   placeAll(state);
   trail = [];
   updateHud();
@@ -413,6 +427,51 @@ function showHint(): void {
 // ---------- drawing ----------
 
 let time = 0;
+
+/** The old look, animated by the game's own animator. */
+const classicFx = new Fx();
+const SILENT = { play() {} } as unknown as Audio;
+let classic = false;
+try {
+  classic = localStorage.getItem('ssk-proto-look') === 'old';
+} catch {
+  // no storage: start with the new look
+}
+
+function renderClassic(): void {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#14121c';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const k = classicScale;
+  ctx.setTransform(k, 0, 0, k, classicX - 170 * k, classicY - 230 * k);
+  const outcomes = classicFx.busy
+    ? undefined
+    : (['N', 'E', 'S', 'W'] as Dir[]).map((d) => [d, predictOutcome(rules, state, d)] as const);
+  drawBoard(ctx, rules, state, classicFx.compute(), classicFx, outcomes);
+  ctx.fillStyle = `rgba(255,215,94,${Math.max(0, 1 - trailAge / 5)})`;
+  for (const p of trail) {
+    ctx.beginPath();
+    ctx.arc(10 + p.x * 40, 50 + p.y * 40, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+const lookBtn = document.getElementById('b-look')!;
+function setLook(old: boolean): void {
+  classic = old;
+  lookBtn.textContent = old ? 'New look' : 'Old look';
+  lookBtn.setAttribute('aria-pressed', String(old));
+  try {
+    localStorage.setItem('ssk-proto-look', old ? 'old' : 'new');
+  } catch {
+    // not remembered: fine
+  }
+}
+lookBtn.onclick = () => setLook(!classic);
+setLook(classic);
 
 function render(): void {
   const W = canvas.width;
@@ -577,14 +636,6 @@ function hurtFlash(): void {
   lastHp = state.player.hp;
 }
 
-function callout(text: string): void {
-  const el = $('callout');
-  el.textContent = text;
-  el.classList.remove('on');
-  void el.offsetWidth;
-  el.classList.add('on');
-}
-
 function showResult(): void {
   const n = starsFor(state.stats.moves);
   const r = $('result');
@@ -651,7 +702,9 @@ function tick(dt: number): void {
     fx.glint(ex.x, ex.y, '#ffd75e', 1, 0.3);
   }
   fx.update(dt);
-  render();
+  classicFx.update(dt);
+  if (classic) renderClassic();
+  else render();
 }
 
 layout();

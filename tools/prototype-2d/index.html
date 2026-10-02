@@ -186,44 +186,6 @@
       .rb.accent svg {
         stroke: var(--gold);
       }
-      #callout {
-        left: 50%;
-        top: 30%;
-        transform: translate(-50%, -50%);
-        font:
-          900 64px system-ui,
-          sans-serif;
-        color: var(--gold);
-        -webkit-text-stroke: 10px var(--ink);
-        paint-order: stroke fill;
-        letter-spacing: 2px;
-        opacity: 0;
-        text-shadow: 0 0 30px rgba(255, 180, 60, 0.6);
-      }
-      #callout.on {
-        animation: callout 1.2s ease-out;
-      }
-      @keyframes callout {
-        0% {
-          opacity: 0;
-          transform: translate(-50%, -50%) scale(0.3) rotate(-8deg);
-        }
-        18% {
-          opacity: 1;
-          transform: translate(-50%, -50%) scale(1.25) rotate(-4deg);
-        }
-        30% {
-          transform: translate(-50%, -50%) scale(1) rotate(-4deg);
-        }
-        75% {
-          opacity: 1;
-          transform: translate(-50%, -62%) scale(1) rotate(-4deg);
-        }
-        100% {
-          opacity: 0;
-          transform: translate(-50%, -80%) scale(0.95) rotate(-4deg);
-        }
-      }
       #hurt {
         inset: 0;
         box-shadow: inset 0 0 160px 40px rgba(255, 40, 70, 0.75);
@@ -378,6 +340,24 @@
       .tip.gone {
         opacity: 0;
       }
+      .look {
+        left: 20px;
+        bottom: 18px;
+        height: 44px;
+        padding: 0 18px;
+        color: var(--gold);
+        font:
+          800 15px system-ui,
+          sans-serif;
+        cursor: pointer;
+        pointer-events: auto;
+      }
+      .look:focus-visible,
+      .rb:focus-visible,
+      .next:focus-visible {
+        outline: 3px solid var(--gold);
+        outline-offset: 3px;
+      }
       /* phones held upright: bars on top, wheel and buttons below the board */
       @media (max-aspect-ratio: 1/1) {
         .lvl {
@@ -432,17 +412,24 @@
           width: 26px;
           height: 26px;
         }
-        #callout {
-          font-size: 46px;
-          top: 26%;
-        }
         .card {
           padding: 22px 26px 26px;
         }
         .tip {
           bottom: auto;
           top: 118px;
+          left: 12px;
+          transform: none;
           font-size: 13px;
+        }
+        .look {
+          left: auto;
+          right: 12px;
+          bottom: auto;
+          top: 114px;
+          height: 38px;
+          font-size: 13px;
+          padding: 0 14px;
         }
       }
     </style>
@@ -470,7 +457,7 @@
         <button class="rb" id="b-menu" data-icon="menu" aria-label="Menu"></button>
         <button class="rb" id="b-sound" data-icon="sound" aria-label="Sound"></button>
       </div>
-      <div id="callout"></div>
+      <button class="pill look" id="b-look" aria-pressed="false">Old look</button>
       <div class="pill tip" id="tip">Swipe, or press ← ↑ → ↓ to roll</div>
     </div>
     <div id="result" hidden>
