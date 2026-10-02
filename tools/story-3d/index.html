@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Six Sided Knight Opening</title>
+    <style>
+      :root {
+        --gold: #ffd75e;
+        --ink: #231d2b;
+        --cream: #f3ead2;
+        color-scheme: dark;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #07050b;
+        overflow: hidden;
+        font-family: system-ui, sans-serif;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      #view canvas {
+        display: block;
+      }
+      #fade {
+        position: fixed;
+        inset: 0;
+        background: #000;
+        pointer-events: none;
+      }
+      .bar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        height: 6vh;
+        background: #000;
+        pointer-events: none;
+      }
+      .bar.top {
+        top: 0;
+      }
+      .bar.bottom {
+        bottom: 0;
+      }
+      #cap {
+        position: fixed;
+        left: 50%;
+        bottom: calc(6vh + 18px);
+        transform: translateX(-50%);
+        width: min(720px, calc(100% - 32px));
+        text-align: center;
+        color: var(--cream);
+        font:
+          700 clamp(17px, 2.8vh, 24px) / 1.4 system-ui,
+          sans-serif;
+        text-shadow:
+          0 2px 6px #000,
+          0 0 18px #000;
+        text-wrap: balance;
+        pointer-events: none;
+        opacity: 0;
+      }
+      #cap.on {
+        animation: cap 0.6s ease-out forwards;
+      }
+      @keyframes cap {
+        from {
+          opacity: 0;
+          transform: translate(-50%, 10px);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, 0);
+        }
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+      }
+      button:focus-visible {
+        outline: 3px solid var(--gold);
+        outline-offset: 3px;
+      }
+      #skip {
+        position: fixed;
+        top: calc(6vh + 12px);
+        right: 16px;
+        height: 40px;
+        padding: 0 18px;
+        border-radius: 99px;
+        border: 1.5px solid rgba(255, 215, 94, 0.35);
+        background: rgba(20, 17, 30, 0.75);
+        color: var(--cream);
+        font-weight: 800;
+      }
+      #skip[hidden] {
+        display: none;
+      }
+      .screen {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        padding: 16px;
+        box-sizing: border-box;
+      }
+      .screen[hidden] {
+        display: none;
+      }
+      #start,
+      #end {
+        background: radial-gradient(circle, rgba(10, 6, 16, 0.35), rgba(10, 6, 16, 0.85));
+      }
+      h1 {
+        margin: 0;
+        text-align: center;
+        line-height: 0.95;
+        color: var(--cream);
+        font:
+          900 clamp(44px, 10vh, 92px) system-ui,
+          sans-serif;
+        text-shadow:
+          0 5px 0 #120d18,
+          0 0 40px rgba(255, 170, 70, 0.45);
+      }
+      h1 b {
+        display: block;
+        color: var(--gold);
+      }
+      #end h1 {
+        animation: slam 0.7s cubic-bezier(0.25, 1.6, 0.45, 1) backwards;
+      }
+      #end .go {
+        animation: slam 0.6s cubic-bezier(0.25, 1.6, 0.45, 1) backwards 0.6s;
+      }
+      @keyframes slam {
+        from {
+          opacity: 0;
+          transform: scale(2.2) rotate(-6deg);
+        }
+      }
+      .go {
+        height: 64px;
+        padding: 0 40px;
+        border-radius: 999px;
+        border: 2px solid #fff3c4;
+        background: linear-gradient(#ffe48f, #f2c443);
+        box-shadow:
+          0 6px 0 #a8761a,
+          0 10px 30px rgba(255, 215, 94, 0.4);
+        color: var(--ink);
+        font:
+          900 24px system-ui,
+          sans-serif;
+      }
+      #err {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        margin: 0;
+        padding: 12px;
+        border-radius: 12px;
+        background: #3a0d16;
+        color: #ffd0d6;
+        font:
+          13px/1.4 ui-monospace,
+          monospace;
+        white-space: pre-wrap;
+        z-index: 10;
+      }
+      #err[hidden] {
+        display: none;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #end h1,
+        #end .go,
+        #cap.on {
+          animation-duration: 0.01s;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="view"></div>
+    <div class="bar top"></div>
+    <div class="bar bottom"></div>
+    <div id="cap" aria-live="polite"></div>
+    <div id="fade"></div>
+    <button id="skip" hidden>Skip</button>
+    <div id="start" class="screen">
+      <h1>Six Sided <b>Knight</b></h1>
+      <button class="go" id="play">▶ Watch the story</button>
+    </div>
+    <div id="end" class="screen" hidden>
+      <h1>Six Sided <b>Knight</b></h1>
+      <button class="go" id="again">↻ Watch again</button>
+    </div>
+    <pre id="err" hidden></pre>
+    <script>
+      // reports problems even if the 3D code can't start at all
+      (function () {
+        function show(msg) {
+          var x = document.getElementById('err');
+          x.hidden = false;
+          x.textContent += msg + '\n';
+        }
+        window.addEventListener('error', function (e) {
+          show('Error: ' + e.message);
+        });
+        setTimeout(function () {
+          if (!window.__ready) show("The 3D scene didn't start.\n" + navigator.userAgent);
+        }, 6000);
+      })();
+    </script>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
