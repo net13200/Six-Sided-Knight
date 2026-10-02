@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Six Sided Knight Story Cut</title>
+    <style>
+      :root {
+        --gold: #ffd75e;
+        --ink: #231d2b;
+        --cream: #f3ead2;
+        --pill: rgba(20, 17, 30, 0.86);
+        --line: rgba(255, 215, 94, 0.25);
+        --u: min(1px, 0.16vh);
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0d0b14;
+        overflow: hidden;
+        font-family: system-ui, sans-serif;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+      }
+      #view canvas {
+        display: block;
+      }
+      #hud {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        --s: clamp(0.62, calc(100vh / 720px * 1), 1.25);
+      }
+      #hud > * {
+        position: absolute;
+      }
+      .pill {
+        background: var(--pill);
+        border: 1.5px solid var(--line);
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+      }
+      .lvl {
+        left: 20px;
+        top: 16px;
+        height: 50px;
+        padding: 0 22px 0 8px;
+        gap: 12px;
+        color: var(--cream);
+        font-weight: 800;
+        font-size: 21px;
+      }
+      .badge {
+        background: var(--gold);
+        color: var(--ink);
+        font-weight: 900;
+        border-radius: 99px;
+        padding: 6px 14px;
+      }
+      .meter {
+        left: 50%;
+        top: 16px;
+        height: 50px;
+        transform: translateX(-50%);
+        padding: 0 18px;
+        gap: 10px;
+        color: var(--cream);
+        font-weight: 800;
+        font-size: 15px;
+      }
+      .st {
+        width: 24px;
+        height: 24px;
+        background: var(--gold);
+        clip-path: polygon(
+          50% 0,
+          61% 35%,
+          98% 35%,
+          68% 57%,
+          79% 91%,
+          50% 70%,
+          21% 91%,
+          32% 57%,
+          2% 35%,
+          39% 35%
+        );
+        transition:
+          background 0.3s,
+          transform 0.3s;
+      }
+      .st.off {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(0.85);
+      }
+      .bar {
+        width: 130px;
+        height: 12px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.12);
+        overflow: hidden;
+        margin-left: 8px;
+      }
+      #fill {
+        height: 100%;
+        width: 0;
+        background: var(--gold);
+        border-radius: 6px;
+        transition: width 0.25s;
+      }
+      #count {
+        min-width: 34px;
+        text-align: right;
+      }
+      .hearts {
+        right: 20px;
+        top: 16px;
+        height: 50px;
+        padding: 0 14px;
+        gap: 6px;
+      }
+      .heart {
+        width: 36px;
+        height: 36px;
+      }
+      .heart.pop {
+        animation: pop 0.5s;
+      }
+      @keyframes pop {
+        30% {
+          transform: scale(1.6) rotate(-12deg);
+        }
+      }
+      #wheel {
+        left: 30px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 220px;
+        height: 220px;
+      }
+      .side {
+        right: 30px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: min(22px, 2.4vh);
+        pointer-events: auto;
+      }
+      .rb {
+        width: min(64px, 9.5vh);
+        height: min(64px, 9.5vh);
+        border-radius: 50%;
+        background: rgba(34, 31, 47, 0.94);
+        border: 2px solid #4d4568;
+        box-shadow:
+          inset 0 -4px 0 rgba(0, 0, 0, 0.35),
+          0 6px 14px rgba(0, 0, 0, 0.4);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        transition: transform 0.1s;
+      }
+      .rb:active {
+        transform: translateY(2px) scale(0.96);
+      }
+      .rb svg {
+        width: 30px;
+        height: 30px;
+        fill: none;
+        stroke: #ece6d6;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .rb.accent {
+        background: #3b3160;
+        border-color: var(--gold);
+        box-shadow:
+          0 0 18px rgba(255, 215, 94, 0.45),
+          inset 0 -4px 0 rgba(0, 0, 0, 0.35);
+      }
+      .rb.accent svg {
+        stroke: var(--gold);
+      }
+      #hurt {
+        inset: 0;
+        box-shadow: inset 0 0 160px 40px rgba(255, 40, 70, 0.75);
+        opacity: 0;
+      }
+      #hurt.on {
+        animation: hurt 0.5s;
+      }
+      @keyframes hurt {
+        15% {
+          opacity: 1;
+        }
+      }
+      #result {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle, rgba(13, 11, 20, 0.35), rgba(13, 11, 20, 0.8));
+        animation: fade 0.3s;
+      }
+      #result[hidden] {
+        display: none;
+      }
+      @keyframes fade {
+        from {
+          opacity: 0;
+        }
+      }
+      .card {
+        background: linear-gradient(#2b2540, #1c1829);
+        border: 2px solid rgba(255, 215, 94, 0.5);
+        border-radius: 28px;
+        padding: 26px 40px 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+        box-shadow:
+          0 30px 80px rgba(0, 0, 0, 0.6),
+          0 0 60px rgba(255, 215, 94, 0.15);
+        animation: rise 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+      }
+      @keyframes rise {
+        from {
+          transform: translateY(40px) scale(0.85);
+          opacity: 0;
+        }
+      }
+      .stars {
+        display: flex;
+        gap: 10px;
+        align-items: end;
+      }
+      .big {
+        width: 84px;
+        height: 84px;
+        background: var(--gold);
+        clip-path: polygon(
+          50% 0,
+          61% 35%,
+          98% 35%,
+          68% 57%,
+          79% 91%,
+          50% 70%,
+          21% 91%,
+          32% 57%,
+          2% 35%,
+          39% 35%
+        );
+        animation: stamp 0.45s cubic-bezier(0.3, 1.8, 0.5, 1) backwards;
+        filter: drop-shadow(0 0 12px rgba(255, 215, 94, 0.8));
+      }
+      .big:nth-child(2) {
+        width: 110px;
+        height: 110px;
+        animation-delay: 0.25s;
+      }
+      .big:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .big:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      .big.off {
+        background: rgba(255, 255, 255, 0.15);
+        filter: none;
+      }
+      @keyframes stamp {
+        from {
+          transform: scale(2.4) rotate(-20deg);
+          opacity: 0;
+        }
+      }
+      .moves {
+        color: var(--cream);
+        font:
+          800 22px system-ui,
+          sans-serif;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .moves small {
+        color: #8d86a0;
+        font-weight: 700;
+      }
+      .row {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        pointer-events: auto;
+      }
+      .next {
+        height: 64px;
+        padding: 0 42px;
+        border-radius: 999px;
+        border: 2px solid #fff3c4;
+        background: linear-gradient(#ffe48f, #f2c443);
+        box-shadow:
+          0 6px 0 #a8761a,
+          0 10px 30px rgba(255, 215, 94, 0.4);
+        color: var(--ink);
+        font:
+          900 26px system-ui,
+          sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+      }
+      .next svg {
+        width: 28px;
+        height: 28px;
+        fill: none;
+        stroke: var(--ink);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .tip {
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        padding: 10px 20px;
+        color: var(--cream);
+        font-weight: 700;
+        font-size: 15px;
+        white-space: nowrap;
+        transition: opacity 0.6s;
+      }
+      .tip.gone {
+        opacity: 0;
+      }
+      .look {
+        left: 20px;
+        bottom: 18px;
+        height: 44px;
+        padding: 0 18px;
+        color: var(--gold);
+        font:
+          800 15px system-ui,
+          sans-serif;
+        cursor: pointer;
+        pointer-events: auto;
+      }
+      .look:focus-visible,
+      .rb:focus-visible,
+      .next:focus-visible {
+        outline: 3px solid var(--gold);
+        outline-offset: 3px;
+      }
+      /* screens: title, story, play */
+      body:not(.play) #hud {
+        display: none;
+      }
+      .screen {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        pointer-events: none;
+      }
+      .screen[hidden] {
+        display: none;
+      }
+      #title {
+        justify-content: space-between;
+        padding: 9vh 16px 10vh;
+        box-sizing: border-box;
+      }
+      #title h1 {
+        margin: 0;
+        text-align: center;
+        line-height: 0.95;
+        color: var(--cream);
+        font:
+          900 clamp(40px, 8vh, 76px) system-ui,
+          sans-serif;
+        letter-spacing: 1px;
+        text-shadow:
+          0 4px 0 #120d18,
+          0 0 40px rgba(255, 170, 70, 0.35);
+        animation: drop 1s cubic-bezier(0.2, 1.3, 0.4, 1) backwards 0.2s;
+      }
+      #title h1 b {
+        display: block;
+        color: var(--gold);
+      }
+      #title .next {
+        pointer-events: auto;
+        animation: drop 0.8s cubic-bezier(0.2, 1.4, 0.4, 1) backwards 0.7s;
+      }
+      @keyframes drop {
+        from {
+          opacity: 0;
+          transform: translateY(-30px) scale(0.9);
+        }
+      }
+      #story {
+        cursor: pointer;
+        pointer-events: auto;
+      }
+      .skip {
+        position: absolute;
+        top: max(16px, 9vh);
+        right: 16px;
+        height: 40px;
+        padding: 0 18px;
+        color: var(--cream);
+        font:
+          800 15px system-ui,
+          sans-serif;
+        cursor: pointer;
+      }
+      .cap {
+        position: absolute;
+        left: 50%;
+        bottom: max(22px, 10vh);
+        transform: translateX(-50%);
+        width: min(640px, calc(100% - 32px));
+        text-align: center;
+        color: var(--cream);
+      }
+      #s-title {
+        font:
+          900 clamp(26px, 5vh, 40px) system-ui,
+          sans-serif;
+        color: var(--gold);
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        text-shadow: 0 0 24px rgba(255, 200, 90, 0.5);
+      }
+      #s-title:empty {
+        display: none;
+      }
+      #s-text {
+        margin: 0;
+        min-height: 3.1em;
+        font:
+          600 clamp(16px, 2.6vh, 21px) / 1.45 system-ui,
+          sans-serif;
+        text-wrap: balance;
+        text-shadow: 0 2px 8px #000;
+      }
+      #s-more {
+        display: block;
+        margin: 12px auto 0;
+        width: 12px;
+        height: 12px;
+        border-right: 3px solid var(--gold);
+        border-bottom: 3px solid var(--gold);
+        transform: rotate(45deg);
+        animation: nudge 1s infinite;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      #s-more.on {
+        opacity: 1;
+      }
+      @keyframes nudge {
+        50% {
+          translate: 0 5px;
+        }
+      }
+      #banner {
+        position: fixed;
+        left: 50%;
+        top: 34%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        pointer-events: none;
+        opacity: 0;
+      }
+      #banner.on {
+        animation: banner 2s ease-out;
+      }
+      @keyframes banner {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.8);
+        }
+        15%,
+        70% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -70%) scale(1);
+        }
+      }
+      #banner .badge {
+        font-size: 26px;
+        padding: 8px 20px;
+      }
+      #banner b {
+        color: var(--cream);
+        font:
+          900 clamp(30px, 6vh, 48px) system-ui,
+          sans-serif;
+        -webkit-text-stroke: 8px var(--ink);
+        paint-order: stroke fill;
+        white-space: nowrap;
+      }
+      #banner small {
+        color: var(--gold);
+        font:
+          800 18px system-ui,
+          sans-serif;
+        -webkit-text-stroke: 5px var(--ink);
+        paint-order: stroke fill;
+      }
+      .ko-h {
+        color: #ff8a96;
+        font:
+          900 30px system-ui,
+          sans-serif;
+      }
+      .ko-heart {
+        width: 90px;
+        height: 90px;
+      }
+      .link {
+        background: none;
+        border: 0;
+        color: #b9b0cc;
+        font:
+          700 14px system-ui,
+          sans-serif;
+        text-decoration: underline;
+        cursor: pointer;
+        pointer-events: auto;
+      }
+      #ko {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        animation: fade 0.5s;
+      }
+      #ko[hidden] {
+        display: none;
+      }
+      /* phones held upright: bars on top, wheel and buttons below the board */
+      @media (max-aspect-ratio: 1/1) {
+        .lvl {
+          left: 12px;
+          top: 12px;
+          font-size: 17px;
+          height: 44px;
+        }
+        .hearts {
+          right: 12px;
+          top: 12px;
+          height: 44px;
+          padding: 0 8px;
+          gap: 2px;
+        }
+        .heart {
+          width: 28px;
+          height: 28px;
+        }
+        .meter {
+          top: 66px;
+          height: 40px;
+        }
+        .st {
+          width: 20px;
+          height: 20px;
+        }
+        .bar {
+          width: 100px;
+        }
+        #wheel {
+          left: 50%;
+          top: auto;
+          bottom: 104px;
+          transform: translateX(-50%);
+          width: 150px;
+          height: 150px;
+        }
+        .side {
+          top: auto;
+          right: 50%;
+          bottom: 22px;
+          transform: translateX(50%);
+          flex-direction: row;
+          gap: 14px;
+        }
+        .rb {
+          width: 56px;
+          height: 56px;
+        }
+        .rb svg {
+          width: 26px;
+          height: 26px;
+        }
+        .card {
+          padding: 22px 26px 26px;
+        }
+        .tip {
+          bottom: auto;
+          top: 118px;
+          left: 12px;
+          transform: none;
+          font-size: 13px;
+        }
+        .look {
+          left: auto;
+          right: 12px;
+          bottom: auto;
+          top: 114px;
+          height: 38px;
+          font-size: 13px;
+          padding: 0 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="view"></div>
+    <div id="hud">
+      <div id="hurt"></div>
+      <div class="pill lvl"><span class="badge">10</span><span>Crowd Control</span></div>
+      <div class="pill meter">
+        <i class="st"></i><i class="st"></i><i class="st"></i>
+        <div class="bar"><div id="fill"></div></div>
+        <span id="count">0/8</span>
+      </div>
+      <div class="pill hearts">
+        <canvas class="heart" width="72" height="72"></canvas>
+        <canvas class="heart" width="72" height="72"></canvas>
+        <canvas class="heart" width="72" height="72"></canvas>
+      </div>
+      <canvas id="wheel" width="440" height="440"></canvas>
+      <div class="side">
+        <button class="rb" id="b-undo" data-icon="undo" aria-label="Undo"></button>
+        <button class="rb" id="b-retry" data-icon="retry" aria-label="Retry"></button>
+        <button class="rb accent" id="b-hint" data-icon="hint" aria-label="Hint"></button>
+        <button class="rb" id="b-menu" data-icon="menu" aria-label="Menu"></button>
+        <button class="rb" id="b-sound" data-icon="sound" aria-label="Sound"></button>
+      </div>
+      <div class="pill tip" id="tip">Swipe, or press ← ↑ → ↓ to roll</div>
+    </div>
+    <div id="title" class="screen">
+      <h1>Six Sided <b>Knight</b></h1>
+      <button class="next" id="t-play" aria-label="Play">
+        <svg viewBox="0 0 24 24">
+          <path d="M8 5l11 7-11 7z" style="fill: var(--ink); stroke: none" />
+        </svg>
+        Play
+      </button>
+    </div>
+    <div id="story" class="screen" hidden>
+      <button class="pill skip" id="s-skip">Skip</button>
+      <div class="cap">
+        <div id="s-title"></div>
+        <p id="s-text" aria-live="polite"></p>
+        <i id="s-more"></i>
+      </div>
+    </div>
+    <div id="banner">
+      <span class="badge">10</span><b>Crowd Control</b><small>★★★ in 8 moves</small>
+    </div>
+    <div id="ko" hidden>
+      <div class="card">
+        <canvas class="ko-heart" id="ko-heart" width="180" height="180"></canvas>
+        <div class="ko-h">Knocked out</div>
+        <div class="row">
+          <button class="rb" id="k-undo" data-icon="undo" aria-label="Undo"></button>
+          <button class="next" id="k-retry" aria-label="Retry">
+            <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 11-2.3-5.6M20 4v5h-5" /></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="result" hidden>
+      <div class="card">
+        <div class="stars"><i class="big"></i><i class="big"></i><i class="big"></i></div>
+        <div class="moves"><span id="rmoves">8</span><small>/ 8</small></div>
+        <div class="row">
+          <button class="rb" id="r-retry" data-icon="retry" aria-label="Retry"></button>
+          <button class="next" id="r-next" aria-label="Next">
+            <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
+          </button>
+        </div>
+        <button class="link" id="r-story">Watch the story again</button>
+      </div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
