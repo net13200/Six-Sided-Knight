@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { facesOf } from '../../src/game/view/cube';
 import { faceTexture, BOX_SLOTS } from '../prototype-3d/world';
+import { iconTexture } from './icons';
 
 const tones = new Uint8Array([90, 170, 255]);
 const gradient = new THREE.DataTexture(tones, 3, 1, THREE.RedFormat);
@@ -52,8 +53,18 @@ export interface Person {
   head: THREE.Group;
   armL: THREE.Group;
   armR: THREE.Group;
+  /** A smile, and an open "O" for gasping or talking. */
+  smile: THREE.Mesh;
+  gasp: THREE.Mesh;
   /** Where a die appears when this person turns into one. */
   height: number;
+}
+
+/** Mouth: 0 = smiling, 1 = wide open. */
+export function mouth(p: Person, open: number): void {
+  p.smile.visible = open < 0.35;
+  p.gasp.visible = open >= 0.35;
+  p.gasp.scale.set(0.8 + open * 0.3, 0.5 + open * 0.9, 0.5);
 }
 
 export interface PersonLook {
@@ -89,6 +100,18 @@ export function person(look: PersonLook): Person {
   head.add(mesh(new THREE.SphereGeometry(0.035, 8, 6), eye, -0.09, -0.01, 0.245));
   head.add(mesh(new THREE.SphereGeometry(0.035, 8, 6), eye, 0.09, -0.01, 0.245));
   head.add(mesh(new THREE.SphereGeometry(0.045, 8, 6), toon('#e8a888'), 0, -0.07, 0.27));
+  const smile = mesh(
+    new THREE.TorusGeometry(0.06, 0.014, 6, 12, Math.PI),
+    toon('#5a2a2a'),
+    0,
+    -0.1,
+    0.245,
+  );
+  smile.rotation.z = Math.PI;
+  head.add(smile);
+  const gasp = mesh(new THREE.SphereGeometry(0.05, 10, 8), toon('#3a1414'), 0, -0.14, 0.24);
+  gasp.visible = false;
+  head.add(gasp);
   const hair = toon(look.hair ?? '#5b3a22');
   const cap = mesh(
     new THREE.SphereGeometry(0.285, 18, 10, 0, Math.PI * 2, 0, Math.PI * 0.5),
@@ -157,7 +180,7 @@ export function person(look: PersonLook): Person {
   const armL = arm(-1);
   const armR = arm(1);
   group.scale.setScalar(look.scale ?? 1);
-  return { group, body, head, armL, armR, height: 1.5 * (look.scale ?? 1) };
+  return { group, body, head, armL, armR, smile, gasp, height: 1.5 * (look.scale ?? 1) };
 }
 
 /** A walk cycle at phase t (seconds). */
@@ -174,7 +197,7 @@ export function idle(p: Person, t: number, seed = 0): void {
   p.head.rotation.z = Math.sin(t * 0.9 + seed) * 0.05;
 }
 
-export function goat(): { group: THREE.Group; head: THREE.Group } {
+export function goat(): { group: THREE.Group; head: THREE.Group; jaw: THREE.Group } {
   const group = new THREE.Group();
   const wool = toon('#f2efe6');
   const dark = toon('#5b4a3a');
@@ -198,9 +221,25 @@ export function goat(): { group: THREE.Group; head: THREE.Group } {
   const beard = mesh(new THREE.ConeGeometry(0.035, 0.12, 6), wool, 0.12, -0.17, 0);
   beard.rotation.z = Math.PI;
   head.add(beard);
-  head.add(mesh(new THREE.SphereGeometry(0.025, 6, 4), toon('#231d2b'), 0.14, 0.04, 0.1));
-  head.add(mesh(new THREE.SphereGeometry(0.025, 6, 4), toon('#231d2b'), 0.14, 0.04, -0.1));
-  return { group, head };
+  // big googly eyes, pupils looking two different ways
+  for (const [z, dy, dz] of [
+    [0.1, 0.02, 0.015],
+    [-0.1, -0.015, -0.02],
+  ] as const) {
+    head.add(mesh(new THREE.SphereGeometry(0.06, 12, 10), toon('#ffffff'), 0.14, 0.06, z));
+    head.add(
+      mesh(new THREE.SphereGeometry(0.028, 8, 6), toon('#231d2b'), 0.195, 0.06 + dy, z + dz),
+    );
+  }
+  // a chewing mouth, with the corner of a page sticking out
+  const jaw = new THREE.Group();
+  jaw.position.set(0.16, -0.1, 0);
+  head.add(jaw);
+  jaw.add(mesh(new THREE.BoxGeometry(0.06, 0.03, 0.12), toon('#3a1414')));
+  const page = mesh(new THREE.PlaneGeometry(0.1, 0.08), toon('#f4ead2'), 0.04, -0.01, 0.05);
+  page.rotation.set(0.3, 0.8, 0.2);
+  jaw.add(page);
+  return { group, head, jaw };
 }
 
 // ---------- dice ----------
@@ -231,10 +270,25 @@ export function gameDie(
   return m;
 }
 
-const PIPS = ['Pip1', 'Pip2', 'Pip3', 'Pip4', 'Pip5', 'Pip6'];
-/** A plain villager die (pips), tinted like the person it was. */
-export function pipDie(renderer: THREE.WebGLRenderer, tint: string, size = 0.7): THREE.Mesh {
-  return gameDie(renderer, size, PIPS, tint);
+/**
+ * A villager's die: three faces showing what they were (each twice, on
+ * opposite sides), in their colour.
+ */
+export function roleDie(
+  renderer: THREE.WebGLRenderer,
+  icons: readonly string[],
+  tint: string,
+  size = 0.7,
+): THREE.Mesh {
+  // BOX_SLOTS order: east, west, top, bottom, south, north
+  const order = [icons[1]!, icons[1]!, icons[0]!, icons[0]!, icons[2]!, icons[2]!];
+  const ms = order.map(
+    (name) =>
+      new THREE.MeshToonMaterial({ map: iconTexture(name, tint, renderer), gradientMap: gradient }),
+  );
+  const m = new THREE.Mesh(new RoundedBoxGeometry(size, size, size, 4, size * 0.15), ms);
+  m.castShadow = true;
+  return m;
 }
 
 // ---------- sets ----------

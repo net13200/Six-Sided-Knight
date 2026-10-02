@@ -19,7 +19,8 @@ import {
   mesh,
   person,
   pillar,
-  pipDie,
+  roleDie,
+  mouth,
   scroll,
   throne,
   toon,
@@ -487,19 +488,111 @@ function village(root: THREE.Group, grassy = '#7fbf5f'): void {
   }
 }
 
+/** The townsfolk: who they are, what they carry, and the faces their dice get. */
 const FOLK: {
+  role: string;
   robe: string;
-  hat: 'hood' | 'cap' | 'none';
+  hat: 'hood' | 'cap' | 'helmet' | 'none';
   hatColor?: string;
   hair: string;
+  prop: 'bread' | 'spear' | 'pitchfork' | 'fish' | 'lute';
+  faces: [string, string, string];
   at: [number, number];
 }[] = [
-  { robe: '#c0503c', hat: 'cap', hatColor: '#5a3d2b', hair: '#3a2a1a', at: [-2.4, -1.2] },
-  { robe: '#3c8ac0', hat: 'none', hair: '#e0b050', at: [-0.8, -2.2] },
-  { robe: '#5aa05a', hat: 'hood', hatColor: '#3d6b3d', hair: '#3a2a1a', at: [1.2, -1.8] },
-  { robe: '#c08a3c', hat: 'cap', hatColor: '#7a2638', hair: '#5b3a22', at: [2.6, -0.4] },
-  { robe: '#8a4fb0', hat: 'none', hair: '#2a1a12', at: [-2.8, 1.0] },
+  {
+    role: 'baker',
+    robe: '#e8d8b8',
+    hat: 'cap',
+    hatColor: '#ffffff',
+    hair: '#3a2a1a',
+    prop: 'bread',
+    faces: ['bread', 'croissant', 'cake'],
+    at: [-2.4, -1.2],
+  },
+  {
+    role: 'guard',
+    robe: '#3c8ac0',
+    hat: 'helmet',
+    hair: '#e0b050',
+    prop: 'spear',
+    faces: ['zzz', 'spear', 'coffee'],
+    at: [-0.8, -2.2],
+  },
+  {
+    role: 'farmer',
+    robe: '#5aa05a',
+    hat: 'hood',
+    hatColor: '#e0c060',
+    hair: '#3a2a1a',
+    prop: 'pitchfork',
+    faces: ['carrot', 'egg', 'pitchfork'],
+    at: [1.2, -1.8],
+  },
+  {
+    role: 'fishmonger',
+    robe: '#c08a3c',
+    hat: 'cap',
+    hatColor: '#2f5f7a',
+    hair: '#5b3a22',
+    prop: 'fish',
+    faces: ['fish', 'boot', 'stink'],
+    at: [2.6, -0.4],
+  },
+  {
+    role: 'bard',
+    robe: '#8a4fb0',
+    hat: 'cap',
+    hatColor: '#e5485f',
+    hair: '#2a1a12',
+    prop: 'lute',
+    faces: ['lute', 'note', 'tomato'],
+    at: [-2.8, 1.0],
+  },
 ];
+
+/** What each of them holds, in their right hand. */
+function prop(kind: (typeof FOLK)[number]['prop']): THREE.Group {
+  const g = new THREE.Group();
+  g.position.set(0, -0.46, 0.08);
+  const wood = toon('#8a5a33');
+  switch (kind) {
+    case 'bread': {
+      const loaf = mesh(new THREE.CapsuleGeometry(0.08, 0.18, 4, 8), toon('#d99a4e'));
+      loaf.rotation.z = Math.PI / 2;
+      g.add(loaf);
+      break;
+    }
+    case 'spear':
+      g.add(mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.6, 6), wood, 0, 0.45, 0));
+      g.add(mesh(new THREE.ConeGeometry(0.05, 0.18, 6), toon('#c9d2de'), 0, 1.33, 0));
+      break;
+    case 'pitchfork':
+      g.add(mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.4, 6), wood, 0, 0.35, 0));
+      for (const x of [-0.06, 0, 0.06])
+        g.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.2, 4), toon('#8d93a3'), x, 1.12, 0));
+      g.add(mesh(new THREE.BoxGeometry(0.14, 0.02, 0.02), toon('#8d93a3'), 0, 1.03, 0));
+      break;
+    case 'fish': {
+      const body = mesh(new THREE.SphereGeometry(0.1, 10, 8), toon('#6fb3d3'));
+      body.scale.set(1.8, 0.8, 0.5);
+      g.add(body);
+      const tail = mesh(new THREE.ConeGeometry(0.07, 0.12, 4), toon('#6fb3d3'), 0.22, 0, 0);
+      tail.rotation.z = Math.PI / 2;
+      g.add(tail);
+      break;
+    }
+    case 'lute': {
+      const bowl = mesh(new THREE.SphereGeometry(0.13, 12, 10), toon('#c8873a'), 0, 0.05, 0.06);
+      bowl.scale.set(1, 1.2, 0.6);
+      g.add(bowl);
+      const neck = mesh(new THREE.BoxGeometry(0.04, 0.32, 0.03), wood, 0.06, 0.3, 0.06);
+      neck.rotation.z = -0.3;
+      g.add(neck);
+      break;
+    }
+  }
+  return g;
+}
 
 export function morning(ctx: Ctx): Stage {
   const root = new THREE.Group();
@@ -507,10 +600,11 @@ export function morning(ctx: Ctx): Stage {
   const fx = new Particles(root);
   const folk: Villager[] = FOLK.map((f, i) => {
     const p = person({ robe: f.robe, hat: f.hat, hatColor: f.hatColor, hair: f.hair, scale: 0.9 });
+    p.armR.add(prop(f.prop));
     p.group.position.set(f.at[0], 0, f.at[1]);
     p.group.rotation.y = Math.atan2(-f.at[0], 4 - f.at[1]) + (i % 2 ? 0.4 : -0.4);
     root.add(p.group);
-    const d = pipDie(ctx.renderer, f.robe, 0.7);
+    const d = roleDie(ctx.renderer, f.faces, f.robe, 0.7);
     d.position.set(f.at[0], 0.35, f.at[1]);
     d.scale.setScalar(0);
     root.add(d);
@@ -525,14 +619,14 @@ export function morning(ctx: Ctx): Stage {
   // the goat, eating the council's notes
   const g = goat();
   g.group.position.set(1.4, 0, 1.4);
-  g.group.rotation.y = 2.5;
+  g.group.rotation.y = -1.26; // facing us, head down in the notes
   root.add(g.group);
   const notes = scroll('§');
-  notes.position.set(0.9, 0.03, 1.7);
+  notes.position.set(1.62, 0.03, 2.05);
   notes.rotation.x = -Math.PI / 2;
   noOutline(notes);
   root.add(notes);
-  const gd = pipDie(ctx.renderer, '#f2efe6', 0.6);
+  const gd = roleDie(ctx.renderer, ['goatface', 'notes', 'can'], '#b8a890', 0.6);
   for (const s of [-1, 1]) {
     const horn = mesh(new THREE.ConeGeometry(0.05, 0.25, 6), toon('#5b4a3a'), s * 0.15, 0.38, 0);
     horn.rotation.z = -s * 0.3;
@@ -591,8 +685,20 @@ export function morning(ctx: Ctx): Stage {
       waveMat.opacity = 0.5 * (1 - smooth((t - 6) / 1.5));
       for (const v of folk) {
         if (!v.turned) {
-          if (v.p) idle(v.p, t, v.seed);
-          if (v.goat) v.goat.head.rotation.z = -0.5 + Math.abs(Math.sin(t * 5)) * 0.35;
+          if (v.p) {
+            idle(v.p, t, v.seed);
+            // they see it coming: mouths drop open, arms go up
+            const near = smooth((r + 3 - v.pos.distanceTo(origin)) / 2.5);
+            mouth(v.p, near);
+            v.p.armL.rotation.x = -near * 2.4;
+            v.p.armR.rotation.x = -near * 0.6;
+            v.p.head.rotation.x = -near * 0.25;
+          }
+          if (v.goat) {
+            v.goat.head.rotation.z = -0.5 + Math.abs(Math.sin(t * 5)) * 0.35;
+            v.goat.jaw.position.y = -0.1 - Math.abs(Math.sin(t * 9)) * 0.03; // chomp chomp
+            v.goat.jaw.rotation.y = Math.sin(t * 9) * 0.3;
+          }
           if (v.pos.distanceTo(origin) < r) {
             v.turned = true;
             v.born = t;
@@ -638,7 +744,7 @@ export function you(ctx: Ctx): Stage {
   const mine = new Roller(me, 0.8, 6);
   // everyone else, tumbling about at random
   const others = FOLK.map((f, i) => {
-    const d = pipDie(ctx.renderer, f.robe, 0.7);
+    const d = roleDie(ctx.renderer, f.faces, f.robe, 0.7);
     const a = (i / FOLK.length) * Math.PI * 2;
     d.position.set(
       Math.round((Math.cos(a) * 3.2) / 0.7) * 0.7,
@@ -713,6 +819,9 @@ export function you(ctx: Ctx): Stage {
         knight.armR.rotation.z = 0.4;
         knight.head.rotation.x = Math.sin(t * 9) * 0.06;
         said.visible = t > 0.4;
+        // talking, then a gasp as the wave arrives
+        const coming = smooth((t - 1.9) / 0.4);
+        mouth(knight, Math.max(coming, t > 0.4 ? Math.abs(Math.sin(t * 13)) : 0));
         const r = Math.max(0, (t - 1) * 4.2);
         wave.scale.set(r, 1, r);
         if (r > Math.hypot(6, 6)) {
