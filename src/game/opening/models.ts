@@ -5,8 +5,8 @@
  */
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { facesOf } from '../../src/game/view/cube';
-import { faceTexture, BOX_SLOTS } from '../prototype-3d/world';
+import { facesOf } from '../view/cube';
+import { faceTexture, BOX_SLOTS } from './die-art';
 import { iconTexture } from './icons';
 
 const tones = new Uint8Array([90, 170, 255]);

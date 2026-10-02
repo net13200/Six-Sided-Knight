@@ -698,6 +698,20 @@ const dict: Dict = {
   'No ad right now. Try again later.': 'Şu an reklam yok. Daha sonra tekrar dene.',
   'Ads are blocked, so there is no ad to watch.':
     'Reklamlar engelli, bu yüzden izlenecek reklam yok.',
+  'In Oddmere, the Queen decided everything.': "Tuhafköy'de her şeye Kraliçe karar verirdi.",
+  'After forty years, she was tired.': 'Kırk yıl sonra yorulmuştu.',
+  'So she went to the Old Well and made a wish.': "Bu yüzden Eski Kuyu'ya gidip bir dilek diledi.",
+  'The Well was generous. Too generous.': 'Kuyu cömertti. Fazla cömert.',
+  'By morning, everyone in Oddmere was a die.': "Sabah olduğunda Tuhafköy'deki herkes zar olmuştu.",
+  'Even the goat. Nobody decides anything now.':
+    'Keçi bile. Artık kimse hiçbir şeye karar vermiyor.',
+  'You were halfway through saying something important.':
+    'Önemli bir şeyi söylemenin tam ortasındaydın.',
+  'You mean to finish the sentence. So you roll on purpose.':
+    'Cümleni bitirmek istiyorsun. O yüzden bilerek yuvarlanıyorsun.',
+  'I wish I never had to decide anything again.':
+    'Keşke bir daha hiçbir şeye karar vermek zorunda kalmasam.',
+  'Wait! I was just about to say...': 'Bekle! Tam da şunu diyecektim...',
 };
 
 export default dict;

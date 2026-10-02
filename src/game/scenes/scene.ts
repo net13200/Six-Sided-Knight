@@ -30,7 +30,7 @@ export const TRANSITIONS: Readonly<Record<SceneName, readonly SceneName[]>> = {
   forge: ['menu', 'daily', 'depths', 'skins', 'floor', 'levels'],
   stats: ['menu'],
   skins: ['forge'],
-  story: ['play', 'menu', 'levels', 'ranger', 'ranger-map'],
+  story: ['play', 'menu', 'levels', 'ranger', 'ranger-map', 'story'], // the opening, then chapter pages
   'ranger-map': ['menu', 'ranger', 'story'],
   ranger: ['ranger', 'ranger-map', 'story', 'menu'],
 };

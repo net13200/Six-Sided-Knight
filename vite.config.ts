@@ -71,6 +71,8 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: 'es2022',
     sourcemap: true,
+    // The 3D opening (Three.js) is one chunk, loaded only when the story plays.
+    chunkSizeWarningLimit: 650,
     ...(PORTALS[mode] ? { outDir: PORTALS[mode].outDir } : {}),
   },
 }));

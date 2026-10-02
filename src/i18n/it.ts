@@ -702,6 +702,17 @@ const dict: Dict = {
   'No ad right now. Try again later.': 'Nessuna pubblicità al momento. Riprova più tardi.',
   'Ads are blocked, so there is no ad to watch.':
     'Le pubblicità sono bloccate, quindi non ce n’è nessuna da guardare.',
+  'In Oddmere, the Queen decided everything.': 'A Stranoborgo, la Regina decideva tutto.',
+  'After forty years, she was tired.': "Dopo quarant'anni, era stanca.",
+  'So she went to the Old Well and made a wish.':
+    'Così andò al Vecchio Pozzo ed espresse un desiderio.',
+  'The Well was generous. Too generous.': 'Il Pozzo fu generoso. Troppo generoso.',
+  'By morning, everyone in Oddmere was a die.': 'Al mattino, tutti a Stranoborgo erano dadi.',
+  'Even the goat. Nobody decides anything now.': 'Perfino la capra. Ora nessuno decide più niente.',
+  'You were halfway through saying something important.': 'Eri a metà di una frase importante.',
+  'You mean to finish the sentence. So you roll on purpose.': 'Vuoi finirla. Così rotoli apposta.',
+  'I wish I never had to decide anything again.': 'Vorrei non dover mai più decidere niente.',
+  'Wait! I was just about to say...': 'Aspetta! Stavo proprio per dire...',
 };
 
 export default dict;

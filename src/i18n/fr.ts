@@ -705,6 +705,19 @@ const dict: Dict = {
   'No ad right now. Try again later.': 'Pas de pub pour le moment. Réessayez plus tard.',
   'Ads are blocked, so there is no ad to watch.':
     'Les pubs sont bloquées : il n’y en a aucune à regarder.',
+  'In Oddmere, the Queen decided everything.': 'À Bizarrebourg, la Reine décidait de tout.',
+  'After forty years, she was tired.': 'Après quarante ans, elle était fatiguée.',
+  'So she went to the Old Well and made a wish.': 'Alors elle alla au Vieux Puits et fit un vœu.',
+  'The Well was generous. Too generous.': 'Le Puits fut généreux. Trop généreux.',
+  'By morning, everyone in Oddmere was a die.': 'Au matin, tout Bizarrebourg était devenu des dés.',
+  'Even the goat. Nobody decides anything now.': 'Même la chèvre. Plus personne ne décide rien.',
+  'You were halfway through saying something important.':
+    "Tu étais au milieu d'une phrase importante.",
+  'You mean to finish the sentence. So you roll on purpose.':
+    'Tu comptes bien la finir. Alors tu roules exprès.',
+  'I wish I never had to decide anything again.':
+    'Je voudrais ne plus jamais rien avoir à décider.',
+  'Wait! I was just about to say...': "Attends ! J'allais justement dire...",
 };
 
 export default dict;

@@ -38,6 +38,7 @@ import { ResultsScene } from './scenes/results';
 import { SkinsScene } from './scenes/skins';
 import { StatsScene } from './scenes/stats';
 import { StoryScene } from './scenes/story';
+import { OpeningScene, openingWanted } from './scenes/opening';
 import { RangerMapScene } from './scenes/ranger-map';
 import { RangerPlayScene } from './scenes/ranger-play';
 import { loadRangerLevels } from '../ranger/levels';
@@ -45,6 +46,7 @@ import type { RLevel } from '../ranger/rules';
 import { lessonFor, lessonKey, type Lesson } from './lessons';
 import {
   ENDING,
+  INTRO,
   RANGER_INTRO,
   RANGER_OUTRO,
   STORY_KEYS,
@@ -347,7 +349,21 @@ export class Game {
     finalLabel?: string,
   ): void {
     if (keys.length > 0) this.save.update((d) => keys.forEach((k) => (d.hints[k] = true)));
-    this.go(new StoryScene(this, pages, done, finalLabel));
+    const pagesScene = () => new StoryScene(this, pages, done, finalLabel);
+    // The intro plays as the animated 3D opening where it can; any pages after
+    // it (the chapter card) follow as usual.
+    if (pages[0] === INTRO[0] && openingWanted(this.reducedMotion)) {
+      const rest = pages.slice(INTRO.length);
+      this.go(
+        new OpeningScene(
+          () => (rest.length > 0 ? this.go(new StoryScene(this, rest, done, finalLabel)) : done()),
+          done,
+          () => this.go(pagesScene()),
+        ),
+      );
+      return;
+    }
+    this.go(pagesScene());
   }
 
   storySeen(key: string): boolean {

@@ -5,13 +5,15 @@
  * Counts everything a player downloads: HTML, JS (game + generator worker),
  * CSS, the manifest, the service worker, fonts and icons. Source maps are
  * not downloaded by players and are skipped. A player downloads one language
- * file at most, so only the largest counts.
+ * file at most, so only the largest counts. The animated 3D opening (Three.js)
+ * is loaded only when the story plays, so it has its own budget.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
 const BUDGET_KB = 300;
+const OPENING_BUDGET_KB = 170;
 const root = process.argv[2] ?? 'dist';
 
 function files(dir) {
@@ -22,7 +24,9 @@ function files(dir) {
 }
 
 const LANG_FILE = /assets\/(de|es|fr|it|nl|pt|tr|he)-[\w-]+\.js$/;
+const OPENING_FILE = /assets\/film-[\w-]+\.js$/;
 let total = 0;
+let opening = 0;
 let langMax = 0;
 const rows = [];
 for (const f of files(root)) {
@@ -32,6 +36,7 @@ for (const f of files(root)) {
   const size = /\.(png|woff2)$/.test(f) ? data.length : gzipSync(data, { level: 9 }).length;
   const name = relative(root, f).replace(/\\/g, '/');
   if (LANG_FILE.test(name)) langMax = Math.max(langMax, size);
+  else if (OPENING_FILE.test(name)) opening += size;
   else total += size;
   rows.push([name, size]);
 }
@@ -39,7 +44,18 @@ total += langMax;
 rows.sort((a, b) => b[1] - a[1]);
 for (const [name, size] of rows) console.log(`${(size / 1024).toFixed(1).padStart(7)} KB  ${name}`);
 console.log(`${(total / 1024).toFixed(1).padStart(7)} KB  total (budget ${BUDGET_KB} KB)`);
+console.log(
+  `${(opening / 1024).toFixed(1).padStart(7)} KB  opening, loaded on demand (budget ${OPENING_BUDGET_KB} KB)`,
+);
+let over = false;
 if (total > BUDGET_KB * 1024) {
   console.error(`Over budget by ${((total - BUDGET_KB * 1024) / 1024).toFixed(1)} KB`);
-  process.exit(1);
+  over = true;
 }
+if (opening > OPENING_BUDGET_KB * 1024) {
+  console.error(
+    `Opening over budget by ${((opening - OPENING_BUDGET_KB * 1024) / 1024).toFixed(1)} KB`,
+  );
+  over = true;
+}
+if (over) process.exit(1);

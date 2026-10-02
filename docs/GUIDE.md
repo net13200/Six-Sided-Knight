@@ -2,6 +2,8 @@
 
 _The Queen of Oddmere wished never to decide anything again. The Old Well granted it: by morning, everyone in the realm was a die, and chance decides everything. You're the one die that still rolls on purpose._
 
+The first time you play, the story plays as a short animated film (tap to move on a scene, or Skip). **Story** on the title screen shows it again.
+
 You are a die. Every move rolls you one tile, and **the face on the side you roll toward is the one that acts**: roll a Sword into a skeleton to hit it, roll a Key into a door to open it. Reach the stairs to win.
 
 ## Controls

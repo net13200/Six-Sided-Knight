@@ -41,7 +41,8 @@ src/content/   faces/, tiles/, enemies/ — one definition module each, register
 src/levels/    campaign levels (data/*.txt), gauntlet floors (gauntlets/*.txt) and their loader
 src/solver/    solvers (BFS, IDA*) and the difficulty rater
 src/gen/       seeded level generator, its Web Worker, and the async level service
-src/game/      browser game: scenes, input, audio, loop; view/ holds rendering and effects
+src/game/      browser game: scenes, input, audio, loop; view/ holds rendering and effects;
+               opening/ is the 3D animated intro (Three.js, loaded on demand)
 src/meta/      save data (versioned, with migrations), progression, analytics, KPI maths
 src/platform/  host adapter interface (storage, share, visibility, ...) + browser implementation
 tools/         command-line tools: level validator, solver, replay player, level lab, rink/room search

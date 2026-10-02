@@ -694,6 +694,17 @@ const he: Dict = {
   'You have {n} crowns.': 'יש לך {n} כתרים.',
   'No ad right now. Try again later.': 'אין פרסומת כרגע. נסה שוב מאוחר יותר.',
   'Ads are blocked, so there is no ad to watch.': 'הפרסומות חסומות, אז אין פרסומת לצפות בה.',
+  'In Oddmere, the Queen decided everything.': 'באודמיר, המלכה החליטה על הכול.',
+  'After forty years, she was tired.': 'אחרי ארבעים שנה, היא התעייפה.',
+  'So she went to the Old Well and made a wish.': 'אז היא הלכה לבאר העתיקה וביקשה משאלה.',
+  'The Well was generous. Too generous.': 'הבאר הייתה נדיבה. נדיבה מדי.',
+  'By morning, everyone in Oddmere was a die.': 'עד הבוקר, כל תושבי אודמיר הפכו לקוביות.',
+  'Even the goat. Nobody decides anything now.': 'אפילו העז. אף אחד כבר לא מחליט כלום.',
+  'You were halfway through saying something important.': 'היית באמצע משפט חשוב.',
+  'You mean to finish the sentence. So you roll on purpose.':
+    'ואתה מתכוון לסיים אותו. אז אתה מתגלגל בכוונה.',
+  'I wish I never had to decide anything again.': 'הלוואי שלא אצטרך להחליט על שום דבר יותר לעולם.',
+  'Wait! I was just about to say...': 'רגע! בדיוק עמדתי להגיד...',
 };
 
 export default he;

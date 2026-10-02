@@ -3,7 +3,11 @@ import { defineConfig, devices } from '@playwright/test';
 
 // Use the pre-installed Chromium when present (CI images may ship their own).
 const localChromium = '/opt/pw-browsers/chromium';
-const launchOptions = existsSync(localChromium) ? { executablePath: localChromium } : {};
+// WebGL through the software renderer, so the 3D opening can play in tests.
+const args = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
+const launchOptions = existsSync(localChromium)
+  ? { executablePath: localChromium, args }
+  : { args };
 
 export default defineConfig({
   testDir: 'tests/e2e',

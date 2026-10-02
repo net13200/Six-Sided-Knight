@@ -705,6 +705,19 @@ const dict: Dict = {
   'No ad right now. Try again later.': 'Nu even geen advertentie. Probeer het later nog eens.',
   'Ads are blocked, so there is no ad to watch.':
     'Advertenties worden geblokkeerd, dus er is er geen om te bekijken.',
+  'In Oddmere, the Queen decided everything.': 'In Rarendam besliste de Koningin alles.',
+  'After forty years, she was tired.': 'Na veertig jaar was ze moe.',
+  'So she went to the Old Well and made a wish.': 'Dus ging ze naar de Oude Put en deed een wens.',
+  'The Well was generous. Too generous.': 'De Put was gul. Te gul.',
+  'By morning, everyone in Oddmere was a die.':
+    'De volgende ochtend was heel Rarendam een dobbelsteen.',
+  'Even the goat. Nobody decides anything now.': 'Zelfs de geit. Niemand beslist nog iets.',
+  'You were halfway through saying something important.': 'Je was halverwege iets belangrijks.',
+  'You mean to finish the sentence. So you roll on purpose.':
+    'Je wilt je zin afmaken. Dus rol je met opzet.',
+  'I wish I never had to decide anything again.':
+    'Ik wou dat ik nooit meer iets hoefde te beslissen.',
+  'Wait! I was just about to say...': 'Wacht! Ik wilde net zeggen...',
 };
 
 export default dict;

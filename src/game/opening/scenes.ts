@@ -30,6 +30,7 @@ import {
   type Person,
 } from './models';
 import { cameraAt, easeOut, elastic, Particles, Roller, smooth } from './kit3d';
+import { t, tk } from '../../i18n';
 
 export interface Look {
   background: string;
@@ -44,6 +45,8 @@ export interface Stage {
   duration: number;
   captions: { at: number; text: string }[];
   update(t: number, dt: number, cam: THREE.PerspectiveCamera): void;
+  /** True while a character's speech bubble is up (the caption steps aside). */
+  speaking?(): boolean;
 }
 
 export interface Ctx {
@@ -195,8 +198,8 @@ export function throneRoom(): Stage {
       hemi: { sky: '#8a7aff', ground: '#3a2010', intensity: 0.9 },
     },
     captions: [
-      { at: 0.6, text: 'In Oddmere, the Queen decided everything.' },
-      { at: 5.2, text: 'After forty years, she was tired.' },
+      { at: 0.6, text: tk('In Oddmere, the Queen decided everything.') },
+      { at: 5.2, text: tk('After forty years, she was tired.') },
     ],
     update(t, dt, cam) {
       cameraAt(
@@ -332,7 +335,7 @@ export function oldWell(): Stage {
   }
   const queen = person({ robe: '#7d3fb3', hat: 'crown', hair: '#c9c2cf', trim: '#ffd75e' });
   root.add(queen.group);
-  const wish = bubble('I wish I never had to decide anything again.', 2.3);
+  const wish = bubble(t('I wish I never had to decide anything again.'), 2.3);
   wish.visible = false;
   root.add(wish);
   const wellLight = new THREE.PointLight('#7fe6ff', 0, 12, 1.4);
@@ -381,9 +384,10 @@ export function oldWell(): Stage {
       hemi: { sky: '#4060a0', ground: '#101820', intensity: 0.7 },
     },
     captions: [
-      { at: 0.6, text: 'So she went to the Old Well and made a wish.' },
-      { at: 7, text: 'The Well was generous. Too generous.' },
+      { at: 0.6, text: tk('So she went to the Old Well and made a wish.') },
+      { at: 7, text: tk('The Well was generous. Too generous.') },
     ],
+    speaking: () => wish.visible,
     update(t, dt, cam) {
       cameraAt(
         [
@@ -667,8 +671,8 @@ export function morning(ctx: Ctx): Stage {
       hemi: { sky: '#cfe8ff', ground: '#5a7a3a', intensity: 1.1 },
     },
     captions: [
-      { at: 0.6, text: 'By morning, everyone in Oddmere was a die.' },
-      { at: 6, text: 'Even the goat. Nobody decides anything now.' },
+      { at: 0.6, text: tk('By morning, everyone in Oddmere was a die.') },
+      { at: 6, text: tk('Even the goat. Nobody decides anything now.') },
     ],
     update(t, dt, cam) {
       cameraAt(
@@ -734,7 +738,7 @@ export function you(ctx: Ctx): Stage {
   const fx = new Particles(root);
   const knight = person({ robe: '#2f5fb0', hat: 'helmet', hair: '#5b3a22', trim: '#ffd75e' });
   root.add(knight.group);
-  const said = bubble('Wait! I was just about to say...', 3);
+  const said = bubble(t('Wait! I was just about to say...'), 3);
   said.position.set(0, 2.35, 0);
   root.add(said);
   const me = gameDie(ctx.renderer, 0.8);
@@ -798,10 +802,11 @@ export function you(ctx: Ctx): Stage {
       hemi: { sky: '#cfe8ff', ground: '#5a7a3a', intensity: 1.1 },
     },
     captions: [
-      { at: 3.6, text: 'You were halfway through saying something important.' },
-      { at: 7.2, text: 'You mean to finish the sentence. So you roll on purpose.' },
+      { at: 3.6, text: tk('You were halfway through saying something important.') },
+      { at: 7.2, text: tk('You mean to finish the sentence. So you roll on purpose.') },
     ],
     hemiDim: () => hemiDim,
+    speaking: () => said.visible,
     update(t, dt, cam) {
       cameraAt(
         [

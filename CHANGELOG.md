@@ -2,6 +2,11 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.18.0 — Once upon a roll
+
+- **An animated opening.** The story now plays as a short 3D film: the Queen buried in decisions, her wish at the Old Well, the whole village (and the goat) popping into dice, and you, cut off mid-sentence, rolling on purpose. Tap to move on a scene, or Skip to start playing. **Story** on the title screen plays it again.
+- Phones that can't show 3D, and players who've turned on Reduce motion, get the illustrated story pages as before.
+
 ## 0.17.0 — עברית
 
 - **Hebrew.** The whole game in Hebrew, written right to left: menus, the story, lessons and the play screen all read from the right. Pick עברית in Settings → Language (it starts in Hebrew if that's your browser's language).
