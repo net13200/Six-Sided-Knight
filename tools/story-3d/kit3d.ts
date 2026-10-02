@@ -145,6 +145,23 @@ const AXIS: Record<Dir, THREE.Vector3> = {
   W: new THREE.Vector3(0, 0, 1),
 };
 
+/** Rounds a rotation to the nearest quarter turns, so a die always sits flat. */
+function snapRight(q: THREE.Quaternion): void {
+  const m = new THREE.Matrix4().makeRotationFromQuaternion(q);
+  const e = m.elements;
+  const axis = (x: number, y: number, z: number) => {
+    const a = [Math.abs(x), Math.abs(y), Math.abs(z)];
+    const i = a.indexOf(Math.max(...a));
+    const v = [0, 0, 0];
+    v[i] = Math.sign([x, y, z][i]!);
+    return new THREE.Vector3(v[0], v[1], v[2]);
+  };
+  const xa = axis(e[0]!, e[1]!, e[2]!);
+  const ya = axis(e[4]!, e[5]!, e[6]!);
+  const za = new THREE.Vector3().crossVectors(xa, ya);
+  q.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xa, ya, za));
+}
+
 export class Roller {
   private anim: {
     dir: Dir;
@@ -194,6 +211,7 @@ export class Roller {
       this.mesh.quaternion.copy(q).multiply(a.q0);
       if (k >= 1) {
         this.mesh.position.y = this.size / 2;
+        snapRight(this.mesh.quaternion);
         this.anim = null;
         onLand?.(this);
       }

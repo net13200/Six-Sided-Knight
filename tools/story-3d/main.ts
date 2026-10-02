@@ -109,6 +109,8 @@ function caption(text: string): void {
 
 function next(): void {
   if (fadeOut >= 0 || ended) return;
+  // the last scene has nothing after it: go to the end title
+  if (index >= MAKERS.length - 1) return end();
   fadeOut = 0;
 }
 
@@ -173,7 +175,10 @@ function tick(dt: number): void {
   if (fadeOut >= 0) {
     fadeOut += dt;
     black = Math.max(black, Math.min(1, fadeOut / 0.45));
-    if (fadeOut > 0.5) load(index + 1);
+    if (fadeOut > 0.5) {
+      if (index + 1 < MAKERS.length) load(index + 1);
+      else end();
+    }
   }
   $('fade').style.opacity = String(black);
   effect.render(scene, camera);
@@ -189,6 +194,8 @@ declare global {
 window.__tick = tick;
 window.__play = () => $('play').click();
 window.__ready = true;
+if (new URLSearchParams(location.search).has('capture'))
+  (window as unknown as { __scene: THREE.Scene }).__scene = scene;
 
 if (!new URLSearchParams(location.search).has('capture')) {
   let last = performance.now();

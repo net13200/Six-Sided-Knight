@@ -597,7 +597,7 @@ export function morning(ctx: Ctx): Stage {
             v.turned = true;
             v.born = t;
             fx.puff(v.pos.clone().setY(0.6), 9, 0.22);
-            v.die.mesh.rotation.y = v.seed;
+            v.die.mesh.rotation.y = (v.seed % 4) * (Math.PI / 2); // square to the grid, so rolls land flat
           }
         } else {
           const born = v.born ?? t;
