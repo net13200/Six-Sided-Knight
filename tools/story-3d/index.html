@@ -47,7 +47,7 @@
       #cap {
         position: fixed;
         left: 50%;
-        bottom: calc(6vh + 18px);
+        top: calc(6vh + 16px);
         transform: translateX(-50%);
         width: min(720px, calc(100% - 32px));
         text-align: center;
@@ -68,7 +68,7 @@
       @keyframes cap {
         from {
           opacity: 0;
-          transform: translate(-50%, 10px);
+          transform: translate(-50%, -10px);
         }
         to {
           opacity: 1;
@@ -85,7 +85,7 @@
       }
       #skip {
         position: fixed;
-        top: calc(6vh + 12px);
+        bottom: calc(6vh + 12px);
         right: 16px;
         height: 40px;
         padding: 0 18px;

@@ -331,7 +331,7 @@ export function oldWell(): Stage {
   }
   const queen = person({ robe: '#7d3fb3', hat: 'crown', hair: '#c9c2cf', trim: '#ffd75e' });
   root.add(queen.group);
-  const wish = bubble('I wish I never had to decide anything again.', 2.6);
+  const wish = bubble('I wish I never had to decide anything again.', 2.3);
   wish.visible = false;
   root.add(wish);
   const wellLight = new THREE.PointLight('#7fe6ff', 0, 12, 1.4);
@@ -387,8 +387,11 @@ export function oldWell(): Stage {
       cameraAt(
         [
           { t: 0, p: [-8, 2.4, 8], l: [-4, 1.1, 0.5] },
-          { t: 4, p: [-3.8, 2.1, 4.6], l: [-0.8, 1.2, 0] },
-          { t: 6.8, p: [-1.3, 1.5, 3.4], l: [-0.2, 1.7, 0] },
+          { t: 4, p: [-3.8, 2.1, 4.6], l: [-0.8, 1.3, 0] },
+          // hold wide enough to read her wish above her
+          { t: 5.2, p: [-2.4, 2.2, 5.6], l: [-0.9, 1.75, 0.2] },
+          { t: 6.6, p: [-2.1, 2.2, 5.3], l: [-0.8, 1.75, 0.2] },
+          { t: 7.6, p: [-1.4, 1.6, 3.8], l: [-0.2, 1.7, 0] },
           { t: 11, p: [2, 8, 13], l: [0, 1, 0] },
         ],
         t,
@@ -407,7 +410,7 @@ export function oldWell(): Stage {
       queen.body.rotation.x = lean * 0.35;
       queen.armR.rotation.x = -lean * 1.2;
       wish.visible = t > 4.5 && t < 7;
-      wish.position.set(-1.3, 2.15 + Math.sin(t * 2) * 0.05, 0.5);
+      wish.position.set(-1.0, 2.5 + Math.sin(t * 2) * 0.04, 0.35);
       // the Well answers
       const glow = smooth((t - 6.2) / 0.8);
       waterMat.color.set('#1b3d52').lerp(new THREE.Color('#bff8ff'), glow);
