@@ -17,6 +17,8 @@ import { drawBoard } from '../../src/game/view/board';
 import { Fx } from '../../src/game/view/fx';
 import { animateTurn } from '../../src/game/view/animate';
 import { tileCenter } from '../../src/game/view/layout';
+import { facesOf } from '../../src/game/view/cube';
+import { drawFace } from '../../src/game/view/art';
 import type { Audio } from '../../src/game/audio';
 import { CLIPS, type Clip } from './clips';
 
@@ -25,7 +27,9 @@ const SILENT = { play() {} } as unknown as Audio;
 const DV: Record<Dir, [number, number]> = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };
 const R = 28; // the die's half-size on the board, as drawn by the game
 
-type Phase = 'wait' | 'hand' | 'roll' | 'hold' | 'fade';
+type Phase = 'wait' | 'focus' | 'hand' | 'roll' | 'hold' | 'fade';
+
+const FOCUS_TIME = 1.2;
 
 class Player {
   private state!: GameState;
@@ -34,7 +38,6 @@ class Player {
   private phase: Phase = 'wait';
   private t = 0;
   private check: { x: number; y: number; t: number } | null = null;
-  private focusOn = false;
   private readonly ctx: CanvasRenderingContext2D;
 
   constructor(
@@ -52,7 +55,6 @@ class Player {
     this.phase = 'wait';
     this.t = 0;
     this.check = null;
-    this.focusOn = false;
   }
 
   private go(phase: Phase): void {
@@ -67,19 +69,25 @@ class Player {
     const c = this.clip;
     switch (this.phase) {
       case 'wait':
-        if (this.t > 0.7) this.go(this.i < c.moves.length ? 'hand' : 'hold');
+        if (this.t > 0.7) this.go(this.i < c.moves.length ? this.beforeRoll() : 'hold');
+        break;
+      case 'focus':
+        // the side that matters lights up first, before any swipe
+        if (this.t > FOCUS_TIME) this.go('hand');
         break;
       case 'hand':
-        this.focusOn = c.focus?.move === this.i && c.focus.kind !== 'bottom';
         if (this.t > 0.75) this.roll();
         break;
       case 'roll':
         if (!this.fx.busy && this.t > 0.35) {
           if (c.check.after === this.i) this.check ??= { ...this.checkSpot(), t: 0 };
           this.i++;
-          this.focusOn = false;
           this.go(
-            this.i < c.moves.length ? (c.check.after === this.i - 1 ? 'wait' : 'hand') : 'hold',
+            this.i < c.moves.length
+              ? c.check.after === this.i - 1
+                ? 'wait'
+                : this.beforeRoll()
+              : 'hold',
           );
         }
         break;
@@ -92,6 +100,11 @@ class Player {
     }
   }
 
+  /** A move that matters gets its side highlighted first. */
+  private beforeRoll(): Phase {
+    return this.clip.focus?.move === this.i ? 'focus' : 'hand';
+  }
+
   private lastEvents: readonly GameEvent[] = [];
   private roll(): void {
     const dir = this.clip.moves[this.i]!;
@@ -100,7 +113,6 @@ class Player {
     this.state = res.state;
     this.lastEvents = res.events;
     animateTurn(this.fx, SILENT, res.events, before, res.state);
-    this.focusOn = this.clip.focus?.move === this.i;
     this.go('roll');
   }
 
@@ -139,7 +151,20 @@ class Player {
     const px = p.x + v.player.dx;
     const py = p.y + v.player.dy;
     const pulse = 0.6 + Math.sin(this.fx.time * 8) * 0.4;
-    if (this.focusOn && clip.focus) this.glow(clip.focus.kind, px, py, pulse);
+    const f = clip.focus;
+    if (f && f.move === this.i) {
+      if (this.phase === 'focus' || this.phase === 'hand') {
+        // before the roll: the face that will act, on the die and as a badge beside it
+        const side = f.kind === 'top' ? 'top' : 'lead';
+        const appear = this.phase === 'focus' ? Math.min(1, this.t / 0.3) : 1;
+        this.glow(side, px, py, pulse, appear);
+        if (side === 'top') this.badge(px, py, pulse, appear);
+        else this.chevrons(px, py, appear);
+      } else if (this.phase === 'roll') {
+        // during the roll: where it ends up (under the die, or still on top)
+        if (f.kind !== 'lead') this.glow(f.kind, px, py, pulse, 1);
+      }
+    }
     if (this.phase === 'hand') this.hand(px, py, clip.moves[this.i]!, this.t / 0.75);
     if (this.check) this.checkMark(this.check.x, this.check.y, this.check.t);
     if (this.phase === 'fade') {
@@ -155,13 +180,20 @@ class Player {
   }
 
   /** A gold glow on the face that matters. */
-  private glow(kind: 'lead' | 'bottom' | 'top', px: number, py: number, pulse: number): void {
+  private glow(
+    kind: 'lead' | 'bottom' | 'top',
+    px: number,
+    py: number,
+    pulse: number,
+    alpha: number,
+  ): void {
     const ctx = this.ctx;
     ctx.save();
-    ctx.strokeStyle = `rgba(255,215,94,${0.5 + pulse * 0.5})`;
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = `rgba(255,215,94,${0.55 + pulse * 0.45})`;
     ctx.shadowColor = '#ffd75e';
-    ctx.shadowBlur = 12;
-    ctx.lineWidth = 3.5;
+    ctx.shadowBlur = 20;
+    ctx.lineWidth = 5.5;
     ctx.lineCap = 'round';
     ctx.beginPath();
     if (kind === 'top') {
@@ -179,6 +211,59 @@ class Player {
       }
     }
     ctx.stroke();
+    ctx.restore();
+  }
+
+  /** The face that will act, enlarged in a badge just outside its side of the die. */
+  private badge(px: number, py: number, pulse: number, alpha: number): void {
+    const ctx = this.ctx;
+    const name = facesOf(this.state.player.die).top;
+    const bx = px;
+    const by = py - R - 24;
+    const s = (0.8 + alpha * 0.2) * (1 + pulse * 0.06);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(bx, by);
+    ctx.scale(s, s);
+    ctx.shadowColor = '#ffd75e';
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = '#2b2540';
+    ctx.beginPath();
+    ctx.arc(0, 0, 15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#ffd75e';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    drawFace(ctx, name ?? '', 0, 0, 20);
+    ctx.restore();
+  }
+
+  /** Chevrons running out of the lit side, the way it will roll. */
+  private chevrons(px: number, py: number, alpha: number): void {
+    const ctx = this.ctx;
+    const [dx, dy] = DV[this.clip.moves[this.i]!];
+    const t = this.fx.time;
+    ctx.save();
+    ctx.strokeStyle = '#ffd75e';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = '#ffd75e';
+    ctx.shadowBlur = 8;
+    for (let k = 0; k < 2; k++) {
+      const phase = (t * 1.6 + k * 0.5) % 1;
+      const d = R + 5 + phase * 9;
+      ctx.globalAlpha = alpha * Math.sin(phase * Math.PI);
+      const cx = px + dx * d;
+      const cy = py + dy * d;
+      ctx.beginPath();
+      // a ">" turned to face the roll
+      ctx.moveTo(cx - dx * 4 - dy * 6, cy - dy * 4 - dx * 6);
+      ctx.lineTo(cx + dx * 2, cy + dy * 2);
+      ctx.lineTo(cx - dx * 4 + dy * 6, cy - dy * 4 + dx * 6);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 

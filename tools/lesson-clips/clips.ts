@@ -15,7 +15,11 @@ export interface Clip {
   view: [number, number, number, number];
   /** Which move earns the check mark (index into moves), and where it pops. */
   check: { after: number; at: 'die' | 'event' };
-  /** A glow on the face that matters: the side it rolls with, its bottom, or its top. */
+  /**
+   * The face that matters, lit before the roll: the side it rolls with
+   * ('lead'), the side that then lands under the die ('bottom'), or the top
+   * face that stays put while sliding ('top').
+   */
   focus?: { move: number; kind: 'lead' | 'bottom' | 'top' };
 }
 
