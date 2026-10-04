@@ -2,6 +2,13 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.20.0 — Watch and roll
+
+- **Every lesson is a clip now.** Turning the Sword, Shield up, chests, healing, slimes, Golems, splash, archers, Freeze and the Hook are all shown in a short loop instead of a paragraph. Ice stops (walls, floor, enemies), cover from arrows and splashing around a corner get their own clips too.
+- **Right way, wrong way.** Where it helps, a clip shows both side by side: the Sword bouncing off a Golem next to the Bomb cracking it, stopping in an archer's lane next to stepping behind a wall.
+- **Gauntlets, shown.** Three floors, one after another, and the hearts you lose stay lost.
+- Fewer hint lines over the board: levels that just practise what you've learned leave you to work it out.
+
 ## 0.19.0 — Show, don't tell
 
 - **Lessons you can watch.** Rolling, striking with the leading side, Keys, Spikes, the Bomb and Ice are now taught by a short looping clip instead of a paragraph: the side that matters lights up, a finger shows the swipe, and a check mark pops when it works. Your first move closes it.

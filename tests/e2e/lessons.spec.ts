@@ -32,10 +32,8 @@ test.describe('lessons and how to play', () => {
     await expect(card).toHaveCount(0);
   });
 
-  test('a lesson without a clip still types itself out and waits for "Got it"', async ({
-    page,
-  }) => {
-    // levels 1 and 2 beaten: Play opens level 3, whose lesson is still text
+  test('later lessons are clips too, and "Got it" closes them', async ({ page }) => {
+    // levels 1 and 2 beaten: Play opens level 3
     await page.addInitScript((fps) => {
       if (sessionStorage.getItem('seeded')) return;
       sessionStorage.setItem('seeded', '1');
@@ -57,12 +55,11 @@ test.describe('lessons and how to play', () => {
     await page.getByTestId('play').click();
     await expect.poll(() => scene(page)).toBe('play');
     const card = page.getByTestId('lesson');
-    await expect(card).toContainText('Turn the blade');
-    await page.keyboard.press('ArrowRight');
-    expect((await gameState(page)).stats.moves).toBe(0);
-    await page.getByTestId('lesson-ok').click();
+    await expect(page.getByTestId('lesson-clip')).toBeVisible();
+    await expect(card).toHaveText('');
     await page.getByTestId('lesson-ok').click();
     await expect(card).toBeHidden();
+    expect((await gameState(page)).stats.moves).toBe(0);
   });
 
   test('"How to play" appears on the title screen once the tutorial is done', async ({ page }) => {

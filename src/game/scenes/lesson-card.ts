@@ -8,7 +8,7 @@ import type { Rules } from '../../engine/registry';
 import type { Lesson } from '../lessons';
 import type { Clip } from '../lesson-clips';
 import { el, icon, place } from '../ui';
-import { ClipPlayer } from '../view/lesson-clip';
+import { ClipPlayer, clipAspect } from '../view/lesson-clip';
 import { t } from '../../i18n';
 
 /** Characters per second while typing. */
@@ -93,15 +93,15 @@ export class LessonCard {
   }
 
   private openClip(ui: HTMLElement, y: number, clip: Clip, rules: Rules): void {
-    const [, , vw, vh] = clip.view;
     const w = 268;
+    const h = w / clipAspect(clip);
     const canvas = el('canvas', { className: 'lesson-clip', testId: 'lesson-clip' });
     // sharp on any screen: the stage can be scaled up a lot on a big window
     const res = 3;
     canvas.width = w * res;
-    canvas.height = Math.round(((w * vh) / vw) * res);
+    canvas.height = Math.round(h * res);
     canvas.style.width = `${w}px`;
-    canvas.style.height = `${(w * vh) / vw}px`;
+    canvas.style.height = `${h}px`;
     canvas.setAttribute('aria-hidden', 'true');
     this.button = el(
       'button',

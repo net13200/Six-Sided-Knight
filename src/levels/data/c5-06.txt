@@ -1,7 +1,6 @@
 id: c5-06
 name: Deep Freeze
 par: 9
-hint: A frozen archer holds its fire
 loadout: Shield Heart Bomb Key Sword Freeze
 teaches: freeze-archer
 ---

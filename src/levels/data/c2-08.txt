@@ -1,7 +1,6 @@
 id: c2-08
 name: Bone Rink
 par: 14
-hint: Enemies make good stoppers
 teaches: slide-enemy
 ---
 ########

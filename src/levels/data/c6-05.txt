@@ -1,7 +1,6 @@
 id: c6-05
 name: Fishing Hole
 par: 12
-hint: Hook works across ice too
 loadout: Shield Hook Bomb Key Sword Coin
 teaches: hook-enemy, slide
 ---

@@ -4,7 +4,7 @@
  */
 import { defaultRules } from '../../src/content/register';
 import { CLIPS } from '../../src/game/lesson-clips';
-import { ClipPlayer } from '../../src/game/view/lesson-clip';
+import { ClipPlayer, clipAspect } from '../../src/game/view/lesson-clip';
 
 const rules = defaultRules();
 // ---------- the page ----------
@@ -14,13 +14,13 @@ const players: ClipPlayer[] = [];
 for (const clip of CLIPS) {
   const card = document.createElement('figure');
   const canvas = document.createElement('canvas');
-  const [, , vw, vh] = clip.view;
   const cssW = 320;
+  const cssH = cssW / clipAspect(clip);
   const dpr = Math.min(devicePixelRatio || 1, 2);
   canvas.width = Math.round(cssW * dpr);
-  canvas.height = Math.round(((cssW * vh) / vw) * dpr);
+  canvas.height = Math.round(cssH * dpr);
   canvas.style.width = `${cssW}px`;
-  canvas.style.aspectRatio = `${vw} / ${vh}`;
+  canvas.style.aspectRatio = `${cssW} / ${cssH}`;
   const cap = document.createElement('figcaption');
   cap.textContent = clip.name;
   card.append(canvas, cap);
