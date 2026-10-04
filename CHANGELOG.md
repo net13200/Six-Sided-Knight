@@ -2,6 +2,11 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.19.0 — Show, don't tell
+
+- **Lessons you can watch.** Rolling, striking with the leading side, Keys, Spikes, the Bomb and Ice are now taught by a short looping clip instead of a paragraph: the side that matters lights up, a finger shows the swipe, and a check mark pops when it works. Your first move closes it.
+- Those levels no longer show a line of hint text over the board.
+
 ## 0.18.0 — Once upon a roll
 
 - **An animated opening.** The story now plays as a short 3D film: the Queen buried in decisions, her wish at the Old Well, the whole village (and the goat) popping into dice, and you, cut off mid-sentence, rolling on purpose. Tap to move on a scene, or Skip to start playing. **Story** on the title screen plays it again.

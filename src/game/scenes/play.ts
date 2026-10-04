@@ -34,6 +34,7 @@ import { muteButton } from './common';
 import { CHAPTER_NAMES, CHAPTER_SIZE } from '../../meta/progress';
 import { InspectView } from './inspect';
 import { LessonCard } from './lesson-card';
+import { clipFor, type Clip } from '../lesson-clips';
 import { SolutionWatch } from './watch';
 import { lessonKey } from '../lessons';
 import { buySolution, shouldOffer, SOLVE_PRICE, STUCK_AFTER } from '../../meta/solve-offer';
@@ -61,6 +62,16 @@ export class PlayScene implements Scene {
   /** Moves per leading face not yet written to the lifetime stats. */
   private faceMoves = new Map<string, number>();
   private inspect: InspectView | null = null;
+  /** The clip that shows this level's mechanic, if it has one (no text then). */
+  private get clip(): Clip | null {
+    return this.session.mode === 'campaign' ? clipFor(this.level.id) : null;
+  }
+
+  /** The one-line hint over the board; levels with a clip show the clip instead. */
+  private get showLevelHint(): boolean {
+    return this.level.hint !== undefined && !this.clip;
+  }
+
   /** The lesson card, while it's up (play waits for it). */
   private lesson: LessonCard | null = null;
   /** Dev tool: watching a solution (debug mode). */
@@ -364,6 +375,7 @@ export class PlayScene implements Scene {
         this.game.stage.canvas.focus();
       },
       this.game.reducedMotion,
+      this.clip ? { clip: this.clip, rules: this.game.rules } : null,
     );
     this.lesson.open(ui, BOARD_Y + 70);
   }
@@ -393,6 +405,9 @@ export class PlayScene implements Scene {
       // The board waits for the lesson to be read.
       if (cmd.type === 'confirm' || cmd.type === 'back') this.lesson.advance();
       else if (cmd.type === 'tap' && this.lesson.typing) this.lesson.advance();
+      // a clip has nothing to read: the first move (or tap) just closes it
+      else if (this.lesson.isClip && (cmd.type === 'move' || cmd.type === 'tap'))
+        this.lesson.close();
       return;
     }
     if (this.inspect) {
@@ -598,7 +613,7 @@ export class PlayScene implements Scene {
       ctx.fillRect(0, BOARD_Y, 340, BAR_Y - BOARD_Y);
       return;
     }
-    const levelHintShowing = this.level.hint !== undefined && s.stats.moves < 3;
+    const levelHintShowing = this.showLevelHint && s.stats.moves < 3;
     if (!levelHintShowing && this.showInspectHint()) {
       const text = t('Tap the die to inspect it');
       ctx.save();
@@ -637,7 +652,7 @@ export class PlayScene implements Scene {
     }
 
     // One-line hint that fades once the player gets going.
-    if (this.level.hint && s.stats.moves < 3) {
+    if (this.showLevelHint && this.level.hint && s.stats.moves < 3) {
       const hint = t(this.level.hint);
       ctx.save();
       ctx.globalAlpha = 1 - s.stats.moves / 3;

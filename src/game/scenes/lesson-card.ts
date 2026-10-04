@@ -1,9 +1,14 @@
 /**
- * The lesson card over the board: the text types itself out, and play waits
- * for "Got it". A tap while it's typing shows the rest at once.
+ * The lesson card over the board. Where the lesson has a clip, the clip loops
+ * on the card instead of any text, and the first move, tap or ▶ closes it.
+ * Otherwise the text types itself out and play waits for "Got it" (a tap
+ * while it's typing shows the rest at once).
  */
+import type { Rules } from '../../engine/registry';
 import type { Lesson } from '../lessons';
-import { el, place } from '../ui';
+import type { Clip } from '../lesson-clips';
+import { el, icon, place } from '../ui';
+import { ClipPlayer } from '../view/lesson-clip';
 import { t } from '../../i18n';
 
 /** Characters per second while typing. */
@@ -19,19 +24,33 @@ export class LessonCard {
   /** The lesson, translated. */
   private readonly lesson: Lesson;
 
+  private player: ClipPlayer | null = null;
+  private frame = 0;
+
   constructor(
     lesson: Lesson,
     private readonly onClose: () => void,
     private readonly instant: boolean,
+    /** Shown instead of the text, when the lesson has one. */
+    private readonly clip: { clip: Clip; rules: Rules } | null = null,
   ) {
     this.lesson = { title: t(lesson.title), text: t(lesson.text) };
   }
 
+  /** A clip lesson: no text to read, so the first move just closes it. */
+  get isClip(): boolean {
+    return this.clip !== null;
+  }
+
   get typing(): boolean {
-    return this.shown < this.lesson.text.length;
+    return !this.clip && this.shown < this.lesson.text.length;
   }
 
   open(ui: HTMLElement, y: number): void {
+    if (this.clip) {
+      this.openClip(ui, y, this.clip.clip, this.clip.rules);
+      return;
+    }
     const title = el('h2', { text: this.lesson.title });
     title.id = 'lesson-title';
     // Screen readers get the whole text at once; the typed copy is visual only.
@@ -73,6 +92,56 @@ export class LessonCard {
     this.button.focus();
   }
 
+  private openClip(ui: HTMLElement, y: number, clip: Clip, rules: Rules): void {
+    const [, , vw, vh] = clip.view;
+    const w = 268;
+    const canvas = el('canvas', { className: 'lesson-clip', testId: 'lesson-clip' });
+    // sharp on any screen: the stage can be scaled up a lot on a big window
+    const res = 3;
+    canvas.width = w * res;
+    canvas.height = Math.round(((w * vh) / vw) * res);
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${(w * vh) / vw}px`;
+    canvas.setAttribute('aria-hidden', 'true');
+    this.button = el(
+      'button',
+      {
+        className: 'btn primary lesson-go',
+        testId: 'lesson-ok',
+        label: t('Got it'),
+        onClick: () => this.close(),
+      },
+      [icon('play')],
+    );
+    this.root = el('div', { className: 'sheet lesson clip', testId: 'lesson' }, [
+      canvas,
+      this.button,
+    ]);
+    this.root.setAttribute('role', 'dialog');
+    this.root.setAttribute('aria-modal', 'true');
+    this.root.setAttribute('aria-label', this.lesson.title);
+    this.root.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.close();
+    });
+    place(this.root, 22, y, 296, 0);
+    this.root.style.height = 'auto';
+    ui.append(this.root);
+    const player = new ClipPlayer(rules, clip, canvas);
+    this.player = player;
+    let last = performance.now();
+    const loop = (now: number) => {
+      if (!this.player) return;
+      player.update(Math.min(0.05, (now - last) / 1000));
+      last = now;
+      player.draw();
+      this.frame = requestAnimationFrame(loop);
+    };
+    player.draw();
+    this.frame = requestAnimationFrame(loop);
+    this.button.focus();
+  }
+
   /** "Got it": finish typing first, then close. */
   advance(): void {
     if (this.typing) this.finishTyping();
@@ -80,7 +149,10 @@ export class LessonCard {
   }
 
   close(): void {
+    if (!this.root) return;
     this.stopTimer();
+    this.player = null;
+    cancelAnimationFrame(this.frame);
     this.root?.remove();
     this.root = null;
     this.onClose();

@@ -659,6 +659,22 @@ button:focus-visible {
 .sheet.lesson .btn.waiting {
   opacity: 0.55;
 }
+/* A clip lesson: the clip and a play button, no text. */
+.sheet.lesson.clip {
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  cursor: pointer;
+}
+.lesson-clip {
+  display: block;
+  border-radius: 12px;
+  background: #14121c;
+}
+.sheet.lesson.clip .lesson-go {
+  align-self: stretch;
+  justify-content: center;
+}
 
 /* How to play: plain text, scrolls inside the sheet. */
 .sheet.how-to {

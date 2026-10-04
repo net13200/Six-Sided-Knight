@@ -16,7 +16,7 @@ You are a die. Every move rolls you one tile, and **the face on the side you rol
 | Hear the board  | (screen reader: focus the board) | H or ?                  |
 | Menu / Sound    | Buttons                          | Esc / M                 |
 
-The first time you play a level with something new, a lesson card explains it; play starts when you tap "Got it". Once you've finished the tutorial, **Help** on the title screen has all the rules in one place.
+The first time you play a level with something new, a lesson shows it: usually a short clip (your first move closes it), sometimes a card to read (tap "Got it"). Once you've finished the tutorial, **Help** on the title screen has all the rules in one place.
 
 You have **3 HP**. Enemy hits, arrows and spikes cost 1 each.
 

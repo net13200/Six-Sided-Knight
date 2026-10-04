@@ -1,12 +1,15 @@
 /**
- * Lesson clips: tiny scripted levels that show a mechanic instead of
- * explaining it. Each is a full 8x9 level (the board renderer needs that),
- * mostly wall, cropped to `view` (x, y, w, h in tiles) when drawn.
+ * Lesson clips: a mechanic shown, not explained. Each is a tiny scripted
+ * level played with the real rules and animations, looping on the lesson
+ * card. Each is a full 8x9 level (the board renderer needs that), mostly
+ * wall, cropped to `view` (x, y, w, h in tiles) when drawn.
  */
-import type { Dir } from '../../src/engine';
+import type { Dir } from '../engine';
 
 export interface Clip {
   id: string;
+  /** The campaign level whose lesson this replaces. */
+  levelId: string;
   /** For the review page only; the game shows no title. */
   name: string;
   level: string;
@@ -28,6 +31,7 @@ const head = (id: string, extra = '') => `id: lesson-${id}\nname: ${id}\n${extra
 export const CLIPS: Clip[] = [
   {
     id: 'rolling',
+    levelId: 'c1-01',
     name: '1 · Rolling',
     level:
       head('rolling') +
@@ -48,6 +52,7 @@ export const CLIPS: Clip[] = [
   },
   {
     id: 'leading',
+    levelId: 'c1-02',
     name: '2 · The leading side',
     level:
       head('leading', 'enemies: 3,4 hp=1\n') +
@@ -69,6 +74,7 @@ export const CLIPS: Clip[] = [
   },
   {
     id: 'keys',
+    levelId: 'c1-05',
     name: '5 · Keys',
     level:
       head('keys') +
@@ -90,6 +96,7 @@ export const CLIPS: Clip[] = [
   },
   {
     id: 'spikes',
+    levelId: 'c1-07',
     name: '7 · Spikes',
     level:
       head('spikes') +
@@ -111,6 +118,7 @@ export const CLIPS: Clip[] = [
   },
   {
     id: 'bomb',
+    levelId: 'c1-10',
     name: '10 · The Bomb',
     level:
       head('bomb', 'enemies: 2,3 hp=1; 4,3 hp=1\n') +
@@ -132,6 +140,7 @@ export const CLIPS: Clip[] = [
   },
   {
     id: 'ice',
+    levelId: 'c2-01',
     name: 'Ch. 2 · Ice',
     level:
       head('ice') +
@@ -152,3 +161,8 @@ export const CLIPS: Clip[] = [
     focus: { move: 0, kind: 'top' },
   },
 ];
+
+/** The clip that replaces a level's text lesson, if it has one. */
+export function clipFor(levelId: string): Clip | null {
+  return CLIPS.find((c) => c.levelId === levelId) ?? null;
+}

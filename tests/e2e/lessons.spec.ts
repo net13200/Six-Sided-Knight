@@ -10,23 +10,19 @@ test.describe('lessons and how to play', () => {
     expect(errors).toEqual([]);
   });
 
-  test('a lesson types itself out and the board waits for "Got it"', async ({ page }) => {
+  test('a lesson shows as a clip, with no text; the first move closes it', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('play').click();
     await page.getByTestId('story-skip').click();
     await expect.poll(() => scene(page)).toBe('play');
     const card = page.getByTestId('lesson');
     await expect(card).toBeVisible();
-    await expect(card).toContainText('Rolling');
-    // Rolling does nothing while the lesson is up.
+    await expect(page.getByTestId('lesson-clip')).toBeVisible();
+    await expect(card).toHaveText('');
+    // The first roll only closes the clip; the board waited for it.
     await page.keyboard.press('ArrowRight');
-    expect((await gameState(page)).stats.moves).toBe(0);
-    // The first tap shows the rest of the text; the second closes the card.
-    await page.getByTestId('lesson-ok').click();
-    await expect(card).toBeVisible();
-    await expect(card).toContainText("that's what the stars are for.");
-    await page.getByTestId('lesson-ok').click();
     await expect(card).toBeHidden();
+    expect((await gameState(page)).stats.moves).toBe(0);
     await page.keyboard.press('ArrowRight');
     await expect.poll(async () => (await gameState(page)).stats.moves).toBe(1);
     // Read once: a retry or a later visit goes straight to the board.
@@ -34,6 +30,39 @@ test.describe('lessons and how to play', () => {
     await page.getByTestId('play').click();
     await expect.poll(() => scene(page)).toBe('play');
     await expect(card).toHaveCount(0);
+  });
+
+  test('a lesson without a clip still types itself out and waits for "Got it"', async ({
+    page,
+  }) => {
+    // levels 1 and 2 beaten: Play opens level 3, whose lesson is still text
+    await page.addInitScript((fps) => {
+      if (sessionStorage.getItem('seeded')) return;
+      sessionStorage.setItem('seeded', '1');
+      const levels: Record<string, unknown> = {};
+      for (let i = 1; i <= 2; i++)
+        levels[`c1-0${i}`] = {
+          stars: 3,
+          bestMoves: 5,
+          completions: 1,
+          bestTimeMs: 9000,
+          fp: fps[i - 1],
+        };
+      localStorage.setItem(
+        'ssk.save',
+        JSON.stringify({ version: 3, campaign: 2, createdAt: 1, levels }),
+      );
+    }, tutorialFingerprints());
+    await page.goto('/');
+    await page.getByTestId('play').click();
+    await expect.poll(() => scene(page)).toBe('play');
+    const card = page.getByTestId('lesson');
+    await expect(card).toContainText('Turn the blade');
+    await page.keyboard.press('ArrowRight');
+    expect((await gameState(page)).stats.moves).toBe(0);
+    await page.getByTestId('lesson-ok').click();
+    await page.getByTestId('lesson-ok').click();
+    await expect(card).toBeHidden();
   });
 
   test('"How to play" appears on the title screen once the tutorial is done', async ({ page }) => {
