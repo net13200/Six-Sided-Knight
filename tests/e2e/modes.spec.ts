@@ -33,14 +33,24 @@ test.describe('Daily Roll and Depths', () => {
     await page.getByTestId('daily-start').click();
 
     for (let floor = 1; floor <= 3; floor++) {
-      await playCurrentLevel(page);
+      // Play all but the winning step (onto the stairs, which can't hurt) to see
+      // how much HP the floor leaves: it depends on the day's puzzle.
+      await expect.poll(() => scene(page), { timeout: 15_000 }).toBe('play');
+      await expect.poll(async () => (await gameState(page)).stats.moves).toBe(0);
+      const path = await solveCurrent(page);
+      for (const dir of path.slice(0, -1)) await page.keyboard.press(KEY[dir]);
+      await expect.poll(async () => (await gameState(page)).stats.moves).toBe(path.length - 1);
+      const left = (await gameState(page)).player.hp;
+      expect(left).toBeGreaterThanOrEqual(1);
+      await page.keyboard.press(KEY[path.at(-1)!]);
       await expect.poll(() => scene(page), { timeout: 5000 }).toBe('floor');
       if (floor < 3) {
         await page.getByTestId('floor-next').click();
         await expect.poll(() => scene(page), { timeout: 15_000 }).toBe('play');
         const s = await gameState(page);
         expect(s.levelId).toMatch(new RegExp(`^daily-\\d{4}-\\d{2}-\\d{2}-${floor + 1}$`));
-        expect(s.player.hp).toBeGreaterThanOrEqual(2);
+        // and the next floor starts with exactly that: HP carries over
+        expect(s.player.hp).toBe(left);
       }
     }
 
