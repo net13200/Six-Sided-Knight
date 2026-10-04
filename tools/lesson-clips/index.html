@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Lesson Clips</title>
+    <style>
+      :root {
+        --bg: #14121c;
+        --panel: #1d1a28;
+        --text: #ece6d6;
+        --dim: #8d86a0;
+        --gold: #ffd75e;
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, sans-serif;
+        padding-block: 20px 40px;
+        padding-inline: 16px;
+      }
+      header {
+        max-width: 700px;
+        margin: 0 auto 18px;
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: 22px;
+        color: var(--gold);
+      }
+      header p {
+        margin: 0;
+        color: var(--dim);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      #clips {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+        gap: 18px;
+        max-width: 700px;
+        margin: 0 auto;
+        justify-items: center;
+      }
+      figure {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+        max-width: 100%;
+      }
+      canvas {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        border-radius: 14px;
+        background: var(--panel);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+      }
+      figcaption {
+        font-size: 13px;
+        color: var(--dim);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Lesson clips</h1>
+      <p>
+        Each lesson as a short loop on the game's own board, with no text. Captions under the clips
+        are only for this page.
+      </p>
+    </header>
+    <div id="clips"></div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
