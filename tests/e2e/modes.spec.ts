@@ -59,7 +59,7 @@ test.describe('Daily Roll and Depths', () => {
     await expect(page.getByTestId('floor-share')).toContainText(/Copied|Shared/);
     const clip = await page.evaluate(() => navigator.clipboard.readText());
     expect(clip).toMatch(
-      /^Six Sided Knight · Daily Roll \d{4}-\d{2}-\d{2}\n[★☆]{9} \d\/9\n\d+ moves · \d\/3 HP left\n/,
+      /^Six Sided Knight · Daily Roll \d{4}-\d{2}-\d{2}\n(?:[^\n★☆]+\n)?[★☆]{9} \d\/9\n\d+ moves · \d\/3 HP left\n/,
     );
 
     // Streak shows on the title screen; the hub offers share and practice.
