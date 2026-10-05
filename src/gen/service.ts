@@ -45,7 +45,7 @@ export class LevelService {
 
   /** Cache key includes the params that change the result. */
   private key(p: GenParams): string {
-    return `${p.id}|${p.seed}|${p.band.join('-')}|${p.hp ?? 'max'}|${p.features ?? 1}|${p.shared ? 's' : ''}|${p.loadout?.join(',') ?? ''}`;
+    return `${p.id}|${p.seed}|${p.band.join('-')}|${p.hp ?? 'max'}|${p.features ?? 1}|${p.shared ? 's' : ''}|${p.loadout?.join(',') ?? ''}|${p.theme ?? ''}|${p.pick ?? ''}`;
   }
 
   generate(params: GenParams): Promise<Generated> {

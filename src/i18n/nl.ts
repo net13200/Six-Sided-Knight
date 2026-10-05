@@ -133,6 +133,12 @@ const dict: Dict = {
   'Shared!': 'Gedeeld!',
   'Could not share': 'Delen mislukt',
   'Daily Roll': 'Dagworp',
+  'Lock and Key': 'Slot en sleutel',
+  'Black Ice': 'IJzel',
+  'Bomb Day': 'Bommendag',
+  'Spike Pit': 'Spijkerkuil',
+  'Treasure Hunt': 'Schattenjacht',
+  'Wild Roll': 'Wilde worp',
   '{date} (UTC) · the same dungeon for everyone': '{date} (UTC) · dezelfde kerker voor iedereen',
   'The Well reshuffles three rooms every dawn, out of habit.':
     'De Put husselt elke ochtend drie kamers door elkaar, uit gewoonte.',

@@ -25,6 +25,8 @@ export interface Rating {
   readonly breadth: number;
   readonly noviceWinRate: number;
   readonly enemies: number;
+  /** One fewest-moves solution (empty when unsolvable). */
+  readonly path: readonly Dir[];
 }
 
 export const RATING_WEIGHTS = { moves: 1, breadth: 1.8, novice: 25, enemies: 2 } as const;
@@ -43,6 +45,7 @@ export function rate(rules: Rules, start: GameState, maxNodes = 20_000): Rating 
       breadth: 0,
       noviceWinRate: 0,
       enemies: start.enemies.length,
+      path: [],
     };
   }
   const bfs = solve(rules, start, { maxNodes });
@@ -61,6 +64,7 @@ export function rate(rules: Rules, start: GameState, maxNodes = 20_000): Rating 
     breadth,
     noviceWinRate,
     enemies: start.enemies.length,
+    path: best.path,
   };
 }
 

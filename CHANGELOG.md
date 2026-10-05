@@ -2,6 +2,12 @@
 
 Versions follow [semantic versioning](https://semver.org). The version shown in the game comes from `package.json`; bump it and add an entry here with each release.
 
+## 0.21.0 — Theme of the day
+
+- **The Daily Roll has a theme each day.** Monday is Lock and Key, Tuesday Black Ice, Wednesday Bomb Day, Thursday Arrow Storm, Friday Spike Pit, Saturday Treasure Hunt, and Sunday a Wild Roll that mixes two. The theme shows on the Daily Roll board and in the shared result.
+- **Daily floors that need thinking.** Every floor is built around the day's theme (a door in the only gap, a Golem in the way, an archer covering the short route) and must take some planning: just walking to the stairs won't do, and each floor is harder than the last. Floors are picked from thousands of tries, so they're ready the moment you start.
+- Today's daily is the first themed one; earlier dates keep their dungeons.
+
 ## 0.20.0 — Watch and roll
 
 - **Every lesson is a clip now.** Turning the Sword, Shield up, chests, healing, slimes, Golems, splash, archers, Freeze and the Hook are all shown in a short loop instead of a paragraph. Ice stops (walls, floor, enemies), cover from arrows and splashing around a corner get their own clips too.

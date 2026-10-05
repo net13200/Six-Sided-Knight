@@ -20,6 +20,7 @@
 import { Rng, createState, validateLevel, type LevelData, type Rules } from '../engine';
 import { rate, type Rating } from '../solver/rate';
 import { solve } from '../solver/solve';
+import { buildThemedGrid, dailyQuality, type Bar, type Theme } from './themes';
 
 export interface GenParams {
   readonly seed: number;
@@ -36,6 +37,17 @@ export interface GenParams {
   readonly features?: 1 | 2;
   /** Same floor for everyone, whatever their die (Daily Roll). */
   readonly shared?: boolean;
+  /**
+   * A themed room (Daily Roll): built around the theme, and it only counts
+   * if it meets `bar` (see themes.ts). `band` is then unused.
+   */
+  readonly theme?: Theme;
+  readonly bar?: Bar;
+  /**
+   * Themed rooms only: build just this attempt (found ahead of time by
+   * tools/daily-bake.ts, so the floor is ready at once).
+   */
+  readonly pick?: number;
 }
 
 export interface Generated {
@@ -47,6 +59,8 @@ export interface Generated {
   readonly variant?: boolean;
   /** Shared floors only: false when the player's die is proven unable to win it. */
   readonly winnable?: boolean;
+  /** Themed rooms: the attempt that was used (what `pick` rebuilds). */
+  readonly pick?: number;
 }
 
 const W = 8;
@@ -102,6 +116,7 @@ export function generateLevel(rules: Rules, params: GenParams): Generated {
 }
 
 function generateFor(rules: Rules, params: GenParams): Generated {
+  if (params.theme) return generateThemed(rules, params, params.theme);
   const [lo, hi] = params.band;
   const target = (lo + hi) / 2;
   const maxAttempts = params.maxAttempts ?? 24;
@@ -141,6 +156,54 @@ function generateFor(rules: Rules, params: GenParams): Generated {
     attempts: maxAttempts,
     inBand: false,
   };
+}
+
+/**
+ * A themed room: attempts are independent of each other (so `pick` can
+ * rebuild any one of them), and the first that meets the bar wins. If none
+ * does, the solvable one closest to the band.
+ */
+function generateThemed(rules: Rules, params: GenParams, theme: Theme): Generated {
+  const bar: Bar = params.bar ?? { band: params.band, detour: 0, novice: 1 };
+  const [lo, hi] = bar.band;
+  const target = (lo + hi) / 2;
+  const hp = params.hp ?? rules.config.maxHp;
+  const first = params.pick ?? 0;
+  const last = params.pick ?? (params.maxAttempts ?? 60) - 1;
+  let best: { level: LevelData; rating: Rating; miss: number; pick: number } | null = null;
+  for (let attempt = first; attempt <= last; attempt++) {
+    const rng = new Rng((params.seed ^ Math.imul(attempt + 1, 0x9e3779b1)) >>> 0);
+    const d = clamp01(target / 100 + (rng.next() - 0.5) * 0.3);
+    const grid = buildThemedGrid(rng, d, theme);
+    if (!grid.length) continue;
+    const level: LevelData = {
+      schema: 1,
+      id: params.id,
+      name: params.name,
+      grid,
+      ...(params.loadout ? { loadout: [...params.loadout] } : {}),
+    };
+    if (validateLevel(rules, level).length) continue;
+    const rating = rate(rules, createState(rules, level, { hp }));
+    if (!rating.solvable) continue;
+    const withPar = { ...level, par: rating.minMoves };
+    if (dailyQuality(rules, withPar, rating, theme, bar) !== null)
+      return { level: withPar, rating, attempts: attempt - first + 1, inBand: true, pick: attempt };
+    const miss = Math.abs(rating.score - target);
+    if (!best || miss < best.miss) best = { level: withPar, rating, miss, pick: attempt };
+  }
+  if (best)
+    return {
+      level: best.level,
+      rating: best.rating,
+      attempts: last - first + 1,
+      inBand: false,
+      pick: best.pick,
+    };
+  // A picked attempt that no longer builds (it never should): search afresh.
+  if (params.pick !== undefined)
+    return generateThemed(rules, { ...params, pick: undefined }, theme);
+  return generateFor(rules, { ...params, theme: undefined });
 }
 
 /**

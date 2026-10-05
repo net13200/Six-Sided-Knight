@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { createState } from '../../src/engine';
 import { generateLevel } from '../../src/gen/generate';
+import { THEMES, walkDistance } from '../../src/gen/themes';
+import { DAILY_PICKS_FROM } from '../../src/meta/daily-picks';
 import {
   DAILY_BANDS,
+  DAILY_BARS,
+  DAILY_THEMES_FROM,
+  dailyPick,
+  dailyTheme,
   MIN_ARRIVAL_HP,
   START_HP,
   addDays,
@@ -195,4 +201,49 @@ describe('golden daily', () => {
       ],
     ]);
   }, 30_000);
+});
+
+describe('themed dailies', () => {
+  it('each day of the week has its theme, from the first themed date', () => {
+    expect(dailyTheme(addDays(DAILY_THEMES_FROM, -1))).toBeNull();
+    expect(dailyTheme('2026-10-05')).toBe('keys'); // a Monday
+    const week = Array.from({ length: 7 }, (_, i) => dailyTheme(addDays('2026-10-05', i)));
+    expect(new Set(week)).toEqual(new Set(THEMES));
+    // dates before themes keep their old dungeon
+    expect(dailyFloorParams('2026-09-22', 1).theme).toBeUndefined();
+  });
+
+  it('floors get harder: higher band, longer detour, fewer naive wins', () => {
+    for (let i = 1; i < DAILY_BARS.length; i++) {
+      const [a, b] = [DAILY_BARS[i - 1]!, DAILY_BARS[i]!];
+      expect(b.band[0]).toBeGreaterThan(a.band[0]);
+      expect(b.detour).toBeGreaterThan(a.detour);
+      expect(b.novice).toBeLessThan(a.novice);
+    }
+  });
+
+  it('baked floors rebuild from their pick at once, and meet the bar', () => {
+    // If this fails, the generator changed under the baked table: re-run tools/daily-bake.ts.
+    for (let day = 0; day < 7; day++) {
+      const date = addDays(DAILY_PICKS_FROM, day);
+      for (const floor of [1, 2, 3]) {
+        const p = dailyFloorParams(date, floor);
+        expect(p.pick, `${date} floor ${floor}`).toBeDefined();
+        const g = generateLevel(rules, p);
+        expect(g.inBand, `${date} floor ${floor}`).toBe(true);
+        expect(g.attempts).toBe(1);
+        const bar = DAILY_BARS[floor - 1]!;
+        expect(g.rating.minMoves - walkDistance(rules, g.level)).toBeGreaterThanOrEqual(bar.detour);
+      }
+    }
+  }, 120_000);
+
+  it('the table covers most of a year ahead', () => {
+    expect(DAILY_PICKS_FROM).toBe(DAILY_THEMES_FROM);
+    expect(dailyPick(addDays(DAILY_PICKS_FROM, 360), 3)).not.toBeNull();
+  });
+
+  it('names the theme in the share text', () => {
+    expect(shareText('2026-10-05', R, 1, null)).toContain('Lock and Key');
+  });
 });

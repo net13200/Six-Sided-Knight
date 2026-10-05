@@ -132,6 +132,12 @@ const dict: Dict = {
   'Shared!': '¡Compartido!',
   'Could not share': 'No se pudo compartir',
   'Daily Roll': 'Tirada diaria',
+  'Lock and Key': 'Llave y cerrojo',
+  'Black Ice': 'Hielo negro',
+  'Bomb Day': 'Día de bombas',
+  'Spike Pit': 'Foso de pinchos',
+  'Treasure Hunt': 'Caza del tesoro',
+  'Wild Roll': 'Tirada salvaje',
   '{date} (UTC) · the same dungeon for everyone': '{date} (UTC) · la misma mazmorra para todos',
   'The Well reshuffles three rooms every dawn, out of habit.':
     'El Pozo reordena tres salas cada amanecer, por costumbre.',

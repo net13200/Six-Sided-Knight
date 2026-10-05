@@ -254,7 +254,7 @@ function coverCount(rules: Rules, s: GameState): number {
 }
 
 /** Par (fewest moves) with a mechanic switched off, or null if the level can't be won. */
-function parWithout(level: LevelData, off: Switch): number | null {
+export function parWithout(level: LevelData, off: Switch): number | null {
   const r = rulesWithout(off);
   const res = solve(r, createState(r, level), { maxNodes: 400_000 });
   return res.status === 'solved' ? res.moves : null;

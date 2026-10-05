@@ -1,5 +1,15 @@
 /** Daily Roll hub: today's date, streak, and start / continue / share. */
-import { DAILY_FLOORS, START_HP, currentStreak, shareText, utcDate } from '../../meta/daily';
+import {
+  DAILY_FLOORS,
+  START_HP,
+  currentStreak,
+  dailyTheme,
+  shareText,
+  themeName,
+  utcDate,
+} from '../../meta/daily';
+import type { Theme } from '../../gen/themes';
+import { drawFace } from '../view/art';
 import type { Game } from '../game';
 import type { Command } from '../input';
 import { Run } from '../runs';
@@ -8,6 +18,17 @@ import { C } from '../view/palette';
 import { drawStar } from './common';
 import type { Scene } from './scene';
 import { t } from '../../i18n';
+
+/** The face drawn beside each theme's name. */
+const THEME_FACE: Record<Theme, string> = {
+  keys: 'Key',
+  ice: 'Freeze',
+  bombs: 'Bomb',
+  archers: 'Shield',
+  spikes: 'Shield',
+  treasure: 'Coin',
+  mixed: 'Pip5',
+};
 
 export class DailyScene implements Scene {
   readonly name = 'daily';
@@ -132,8 +153,20 @@ export class DailyScene implements Scene {
       80,
       320,
     );
-    ctx.font = 'italic 12px system-ui, sans-serif';
-    ctx.fillText(t('The Well reshuffles three rooms every dawn, out of habit.'), 170, 99, 320);
+    const theme = dailyTheme(this.date);
+    if (theme) {
+      // today's theme, between two of its faces
+      ctx.fillStyle = C.gold;
+      ctx.font = '700 15px system-ui, sans-serif';
+      const name = themeName(theme);
+      ctx.fillText(name, 170, 102, 240);
+      const w = Math.min(240, ctx.measureText(name).width);
+      drawFace(ctx, THEME_FACE[theme], 170 - w / 2 - 14, 102, 18);
+      drawFace(ctx, THEME_FACE[theme], 170 + w / 2 + 14, 102, 18);
+    } else {
+      ctx.font = 'italic 12px system-ui, sans-serif';
+      ctx.fillText(t('The Well reshuffles three rooms every dawn, out of habit.'), 170, 99, 320);
+    }
 
     drawFlame(ctx, 170, 142, streak > 0);
     ctx.fillStyle = C.text;

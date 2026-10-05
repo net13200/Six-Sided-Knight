@@ -131,6 +131,12 @@ const dict: Dict = {
   'Shared!': 'Paylaşıldı!',
   'Could not share': 'Paylaşılamadı',
   'Daily Roll': 'Günlük Zar',
+  'Lock and Key': 'Kilit ve Anahtar',
+  'Black Ice': 'Kara Buz',
+  'Bomb Day': 'Bomba Günü',
+  'Spike Pit': 'Diken Çukuru',
+  'Treasure Hunt': 'Hazine Avı',
+  'Wild Roll': 'Çılgın Zar',
   '{date} (UTC) · the same dungeon for everyone': '{date} (UTC) · herkes için aynı zindan',
   'The Well reshuffles three rooms every dawn, out of habit.':
     'Kuyu her şafakta, alışkanlıktan, üç odayı yeniden karıştırır.',

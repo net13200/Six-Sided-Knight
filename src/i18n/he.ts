@@ -131,6 +131,12 @@ const he: Dict = {
   'Shared!': 'שותף!',
   'Could not share': 'לא ניתן לשתף',
   'Daily Roll': 'הגלגול היומי',
+  'Lock and Key': 'מנעול ומפתח',
+  'Black Ice': 'קרח שחור',
+  'Bomb Day': 'יום הפצצות',
+  'Spike Pit': 'בור קוצים',
+  'Treasure Hunt': 'ציד אוצרות',
+  'Wild Roll': 'הטלה פרועה',
   '{date} (UTC) · the same dungeon for everyone': '{date} (UTC) · אותו מבוך לכולם',
   'The Well reshuffles three rooms every dawn, out of habit.':
     'הבאר מערבבת שלושה חדרים בכל שחר, מתוך הרגל.',

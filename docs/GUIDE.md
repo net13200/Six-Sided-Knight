@@ -65,7 +65,7 @@ English, Spanish, Portuguese, French, German, Italian, Dutch, Turkish and Hebrew
 ## Modes
 
 - **Campaign:** 60 levels in six chapters. Each chapter from 2 on ends in a **Gauntlet**: three floors in a row, HP carried over with no healing between floors. Its ★★★ is the fewest moves for the whole run.
-- **Daily Roll:** three floors, the same for everyone each day (UTC). HP carries over, with no healing between floors: one mistake too many ends the run. Keep a streak and share your result. Your own die is used; if it can't win a floor you're told, and you can change it between floors.
+- **Daily Roll:** three floors, the same for everyone each day (UTC). HP carries over, with no healing between floors: one mistake too many ends the run. Each day has a theme: Monday **Lock and Key** (doors), Tuesday **Black Ice**, Wednesday **Bomb Day** (Golems and crowds), Thursday **Arrow Storm** (archers), Friday **Spike Pit**, Saturday **Treasure Hunt** (chests) and Sunday **Wild Roll** (two at once). Every floor needs its theme and some thought: walking straight to the stairs won't do. Keep a streak and share your result. Your own die is used; if it can't win a floor you're told, and you can change it between floors.
 - **Depths:** endless floors that start hard and get harder. One life: no Undo, no Retry, and being knocked out ends the run. Leaving mid-floor keeps every move you made. Your high score is the most floors cleared in one run.
 
 ## The Smith
